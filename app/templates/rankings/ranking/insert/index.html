@@ -1,0 +1,44 @@
+{% extends "rankings/master.html" %}
+
+{% block title %}
+   Inserir Ranking
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+
+            <h1>Inserir Ranking</h1>
+
+            <p class="lead">
+                Para inserir valores de pilares e métricas coletadas a partir de um ranking, preencha o formulário
+                abaixo. Caso O ranking desejado não estela relacionado no seletor, será necessário adicioná-lo
+                manualmente na tela do administrador.</p>
+
+            <form id="form-submit-spreadsheet" action="/rankings/ranking/insert/" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% load crispy_forms_tags %}
+                {{ form | crispy }}
+                <button id="button-submit" type="submit" class="btn btn-dark">Enviar</button>
+            </form>
+            <p>{{ error_message }}</p>
+            <div id="spinner-block" class="spinner-border" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="application/javascript">
+    function showSpinner() {
+        document.getElementById('spinner-block').style.display = "block";
+    }
+    function hideSpinner() {
+        document.getElementById('spinner-block').style.display = "none";
+    }
+    hideSpinner();  // começa com o spinner oculto
+    document.getElementById('button-submit').addEventListener("click", showSpinner);
+    document.getElementById('id_file').addEventListener('focus', hideSpinner);
+    </script>
+{% endblock %}

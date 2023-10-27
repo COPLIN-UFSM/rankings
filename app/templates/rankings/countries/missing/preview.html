@@ -1,0 +1,136 @@
+{% extends "rankings/master.html" %}
+
+{% block title %}
+   Verificar países faltantes
+{% endblock %}
+
+{% block additional-stylesheet %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'rankings/universities/duplicate/style.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+            <h1>Verificar países faltantes</h1>
+
+            <p class="lead">
+                Os seguintes países não foram encontrados no banco de dados.
+                Correlacione-os aos países já existentes.
+            </p>
+            <p class="lead">
+                Caso o país não esteja na lista, será preciso adicioná-lo na tela de administrador.
+            </p>
+
+            <form id="form-rows-countries" onsubmit="return validate(event)">
+                {% csrf_token %}
+                {% load crispy_forms_tags %}
+                {{ form | crispy }}
+
+                <input type="hidden" name="id_formulario" value="{{ id_formulario }}">
+                <input type="hidden" name="id_ranking" value="{{ id_ranking }}">
+                <table id="table-missing-countries" class="standard-table">
+                <thead>
+                <tr>
+                    <th>
+                        Nome
+                    </th>
+                    <th>
+                        País
+                    </th>
+                    <th>
+                        Tipo
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for entry in rows %}
+                        <tr>
+                            <td>{{ entry.País }}</td>
+                            <td>
+                                <input type="hidden" name="country-name-{{ entry.index }}" value="{{ entry.País }}">
+                                <!--<label for="select-country-{{ entry.index }}"></label>-->
+                                <select
+                                        name="select-country-{{ entry.index }}"
+                                        id="select-country-{{ entry.index }}"
+                                        class="form-select form-select-sm"
+                                >
+                                    {% for option in country_options %}
+                                        {% if option.first %}
+                                            <option value="{{ option.id_pais }}" selected>
+                                                {{ option.nome_portugues }}
+                                            </option>
+                                        {% else %}
+                                            <option value="{{ option.id_pais }}">
+                                                {{ option.nome_portugues }}
+                                            </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <!--<label for="select-type-{{ entry.index }}"></label>-->
+                                <select
+                                        name="select-type-{{ entry.index }}"
+                                        id="select-type-{{ entry.index }}"
+                                        class="form-select form-select-sm"
+                                >
+                                    {% for option in country_type_options %}
+                                        {% if option.first %}
+                                            <option value="{{ option.id_tipo_apelido }}" selected>
+                                                {{ option.tipo_apelido }}
+                                            </option>
+                                        {% else %}
+                                            <option value="{{ option.id_tipo_apelido }}">
+                                                {{ option.tipo_apelido }}
+                                            </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+                <button id="button-send" type="submit" class="btn btn-dark">Enviar</button>
+            </form>
+            <div id="spinner-block" class="spinner-border" role="status" style="margin-top: 8px;">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script type="application/javascript">
+    function showSpinner() {
+        document.getElementById('spinner-block').style.display = "block";
+    }
+    function hideSpinner() {
+        document.getElementById('spinner-block').style.display = "none";
+    }
+    function validate(event) {
+        let table = document.getElementById("table-missing-countries");
+        let selects = table.getElementsByTagName("select");
+        for(let i = 0; i < selects.length; i++) {
+            if(selects[i].value.length === 0) {
+                return false;
+            }
+        }
+        let form = document.getElementById("form-rows-countries");
+        form.enctype = "multipart/form-data";
+        form.action = "/rankings/countries/missing/insert/";
+        form.method = "POST";
+        console.log('enviando dados para o servidor...');
+        showSpinner();
+        form.submit();
+        return true;
+    }
+    hideSpinner();  // começa com o spinner oculto
+    {#document.getElementById('button-submit').addEventListener("click", showSpinner);#}
+    {#document.getElementById('id_file').addEventListener('focus', hideSpinner);#}
+
+</script>
+{% endblock %}
+
+

@@ -1,0 +1,116 @@
+{% extends "rankings/master.html" %}
+
+{% block title %}
+   Verificar universidades duplicadas
+{% endblock %}
+
+{% block additional-stylesheet %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'rankings/universities/duplicate/style.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+
+            <h1>Verificar universidades duplicadas</h1>
+
+            <p class="lead">
+                As seguintes universidades podem estar duplicadas no banco de dados. Coloque o mesmo número nas linhas
+                das universidades que são, na verdade, a mesma. Caso uma universidade não esteja duplicada, marque
+                <b>NA</b>.
+            </p>
+            <p class="lead">
+                O número atribuído a cada linha não importa; basta que seja o mesmo número para as linhas potencialmente
+                duplicadas.
+            </p>
+
+            <form id="form-rows-universities" onsubmit="return validate(event)">
+                {% csrf_token %}
+                <table id="table-duplicate-universities" class="standard-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <!-- dropdown -->
+                            </th>
+                            <th>
+                                Nome universidade
+                            </th>
+                            <th>
+                                País
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in universities_list %}
+                            <tr class="{% if entry.assigned|divisibleby:2 %}even-color{% else %}odd-color{% endif %}">
+                                <td>
+                                    <input type="hidden"
+                                           name="university-id-{{ entry.index }}"
+                                           value="{{ entry.id_universidade }}"
+                                    >
+                                    <input type="hidden"
+                                           name="university-nickname-id-{{ entry.index }}"
+                                           value="{{ entry.id_apelido_universidade }}"
+                                    >
+                                    <select
+                                            name="select-assigned-{{ entry.index }}"
+                                            id="select-assigned-{{ entry.index }}"
+                                            class="form-select form-select-sm"
+                                    >
+                                        {% for option in options %}
+                                            {% if option.value == entry.assigned %}
+                                                <option value="{{ option.value }}" selected>
+                                                    {{ option.text }}
+                                                </option>
+                                            {% else %}
+                                                <option value="{{ option.value }}">
+                                                    {{ option.text }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>{{ entry.Universidade }}</td>
+                                <td>{{ entry.País }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button id="button-send" type="submit" class="btn btn-dark">Enviar</button>
+            </form>
+            <div id="spinner-block" class="spinner-border" role="status" style="margin-top: 8px;">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="application/javascript">
+        function showSpinner() {
+            document.getElementById('spinner-block').style.display = "block";
+        }
+        function hideSpinner() {
+            document.getElementById('spinner-block').style.display = "none";
+        }
+        function validate(event) {
+            let assigned = null;
+            let table = document.getElementById("table-duplicate-universities");
+            let selects = table.getElementsByTagName("select");
+            for(let i = 0; i < selects.length; i++) {
+                if(selects[i].value.length === 0) {
+                    return false;
+                }
+            }
+            let form = document.getElementById("form-rows-universities");
+            form.enctype = "multipart/form-data";
+            form.action = "/rankings/universities/duplicate/insert/";
+            form.method = "POST";
+            showSpinner();
+            form.submit();
+            return true;
+        }
+        hideSpinner();
+    </script>
+{% endblock %}

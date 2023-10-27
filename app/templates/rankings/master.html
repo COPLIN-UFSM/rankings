@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    {% load static %}
+    <link rel="icon" href="{% static 'images/favicon-claro-32x32.png' %}">
+    <title>{% block title %}{% endblock %}</title>
+    {% block additional-stylesheet %}{% endblock %}
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><img src="{% static 'images/favicon-escuro-32x32.png' %}"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a id="nav-link-index" class="nav-link" href="/rankings/">Página inicial</a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="nav-link-experience" class="nav-link" href="/rankings/ranking/insert">Inserir ranking</a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="nav-link-highlights" class="nav-link" href="/rankings/universities/duplicate/preview">Remover universidades duplicadas</a>
+                    </li>
+                    <!--<li class="nav-item">
+                        <a id="nav-link-contact" class="nav-link" href="contact.html">Contato</a>
+                    </li>-->
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<div class="container main-container">
+    <div class="row d-flex justify-content-center row-cols-1 row-cols-sm-1 row-cols-md-2">
+        <div class="col d-flex align-items-center">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+</body>
+{% block scripts %}{% endblock %}
+</html>

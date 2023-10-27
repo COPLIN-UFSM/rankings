@@ -1,0 +1,32 @@
+.standard-table {
+    font-family: var(--bs-body-font-family);
+    /*border-collapse: collapse;*/
+    /*width: 100%;*/
+}
+
+.standard-table td, #customers th {
+    /*border: 1px solid #ddd;*/
+    padding: 8px;
+}
+
+/* cor da linha par */
+.standard-table tr.even-color {
+  background-color: #dbdbdb;
+}
+
+/* cor da linha ímpar */
+.standard-table tr.odd-color {
+    background-color: #ffffff;
+}
+
+.standard-table tr:hover {
+    background-color: #ddd;
+}
+
+.standard-table th {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    text-align: center;
+    background-color: #525252;
+    color: white;
+}
