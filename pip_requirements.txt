@@ -4,3 +4,4 @@ django-bootstrap-v5
 django-crispy-forms
 crispy-bootstrap5
 ibm-db-django
+django-contrib-comments

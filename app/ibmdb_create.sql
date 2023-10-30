@@ -383,7 +383,8 @@ INSERT INTO R_PAISES(ID_PAIS, NOME_PAIS_PORTUGUES, NOME_PAIS_INGLES, ID_CONTINEN
     (194,'Vietnã','Vietnam',3),
     (195,'Zâmbia','Zambia',1),
     (196,'Zimbábue','Zimbabwe',1),
-    (197,'Palestina','Palestine',3);
+    (197,'Palestina','Palestine',3),
+    (198,'El Salvador','El Salvador', 2);
 
 INSERT INTO R_PAISES_APELIDOS(ID_TIPO_APELIDO, ID_APELIDO_PAIS, ID_PAIS, APELIDO) VALUES
     (1, 1,1,'Afeganistão'),
@@ -778,13 +779,14 @@ INSERT INTO R_PAISES_APELIDOS(ID_TIPO_APELIDO, ID_APELIDO_PAIS, ID_PAIS, APELIDO
     (1, 390,194,'Vietnam'),
     (1, 391,195,'Zambia'),
     (1, 392,196,'Zimbabwe'),
-    (1, 393, 197, 'Palestina'),
-    (1, 394, 197, 'Palestine');
+    (1, 393,197,'Palestina'),
+    (1, 394,197,'Palestine'),
+    (1, 395,198,'El Salvador');
 
 
-INSERT INTO R_PAISES_APELIDOS(ID_APELIDO_PAIS, ID_TIPO_APELIDO, ID_PAIS, APELIDO) VALUES (395, 2, 40, 'China-Hong Kong');
-INSERT INTO R_PAISES_APELIDOS(ID_APELIDO_PAIS, ID_TIPO_APELIDO, ID_PAIS, APELIDO) VALUES (396, 2, 40, 'China-Macau');
-INSERT INTO R_PAISES_APELIDOS(ID_APELIDO_PAIS, ID_TIPO_APELIDO, ID_PAIS, APELIDO) VALUES (397, 2, 40, 'China-Taiwan');
+INSERT INTO R_PAISES_APELIDOS(ID_APELIDO_PAIS, ID_TIPO_APELIDO, ID_PAIS, APELIDO) VALUES (396, 2, 40, 'China-Hong Kong');
+INSERT INTO R_PAISES_APELIDOS(ID_APELIDO_PAIS, ID_TIPO_APELIDO, ID_PAIS, APELIDO) VALUES (397, 2, 40, 'China-Macau');
+INSERT INTO R_PAISES_APELIDOS(ID_APELIDO_PAIS, ID_TIPO_APELIDO, ID_PAIS, APELIDO) VALUES (398, 2, 40, 'China-Taiwan');
 
 INSERT INTO R_GRUPOS_GEOPOLITICOS(ID_GRUPO_GEOPOLITICO, NOME_GRUPO_PORTUGUES, NOME_GRUPO_INGLES) VALUES (1, 'BRICS', 'BRICS');
 INSERT INTO R_GRUPOS_GEOPOLITICOS(ID_GRUPO_GEOPOLITICO, NOME_GRUPO_PORTUGUES, NOME_GRUPO_INGLES) VALUES (2, 'Mercosul', 'Mercosur');
@@ -940,10 +942,154 @@ INSERT INTO R_PILARES(
     (4, 70, 'Affordable and Clean Energy (Score)', 'Affordable and Clean Energy (Score)', NULL, NULL),
     (4, 71, 'Affordable and Clean Energy (Rank)', 'Affordable and Clean Energy (Rank)', NULL, NULL);
 
-
 INSERT INTO R_METRICAS(ID_METRICA, NOME_METRICA_INGLES, NOME_METRICA_PORTUGUES) VALUES
     (1, 'Number of Students', 'Número de estudantes'),
     (2, 'Students to Staff Ratio', 'Proporção de estudantes para funcionários'),
     (3, 'Percent of International Students', 'Porcentagem de estudantes internacionais'),
     (4, 'Female to male students ratio', 'Proporção de estudantes mulheres para estudantes homens');
 
+INSERT INTO R_RANKINGS(ID_RANKING, NOME_RANKING) VALUES (5, 'QS World Ranking');
+INSERT INTO R_PILARES(
+    ID_RANKING, ID_PILAR, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
+) VALUES
+    (5,  72, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
+    (5,  73, 'World Rank', 'World Rank', NULL, NULL),
+    (5,  74, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
+    (5,  75, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
+    (5,  76, 'Employer Reputation (Rank)', 'Employer Reputation (Rank)', NULL, NULL),
+    (5,  77, 'Employer Reputation (Score)', 'Employer Reputation (Score)', NULL, NULL),
+    (5,  78, 'Faculty Student (Rank)', 'Faculty Student (Rank)', NULL, NULL),
+    (5,  79, 'Faculty Student (Score)', 'Faculty Student (Score)', NULL, NULL),
+    (5,  80, 'International Faculty (Rank)', 'International Faculty (Rank)', NULL, NULL),
+    (5,  81, 'International Faculty (Score)', 'International Faculty (Score)', NULL, NULL),
+    (5,  82, 'International Students (Rank)', 'International Students (Rank)', NULL, NULL),
+    (5,  83, 'International Students (Score)', 'International Students (Score)', NULL, NULL),
+    (5,  84, 'Citations per Faculty (Rank)', 'Citations per Faculty (Rank)', NULL, NULL),
+    (5,  85, 'Citations per Faculty (Score)', 'Citations per Faculty (Score)', NULL, NULL),
+    (5,  86, 'Arts & Humanities (Rank)', 'Arts & Humanities (Rank)', NULL, NULL),
+    (5,  87, 'Arts & Humanities (Score)', 'Arts & Humanities (Score)', NULL, NULL),
+    (5,  88, 'Engineering & Technology (Rank)', 'Engineering & Technology (Rank)', NULL, NULL),
+    (5,  89, 'Engineering & Technology (Score)', 'Engineering & Technology (Score)', NULL, NULL),
+    (5,  90, 'Life Sciences & Medicine (Rank)', 'Life Sciences & Medicine (Rank)', NULL, NULL),
+    (5,  91, 'Life Sciences & Medicine (Score)', 'Life Sciences & Medicine (Score)', NULL, NULL),
+    (5,  92, 'Natural Sciences (Rank)', 'Natural Sciences (Rank)', NULL, NULL),
+    (5,  93, 'Natural Sciences (Score)', 'Natural Sciences (Score)', NULL, NULL),
+    (5,  94, 'Social Sciences & Management (Rank)', 'Social Sciences & Management (Rank)', NULL, NULL),
+    (5,  95, 'Social Sciences & Management (Score)', 'Social Sciences & Management (Score)', NULL, NULL),
+    (5,  96, 'International Students Ratio (Rank)', 'International Students Ratio (Rank)', NULL, NULL),
+    (5,  97, 'International Students Ratio (Score)', 'International Students Ratio (Score)', NULL, NULL),
+    (5,  98, 'International Faculty Ratio (Rank)', 'International Faculty Ratio (Rank)', NULL, NULL),
+    (5,  99, 'International Faculty Ratio (Score)', 'International Faculty Ratio (Score)', NULL, NULL),
+    (5, 100, 'Faculty Student Ratio (Rank)', 'Faculty Student Ratio (Rank)', NULL, NULL),
+    (5, 101, 'Faculty Student Ratio (Score)', 'Faculty Student Ratio (Score)', NULL, NULL),
+    (5, 102, 'Social Sciences and Management (Rank)', 'Social Sciences and Management (Rank)', NULL, NULL),
+    (5, 103, 'Social Sciences and Management (Score)', 'Social Sciences and Management (Score)', NULL, NULL),
+    (5, 104, 'Life Sciences and Medicine (Rank)', 'Life Sciences and Medicine (Rank)', NULL, NULL),
+    (5, 105, 'Life Sciences and Medicine (Score)', 'Life Sciences and Medicine (Score)', NULL, NULL),
+    (5, 106, 'Engineering and Technology (Rank)', 'Engineering and Technology (Rank)', NULL, NULL),
+    (5, 107, 'Engineering and Technology (Score)', 'Engineering and Technology (Score)', NULL, NULL),
+    (5, 108, 'Arts and Humanities (Rank)', 'Arts and Humanities (Rank)', NULL, NULL),
+    (5, 109, 'Arts and Humanities (Score)', 'Arts and Humanities (Score)', NULL, NULL),
+    (5, 110, 'International Research Network (Rank)', 'International Research Network (Rank)', NULL, NULL),
+    (5, 111, 'International Research Network (Score)', 'International Research Network (Score)', NULL, NULL),
+    (5, 112, 'Employment Outcomes (Rank)', 'Employment Outcomes (Rank)', NULL, NULL),
+    (5, 113, 'Employment Outcomes (Score)', 'Employment Outcomes (Score)', NULL, NULL),
+    (5, 114, 'Sustainability (Rank)', 'Sustainability (Rank)', NULL, NULL),
+    (5, 115, 'Sustainability (Score)', 'Sustainability (Score)', NULL, NULL);
+
+INSERT INTO R_RANKINGS(ID_RANKING, NOME_RANKING) VALUES (6, 'QS Latin America Ranking');
+INSERT INTO R_PILARES(
+    ID_RANKING, ID_PILAR, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
+) VALUES
+    (6, 116, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
+    (6, 117, 'World Rank', 'World Rank', NULL, NULL),
+    (6, 118, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
+    (6, 119, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
+    (6, 120, 'Employer Reputation (Rank)', 'Employer Reputation (Rank)', NULL, NULL),
+    (6, 121, 'Employer Reputation (Score)', 'Employer Reputation (Score)', NULL, NULL),
+    (6, 122, 'Faculty Student (Rank)', 'Faculty Student (Rank)', NULL, NULL),
+    (6, 123, 'Faculty Student (Score)', 'Faculty Student (Score)', NULL, NULL),
+    (6, 124, 'Faculty Staff with PhD (Rank)', 'Faculty Staff with PhD (Rank)', NULL, NULL),
+    (6, 125, 'Faculty Staff with PhD (Score)', 'Faculty Staff with PhD (Score)', NULL, NULL),
+    (6, 126, 'Web Impact (Rank)', 'Web Impact (Rank)', NULL, NULL),
+    (6, 127, 'Web Impact (Score)', 'Web Impact (Score)', NULL, NULL),
+    (6, 128, 'Papers per Faculty (Rank)', 'Papers per Faculty (Rank)', NULL, NULL),
+    (6, 129, 'Papers per Faculty (Score)', 'Papers per Faculty (Score)', NULL, NULL),
+    (6, 130, 'Citations per Paper (Rank)', 'Citations per Paper (Rank)', NULL, NULL),
+    (6, 131, 'Citations per Paper (Score)', 'Citations per Paper (Score)', NULL, NULL),
+    (6, 132, 'International Research Network (Rank)', 'International Research Network (Rank)', NULL, NULL),
+    (6, 133, 'International Research Network (Score)', 'International Research Network (Score)', NULL, NULL),
+    (6, 134, 'Faculty Student Ratio (Rank)', 'Faculty Student Ratio (Rank)', NULL, NULL),
+    (6, 135, 'Faculty Student Ratio (Score)', 'Faculty Student Ratio (Score)', NULL, NULL);
+
+INSERT INTO R_RANKINGS(ID_RANKING, NOME_RANKING) VALUES (7, 'QS World University Rankings by Subject - Arts & Humanities');
+INSERT INTO R_PILARES(
+    ID_RANKING, ID_PILAR, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
+) VALUES
+    (7, 136, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
+    (7, 137, 'World Rank', 'World Rank', NULL, NULL),
+    (7, 138, 'Stars', 'Stars', NULL, NULL),
+    (7, 139, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
+    (7, 140, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
+    (7, 141, 'Citations per Paper (Rank)', 'Citations per Paper (Rank)', NULL, NULL),
+    (7, 142, 'Citations per Paper (Score)', 'Citations per Paper (Score)', NULL, NULL),
+    (7, 143, 'Employer Reputation (Rank)', 'Employer Reputation (Rank)', NULL, NULL),
+    (7, 144, 'Employer Reputation (Score)', 'Employer Reputation (Score)', NULL, NULL),
+    (7, 145, 'H-index Citations (Rank)', 'H-index Citations (Rank)', NULL, NULL),
+    (7, 146, 'H-index Citations (Score)', 'H-index Citations (Score)', NULL, NULL),
+    (7, 147, 'International Research Network (Rank)', 'International Research Network (Rank)', NULL, NULL),
+    (7, 148, 'International Research Network (Score)', 'International Research Network (Score)', NULL, NULL);
+
+INSERT INTO R_RANKINGS(ID_RANKING, NOME_RANKING) VALUES (8, 'QS World University Rankings by Subject - Engineering and Technology');
+INSERT INTO R_PILARES(
+    ID_RANKING, ID_PILAR, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
+) VALUES
+    (8, 149, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
+    (8, 150, 'World Rank', 'World Rank', NULL, NULL),
+    (8, 151, 'Stars', 'Stars', NULL, NULL),
+    (8, 152, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
+    (8, 153, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
+    (8, 154, 'Citations per Paper (Rank)', 'Citations per Paper (Rank)', NULL, NULL),
+    (8, 155, 'Citations per Paper (Score)', 'Citations per Paper (Score)', NULL, NULL),
+    (8, 156, 'Employer Reputation (Rank)', 'Employer Reputation (Rank)', NULL, NULL),
+    (8, 157, 'Employer Reputation (Score)', 'Employer Reputation (Score)', NULL, NULL),
+    (8, 158, 'H-index Citations (Rank)', 'H-index Citations (Rank)', NULL, NULL),
+    (8, 159, 'H-index Citations (Score)', 'H-index Citations (Score)', NULL, NULL),
+    (8, 160, 'International Research Network (Rank)', 'International Research Network (Rank)', NULL, NULL),
+    (8, 161, 'International Research Network (Score)', 'International Research Network (Score)', NULL, NULL);
+
+INSERT INTO R_RANKINGS(ID_RANKING, NOME_RANKING) VALUES (9, 'QS World University Rankings by Subject - Life Sciences & Medicine');
+INSERT INTO R_PILARES(
+    ID_RANKING, ID_PILAR, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
+) VALUES
+    (9, 162, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
+    (9, 163, 'World Rank', 'World Rank', NULL, NULL),
+    (9, 164, 'Stars', 'Stars', NULL, NULL),
+    (9, 165, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
+    (9, 166, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
+    (9, 167, 'Citations per Paper (Rank)', 'Citations per Paper (Rank)', NULL, NULL),
+    (9, 168, 'Citations per Paper (Score)', 'Citations per Paper (Score)', NULL, NULL),
+    (9, 169, 'Employer Reputation (Rank)', 'Employer Reputation (Rank)', NULL, NULL),
+    (9, 170, 'Employer Reputation (Score)', 'Employer Reputation (Score)', NULL, NULL),
+    (9, 171, 'H-index Citations (Rank)', 'H-index Citations (Rank)', NULL, NULL),
+    (9, 172, 'H-index Citations (Score)', 'H-index Citations (Score)', NULL, NULL),
+    (9, 173, 'International Research Network (Rank)', 'International Research Network (Rank)', NULL, NULL),
+    (9, 174, 'International Research Network (Score)', 'International Research Network (Score)', NULL, NULL);
+
+INSERT INTO R_RANKINGS(ID_RANKING, NOME_RANKING) VALUES (10, 'QS World University Rankings by Subject - Natural Sciences');
+INSERT INTO R_PILARES(
+    ID_RANKING, ID_PILAR, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
+) VALUES
+    (10, 175, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
+    (10, 176, 'World Rank', 'World Rank', NULL, NULL),
+    (10, 177, 'Stars', 'Stars', NULL, NULL),
+    (10, 178, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
+    (10, 179, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
+    (10, 180, 'Citations per Paper (Rank)', 'Citations per Paper (Rank)', NULL, NULL),
+    (10, 181, 'Citations per Paper (Score)', 'Citations per Paper (Score)', NULL, NULL),
+    (10, 182, 'Employer Reputation (Rank)', 'Employer Reputation (Rank)', NULL, NULL),
+    (10, 183, 'Employer Reputation (Score)', 'Employer Reputation (Score)', NULL, NULL),
+    (10, 184, 'H-index Citations (Rank)', 'H-index Citations (Rank)', NULL, NULL),
+    (10, 185, 'H-index Citations (Score)', 'H-index Citations (Score)', NULL, NULL),
+    (10, 186, 'International Research Network (Rank)', 'International Research Network (Rank)', NULL, NULL),
+    (10, 187, 'International Research Network (Score)', 'International Research Network (Score)', NULL, NULL);

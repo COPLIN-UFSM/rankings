@@ -62,6 +62,10 @@ INSTALLED_APPS = [
     'bootstrap5',  # bootstrap nas páginas
     'crispy_forms',  # bootstrap nos formulários
     'crispy_bootstrap5',  # bootstrap nos formulários
+    'django.contrib.flatpages',  # requisito do python_ibmdb_django
+    'django.contrib.redirects',  # requisito do python_ibmdb_django
+    'django.contrib.sites',  # requisito do python_ibmdb_django, precisa ser instalado por fora
+    'django_comments',  # requisito do python_ibmdb_django, precisa ser instalado por fora
 ]
 
 MIDDLEWARE = [
@@ -99,20 +103,26 @@ WSGI_APPLICATION = 'app.wsgi.application'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'database_sqlite.db',
-    },
+    # para usar o banco de dados local, use esta opção
     # 'default': {
-    #     "NAME": 'bee',
-    #     "ENGINE": 'ibm_db_django',
-    #     "HOST": get_secret('host'),
-    #     "PORT": get_secret('port'),
-    #     "USER": get_secret('user'),
-    #     "PASSWORD": get_secret('password'),
-    #     "DATABASE": get_secret('database'),
-    #     'PCONNECT': True,  # TODO optional
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': BASE_DIR / 'database_sqlite.db',
     # },
+    # para usar o banco de dados remoto, use esta opção
+    'default': {
+        "NAME": 'BEE',
+        "ENGINE": 'ibm_db_django',
+        "DATABASE": get_secret('database'),
+        "HOST": get_secret('host'),
+        "PORT": get_secret('port'),
+        "USER": get_secret('user'),
+        "PASSWORD": get_secret('password'),
+        "OPTIONS": {
+            'dsn': f"DATABASE={get_secret('database')};HOSTNAME={get_secret('host')};"
+                   f"PORT={get_secret('port')};PROTOCOL=TCPIP;"
+        },
+        'PCONNECT': True,  # TODO optional
+    },
 }
 
 
@@ -144,10 +154,11 @@ TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False  # TODO precisa ser falso para usar ibm db2
+# USE_TZ = True  # TODO pode ser true para sqlite
 
 # para usar boostrap nos formulários
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
