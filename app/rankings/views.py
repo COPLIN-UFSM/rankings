@@ -4,18 +4,38 @@ import sys
 import pandas as pd
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
-from django.db.models import Max
 from django.shortcuts import render
+
+from django.db.models import Count
 
 from .forms import InsertRankingForm
 from .models import Pais, Universidade, TipoApelido, ApelidoDePais, ApelidoDeUniversidade
+
+from .models import MetricaValor, PilarValor, Pilar, Ranking
+
 from .scripts import get_dataframe, save_ranking_file, load_ranking_file, insert_id_university, \
     check_ranking_file_consistency, insert_id_country, __get_all_universities__, insert_ranking_data, \
     get_canonical_name, __remove_forms__
 
 
 def index(request):
-    context = {'display_greetings': True}
+    n_universidades = Universidade.objects.count()
+    count_values_by_pillar = PilarValor.objects.all().values('pilar_id').annotate(total=Count('pilar_id'))
+    ranking_ids = set()
+    for x in count_values_by_pillar:
+        id_pilar = x['pilar_id']
+        ranking_ids = ranking_ids.union({Pilar.objects.filter(id_pilar=id_pilar).first().ranking_id})
+
+    n_pillars = len(count_values_by_pillar)
+
+    context = {
+        'display_greetings': True,
+        'information_list': [
+            {'name': 'universidades', 'value': n_universidades},
+            {'name': 'pilares', 'value': n_pillars},
+            {'name': 'rankings', 'value': len(ranking_ids)}
+        ]
+    }
     return render(request, 'rankings/index.html', context)
 
 
@@ -191,7 +211,7 @@ def ranking_insert(request):
             try:
                 df = check_ranking_file_consistency(df, id_ranking)
                 df, id_formulario = save_ranking_file(df, id_ranking)
-                return __missing_countries_preview__(request, df, id_formulario, id_ranking)
+                return __missing_countries_preview__(request, df, id_formulario=id_formulario, id_ranking=id_ranking)
             except ValidationError as e:
                 messages.error(request, e.message)
                 return render(

@@ -8,7 +8,7 @@ drop table django_admin_log;
 drop table auth_user;
 drop table django_content_type;
 drop table django_migrations;
--- drop table django_session;
+drop table django_session;
 
 -- tabelas do banco de dados de rankings
 drop table R_FORMULARIOS;

@@ -62,10 +62,10 @@ INSTALLED_APPS = [
     'bootstrap5',  # bootstrap nas páginas
     'crispy_forms',  # bootstrap nos formulários
     'crispy_bootstrap5',  # bootstrap nos formulários
-    'django.contrib.flatpages',  # requisito do python_ibmdb_django
-    'django.contrib.redirects',  # requisito do python_ibmdb_django
-    'django.contrib.sites',  # requisito do python_ibmdb_django, precisa ser instalado por fora
-    'django_comments',  # requisito do python_ibmdb_django, precisa ser instalado por fora
+    # 'django.contrib.flatpages',  # requisito do python_ibmdb_django
+    # 'django.contrib.redirects',  # requisito do python_ibmdb_django
+    # 'django.contrib.sites',  # requisito do python_ibmdb_django, precisa ser instalado por fora
+    # 'django_comments',  # requisito do python_ibmdb_django, precisa ser instalado por fora
 ]
 
 MIDDLEWARE = [

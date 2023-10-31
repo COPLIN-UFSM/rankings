@@ -9,6 +9,14 @@
         <div class="col">
             <h1>Rankings</h1>
             <p class="lead">Bem-vindo a página inicial dos rankings!</p>
+
+            <p class="lead">Atualmente a UFSM monitora...</p>
+
+            <ul class="lead">
+                {% for information in information_list %}
+                    <li>{{ information.value }} {{ information.name }}</li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
 {% endblock %}

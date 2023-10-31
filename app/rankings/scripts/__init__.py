@@ -84,8 +84,6 @@ def get_pillars(df, id_ranking) -> list:
         english_names = '\n'.join(en["nome_ingles"].values.tolist())
         portuguese_names = '\n'.join(pt["nome_portugues"].values.tolist())
 
-        print(english_names)
-
         raise ValidationError(
             f'A planilha não possui todos os pilares do ranking informado! Se novos pilares foram adicionados ao '
             f'Ranking, você terá que adicioná-los manualmente na tela de administrador. Os nomes dos pilares devem ser'
@@ -115,15 +113,15 @@ def check_ranking_file_consistency(df: pd.DataFrame, id_ranking: int) -> pd.Data
     if 'Ano' not in df.columns:
         raise ValidationError(f'A planilha deve conter uma coluna de nome \'Ano\'!')
 
-    def __convert_column_values_to_list__(_x):
+    def __convert_column_values_to_list__(_x) -> list:
         if pd.isna(_x):
-            return [np.nan, np.nan]
+            return [None, None]
         if isinstance(_x, float) or isinstance(_x, int):
-            return [float(_x), np.nan]
+            return [float(_x), None]
         for rep in string.punctuation + '—–':
             _x = _x.replace(rep, ' ')
         _x = _x.split()
-        return ([float(y) for y in _x] + [np.nan, np.nan])[:2]
+        return ([float(y) for y in _x] + [None, None])[:2]
 
     # verifica se o ranking existe no banco de dados
     ranking_obj = Ranking.objects.filter(id_ranking=id_ranking).first()
@@ -264,7 +262,7 @@ def insert_ranking_data(df, id_ranking, id_formulario):
                     pilar_id=int(id_pilar),
                     ano=int(row['Ano']),
                     valor_inicial=p_values[0],
-                    valor_final=p_values[1]
+                    valor_final=p_values[1],
                 )
                 to_add_pillars += [pilar_valor]
 
@@ -285,11 +283,16 @@ def insert_ranking_data(df, id_ranking, id_formulario):
                     valor_final=m_values[1]
                 )
                 to_add_metrics += [metrica_valor]
+                break
 
             pbar.update(1)
 
-    PilarValor.objects.bulk_create(to_add_pillars, ignore_conflicts=True)
-    MetricaValor.objects.bulk_create(to_add_metrics, ignore_conflicts=True)
+    PilarValor.objects.bulk_create(to_add_pillars, batch_size=999)
+    MetricaValor.objects.bulk_create(to_add_metrics, batch_size=999)
+
+    # TODO funciona para sqlite!!
+    # PilarValor.objects.bulk_create(to_add_pillars, ignore_conflicts=True)
+    # MetricaValor.objects.bulk_create(to_add_metrics, ignore_conflicts=True)
 
     __remove_forms__(id_formulario=id_formulario)
 
@@ -371,8 +374,9 @@ def load_ranking_file(id_formulario: int) -> pd.DataFrame:
 
 
 def save_ranking_file(df: pd.DataFrame, id_ranking: int, id_formulario: int = None) -> tuple:
+    # se existe um id_formulario definido, quer dizer que este formulário está sendo atualizado
     if id_formulario is not None:
-        f = Formulario.objects.filter(id_formulario=id_formulario).first()
+        f = Formulario.objects.get(id_formulario=id_formulario)
         if f is None:
             raise ValidationError(
                 'Um id_formulario foi fornecido, mas não existe um formulário correspondente salvo no banco de dados!'
@@ -383,7 +387,7 @@ def save_ranking_file(df: pd.DataFrame, id_ranking: int, id_formulario: int = No
             )
         else:
             upload_path = f.formulario.name
-    else:
+    else:  # caso contrário, será a primeira vez que será salvo
         if len(Formulario.objects.all()) > 0:
             id_formulario = Formulario.objects.latest('id_formulario').id_formulario + 1
         else:
@@ -393,6 +397,9 @@ def save_ranking_file(df: pd.DataFrame, id_ranking: int, id_formulario: int = No
             settings.BASE_DIR, Formulario.formulario.field.upload_to, f'formulario_{id_formulario}.csv'
         )
 
+        formulario = Formulario(id_formulario=id_formulario, ranking_id=id_ranking, formulario=upload_path)
+        formulario.save()
+
     columns = ['Ano', 'id_pais', 'id_apelido_pais', 'id_universidade', 'id_apelido_universidade']
     for column in columns:
         if column in df.columns:
@@ -400,6 +407,5 @@ def save_ranking_file(df: pd.DataFrame, id_ranking: int, id_formulario: int = No
 
     df.to_csv(upload_path, index=True, sep=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC, encoding='utf-8')
 
-    formulario = Formulario(id_formulario=id_formulario, ranking_id=id_ranking, formulario=upload_path)
-    formulario.save()
-    return df, formulario.id_formulario
+    return df, id_formulario
+
