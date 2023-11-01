@@ -20,20 +20,30 @@ from .scripts import get_dataframe, save_ranking_file, load_ranking_file, insert
 
 def index(request):
     n_universidades = Universidade.objects.count()
+    unis_by_pais_apelido = Universidade.objects.all().values('pais_apelido').annotate(total=Count('pais_apelido'))
     count_values_by_pillar = PilarValor.objects.all().values('pilar_id').annotate(total=Count('pilar_id'))
+    count_values_by_metric = MetricaValor.objects.all().values('metrica_id').annotate(total=Count('metrica_id'))
     ranking_ids = set()
+
+    set_countries = set()
+    for x in unis_by_pais_apelido:
+        set_countries = set_countries.union({ApelidoDePais.objects.filter(id_apelido=x['pais_apelido']).first().pais})
+
     for x in count_values_by_pillar:
         id_pilar = x['pilar_id']
         ranking_ids = ranking_ids.union({Pilar.objects.filter(id_pilar=id_pilar).first().ranking_id})
 
     n_pillars = len(count_values_by_pillar)
+    n_metrics = len(count_values_by_metric)
 
     context = {
         'display_greetings': True,
         'information_list': [
-            {'name': 'universidades', 'value': n_universidades},
-            {'name': 'pilares', 'value': n_pillars},
-            {'name': 'rankings', 'value': len(ranking_ids)}
+            {'name': 'universidade' + ('s' if n_universidades > 1 else ''), 'value': n_universidades},
+            {'name': 'país' + ('es' if n_universidades > 1 else ''), 'value': len(set_countries)},
+            {'name': 'ranking' + ('s' if len(ranking_ids) > 1 else ''), 'value': len(ranking_ids)},
+            {'name': 'pilare' + ('s' if n_pillars > 1 else ''), 'value': n_pillars},
+            {'name': 'métrica' + ('s' if n_metrics > 1 else ''), 'value': n_metrics}
         ]
     }
     return render(request, 'rankings/index.html', context)

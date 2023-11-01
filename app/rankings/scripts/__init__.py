@@ -4,6 +4,7 @@ import string
 import unicodedata
 from io import StringIO
 
+import django
 import numpy as np
 import pandas as pd
 from django.conf import settings
@@ -227,13 +228,75 @@ def __remove_forms__(id_formulario=None) -> None:
             os.remove(os.path.join(settings.BASE_DIR, 'uploads', _file))
 
 
-def insert_ranking_data(df, id_ranking, id_formulario):
+def __append_row__(i, row, pillars, metrics, to_add_pillars, to_add_metrics):
+    for pillar in pillars:
+        nome_pilar = pillar['Pilar']
+        id_pilar = pillar['id_pilar']
+
+        try:
+            p_values = eval(row[nome_pilar])  # converte para uma lista
+        except TypeError:
+            p_values = row[nome_pilar]  # já é uma lista
+
+        pilar_valor = PilarValor(
+            apelido_universidade_id=int(row['id_apelido_universidade']),
+            pilar_id=int(id_pilar),
+            ano=int(row['Ano']),
+            valor_inicial=p_values[0],
+            valor_final=p_values[1],
+        )
+        to_add_pillars += [pilar_valor]
+
+    for metric in metrics:
+        nome_metrica = metric['Métrica']
+        id_metrica = metric['id_metrica']
+
+        try:
+            m_values = eval(row[nome_metrica])  # converte para uma lista
+        except TypeError:
+            m_values = row[nome_metrica]  # já é uma lista
+
+        metrica_valor = MetricaValor(
+            apelido_universidade_id=int(row['id_apelido_universidade']),
+            metrica_id=int(id_metrica),
+            ano=int(row['Ano']),
+            valor_inicial=m_values[0],
+            valor_final=m_values[1]
+        )
+        to_add_metrics += [metrica_valor]
+
+    return to_add_pillars, to_add_metrics
+
+
+def __insert_bulk_data__(to_add_pillars, to_add_metrics):
+    def __insert_rows__(rows, model):
+        try:
+            model.objects.bulk_create(rows)  # tenta inserir em conjunto
+        except django.db.utils.IntegrityError:  # alguma tupla está duplicada; insere uma a uma
+            for row in rows:
+                try:
+                    row.save()
+                except django.db.utils.IntegrityError:  # se continuar dando erro, ignora e segue em frente
+                    pass
+
+    __insert_rows__(to_add_pillars, PilarValor)
+    __insert_rows__(to_add_metrics, MetricaValor)
+
+    to_add_pillars = []
+    to_add_metrics = []
+
+    return to_add_pillars, to_add_metrics
+
+
+def insert_ranking_data(df, id_ranking, id_formulario, batch_size=999):
     """
     Insere os dados do formulário nas tabelas pertinentes.
 
     :param df: um formulário, com id_universidade e id_pais definido para todas as linhas.
     :param id_ranking: o ID do ranking que será inserido.
     :param id_formulario: ID do formulário atrelado a esta inserção.
+    :param batch_size: opcional - o número de tuplas a serem inseridas com um comando INSERT no banco de dados. O padrão
+        é 999.
     """
     # verifica colunas básicas
     if 'id_apelido_universidade' not in df.columns:
@@ -248,51 +311,13 @@ def insert_ranking_data(df, id_ranking, id_formulario):
         to_add_pillars = []
         to_add_metrics = []
         for i, row in df.iterrows():
-            for pillar in pillars:
-                nome_pilar = pillar['Pilar']
-                id_pilar = pillar['id_pilar']
-
-                try:
-                    p_values = eval(row[nome_pilar])  # converte para uma lista
-                except TypeError:
-                    p_values = row[nome_pilar]  # já é uma lista
-
-                pilar_valor = PilarValor(
-                    apelido_universidade_id=int(row['id_apelido_universidade']),
-                    pilar_id=int(id_pilar),
-                    ano=int(row['Ano']),
-                    valor_inicial=p_values[0],
-                    valor_final=p_values[1],
-                )
-                to_add_pillars += [pilar_valor]
-
-            for metric in metrics:
-                nome_metrica = metric['Métrica']
-                id_metrica = metric['id_metrica']
-
-                try:
-                    m_values = eval(row[nome_metrica])  # converte para uma lista
-                except TypeError:
-                    m_values = row[nome_metrica]  # já é uma lista
-
-                metrica_valor = MetricaValor(
-                    apelido_universidade_id=int(row['id_apelido_universidade']),
-                    metrica_id=int(id_metrica),
-                    ano=int(row['Ano']),
-                    valor_inicial=m_values[0],
-                    valor_final=m_values[1]
-                )
-                to_add_metrics += [metrica_valor]
-                break
+            to_add_pillars, to_add_pillars, __append_row__(i, row, pillars, metrics, to_add_pillars, to_add_metrics)
+            if len(to_add_pillars) >= batch_size or len(to_add_metrics) >= batch_size:
+                to_add_pillars, to_add_metrics = __insert_bulk_data__(to_add_pillars, to_add_metrics)
 
             pbar.update(1)
 
-    PilarValor.objects.bulk_create(to_add_pillars, batch_size=999)
-    MetricaValor.objects.bulk_create(to_add_metrics, batch_size=999)
-
-    # TODO funciona para sqlite!!
-    # PilarValor.objects.bulk_create(to_add_pillars, ignore_conflicts=True)
-    # MetricaValor.objects.bulk_create(to_add_metrics, ignore_conflicts=True)
+    to_add_pillars, to_add_metrics = __insert_bulk_data__(to_add_pillars, to_add_metrics)
 
     __remove_forms__(id_formulario=id_formulario)
 

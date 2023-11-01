@@ -12,8 +12,8 @@
 
             <p class="lead">
                 Para inserir valores de pilares e métricas coletadas a partir de um ranking, preencha o formulário
-                abaixo. Caso O ranking desejado não estela relacionado no seletor, será necessário adicioná-lo
-                manualmente na tela do administrador.</p>
+                abaixo. Caso não encontre o ranking desejado, será necessário adicioná-lo manualmente na tela de
+                <a href="/admin">administrador.</a></p>
 
             <form id="form-submit-spreadsheet" action="/rankings/ranking/insert/" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
