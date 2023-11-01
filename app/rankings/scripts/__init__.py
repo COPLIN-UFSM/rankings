@@ -273,11 +273,12 @@ def __insert_bulk_data__(to_add_pillars, to_add_metrics):
         try:
             model.objects.bulk_create(rows)  # tenta inserir em conjunto
         except django.db.utils.IntegrityError:  # alguma tupla está duplicada; insere uma a uma
-            for row in rows:
-                try:
-                    row.save()
-                except django.db.utils.IntegrityError:  # se continuar dando erro, ignora e segue em frente
-                    pass
+            pass  # ignora
+            # for row in rows:
+            #     try:
+            #         row.save()
+            #     except django.db.utils.IntegrityError:  # se continuar dando erro, ignora e segue em frente
+            #         pass
 
     __insert_rows__(to_add_pillars, PilarValor)
     __insert_rows__(to_add_metrics, MetricaValor)

@@ -853,14 +853,14 @@ INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Shanghai');
 INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_PORTUGUES, NOME_PILAR_INGLES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
-(1, 'Alumni', 'Alumni',  NULL, NULL),
-(1, 'N&S', 'N&S', NULL, NULL),
-(1, 'PUB', 'PUB', NULL, NULL),
-(1, 'PCP', 'PCP', NULL, NULL),
-(1, 'Award', 'Award', NULL, NULL),
-(1, 'HiCi', 'HiCi', NULL, NULL),
-(1, 'Geral', 'Total Score', NULL, NULL),
-(1, 'Posição no Ranking Mundial', 'World Rank', NULL, NULL);
+    (1, 'Alumni', 'Alumni',  NULL, NULL),
+    (1, 'N&S', 'N&S', NULL, NULL),
+    (1, 'PUB', 'PUB', NULL, NULL),
+    (1, 'PCP', 'PCP', NULL, NULL),
+    (1, 'Award', 'Award', NULL, NULL),
+    (1, 'HiCi', 'HiCi', NULL, NULL),
+    (1, 'Geral', 'Total Score', NULL, NULL),
+    (1, 'Posição no Ranking Mundial', 'World Rank', NULL, NULL);
 
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - World Ranking');
 INSERT INTO R_PILARES(
@@ -878,8 +878,7 @@ INSERT INTO R_PILARES(
     (2, 'Research (Score)', 'Pesquisa (Score)', NULL, NULL),
     (2, 'Research (Rank)', 'Pesquisa (Rank)', NULL, NULL),
     (2, 'Citations (Score)', 'Citações (Score)', NULL, NULL),
-    (2, 'Citations (Rank)', 'Citações (Rank)', NULL, NULL)
- ;
+    (2, 'Citations (Rank)', 'Citações (Rank)', NULL, NULL);
 
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - Latin Ranking');
 INSERT INTO R_PILARES(

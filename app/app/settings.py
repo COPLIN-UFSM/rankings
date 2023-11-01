@@ -172,3 +172,6 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# precisou ser setado pra cima para remover as universidades duplicadsa
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 100000

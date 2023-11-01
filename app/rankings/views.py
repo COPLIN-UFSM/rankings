@@ -39,11 +39,11 @@ def index(request):
     context = {
         'display_greetings': True,
         'information_list': [
-            {'name': 'universidade' + ('s' if n_universidades > 1 else ''), 'value': n_universidades},
-            {'name': 'país' + ('es' if n_universidades > 1 else ''), 'value': len(set_countries)},
-            {'name': 'ranking' + ('s' if len(ranking_ids) > 1 else ''), 'value': len(ranking_ids)},
-            {'name': 'pilare' + ('s' if n_pillars > 1 else ''), 'value': n_pillars},
-            {'name': 'métrica' + ('s' if n_metrics > 1 else ''), 'value': n_metrics}
+            {'name': 'universidade' + ('s' if n_universidades != 1 else ''), 'value': n_universidades},
+            {'name': 'país' + ('es' if len(set_countries) != 1 else ''), 'value': len(set_countries)},
+            {'name': 'ranking' + ('s' if len(ranking_ids) != 1 else ''), 'value': len(ranking_ids)},
+            {'name': 'pilar' + ('es' if n_pillars != 1 else ''), 'value': n_pillars},
+            {'name': 'métrica' + ('s' if n_metrics != 1 else ''), 'value': n_metrics}
         ]
     }
     return render(request, 'rankings/index.html', context)
