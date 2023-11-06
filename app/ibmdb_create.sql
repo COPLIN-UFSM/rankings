@@ -878,7 +878,11 @@ INSERT INTO R_PILARES(
     (2, 'Research (Score)', 'Pesquisa (Score)', NULL, NULL),
     (2, 'Research (Rank)', 'Pesquisa (Rank)', NULL, NULL),
     (2, 'Citations (Score)', 'Citações (Score)', NULL, NULL),
-    (2, 'Citations (Rank)', 'Citações (Rank)', NULL, NULL);
+    (2, 'Citations (Rank)', 'Citações (Rank)', NULL, NULL),
+    (2, 'Number of Students', 'Número de estudantes', NULL, NULL),
+    (2, 'Students to Staff Ratio', 'Proporção de estudantes para funcionários', NULL, NULL),
+    (2, 'Percent of International Students', 'Porcentagem de estudantes internacionais', NULL, NULL),
+    (2, 'Female to male students ratio', 'Proporção de estudantes mulheres para estudantes homens', NULL, NULL);
 
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - Latin Ranking');
 INSERT INTO R_PILARES(
@@ -896,8 +900,7 @@ INSERT INTO R_PILARES(
     (3, 'Research (Score)', 'Pesquisa (Score)', NULL, NULL),
     (3, 'Research (Rank)', 'Pesquisa (Rank)', NULL, NULL),
     (3, 'Citations (Score)', 'Citações (Score)', NULL, NULL),
-    (3, 'Citations (Rank)', 'Citações (Rank)', NULL, NULL)
- ;
+    (3, 'Citations (Rank)', 'Citações (Rank)', NULL, NULL);
 
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - Impact Ranking');
 INSERT INTO R_PILARES(
@@ -939,13 +942,12 @@ INSERT INTO R_PILARES(
     (4, 'Reduced Inequalities (Score)', 'Reduced Inequalities (Score)', NULL, NULL),
     (4, 'Reduced Inequalities (Rank)', 'Reduced Inequalities (Rank)', NULL, NULL),
     (4, 'Affordable and Clean Energy (Score)', 'Affordable and Clean Energy (Score)', NULL, NULL),
-    (4, 'Affordable and Clean Energy (Rank)', 'Affordable and Clean Energy (Rank)', NULL, NULL);
+    (4, 'Affordable and Clean Energy (Rank)', 'Affordable and Clean Energy (Rank)', NULL, NULL),
+    (4, 'Number of Students', 'Número de estudantes', NULL, NULL),
+    (4, 'Students to Staff Ratio', 'Proporção de estudantes para funcionários', NULL, NULL),
+    (4, 'Percent of International Students', 'Porcentagem de estudantes internacionais', NULL, NULL),
+    (4, 'Female to male students ratio', 'Proporção de estudantes mulheres para estudantes homens', NULL, NULL);
 
-INSERT INTO R_METRICAS(NOME_METRICA_INGLES, NOME_METRICA_PORTUGUES) VALUES
-    ('Number of Students', 'Número de estudantes'),
-    ('Students to Staff Ratio', 'Proporção de estudantes para funcionários'),
-    ('Percent of International Students', 'Porcentagem de estudantes internacionais'),
-    ('Female to male students ratio', 'Proporção de estudantes mulheres para estudantes homens');
 
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS World Ranking');
 INSERT INTO R_PILARES(

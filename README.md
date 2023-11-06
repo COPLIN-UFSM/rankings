@@ -31,15 +31,50 @@ pip install --requirement pip_requirements.txt
 
 ### Primeira execução
 
+**IMPORTANTE:** caso você não tenha acesso ao banco de dados bee da UFSM, mude no arquivo `settings.py` para usar o
+banco de dados local:
+
+```python
+DATABASES = {
+    # para usar o banco de dados local, use esta opção
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'database_sqlite.db',
+    },
+    # para usar o banco de dados remoto, use esta opção
+    # 'default': {
+    #     "NAME": 'BEE',
+    #     "ENGINE": 'ibm_db_django',
+    #     "DATABASE": get_secret('database'),
+    #     "HOST": get_secret('host'),
+    #     "PORT": get_secret('port'),
+    #     "USER": get_secret('user'),
+    #     "PASSWORD": get_secret('password'),
+    #     "OPTIONS": {
+    #         'dsn': f"DATABASE={get_secret('database')};HOSTNAME={get_secret('host')};"
+    #                f"PORT={get_secret('port')};PROTOCOL=TCPIP;"
+    #     },
+    #     'PCONNECT': True,  
+    # },
+}
+```
+
+Só é necessário executar este passo-a-passo na **primeira** vez que o banco de dados for criado. Depois disso, 
+é desnecessário.
+
 1. Entre na pasta `app`
-2. Execute os seguintes comandos:
+2. Rode o script `ibmdb_drop.sql` para deletar **todas** as tabelas do banco de dados de rankings;
+3. Rode o script `ibmdb_create.sql` para recriar as tabelas do zero;
+4. Execute os seguintes comandos:
 
    ```bash
    conda activate rankings
    python manage.py makemigrations rankings
-   python manage.py migrate 
-   python manage.py runserver
+   python manage.py migrate
    ```
+
+**NOTA:** pode ser que ao executar o comando `python manage.py migrate` com o banco de dados IBM DB2, um erro ocorra
+na migração. Simplesmente ignore este erro.
 
 ### Execuções subsequentes
 

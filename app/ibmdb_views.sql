@@ -1,0 +1,3 @@
+select *
+from R_UNIVERSIDADES_APELIDOS rua
+inner join R_UNIVERSIDADES ru on rua.ID_UNIVERSIDADE = ru.ID_UNIVERSIDADE;

@@ -83,12 +83,10 @@ def duplicate_universities_insert(request):
 
         values = subset['assigned'].unique()
 
-        for val in values:
+        for val in values:  # para cada conjunto de universidades que são as mesmas
             uni_ids = subset.loc[subset['assigned'] == val, ['id_apelido_universidade', 'id_universidade']]
             parent_id = uni_ids.iloc[0]  # o primeiro registro vira o pai
             children_id = uni_ids.iloc[1:]  # os outros receberão o id_universidade do pai
-
-            # subset.loc[children_id.index, 'id_universidade'] = parent_id['id_universidade']
 
             parent = ApelidoDeUniversidade.objects.get(
                 id_apelido=parent_id['id_apelido_universidade']
@@ -101,6 +99,8 @@ def duplicate_universities_insert(request):
             for child in children:
                 child.universidade = parent_uni
                 child.save(update_fields=['universidade'])
+
+            # TODO remover universidades que não forem utilizadas mais!!!
 
         return success_remove_duplicate_universities(request)
 

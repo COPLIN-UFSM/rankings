@@ -121,7 +121,7 @@ DATABASES = {
             'dsn': f"DATABASE={get_secret('database')};HOSTNAME={get_secret('host')};"
                    f"PORT={get_secret('port')};PROTOCOL=TCPIP;"
         },
-        'PCONNECT': True,  # TODO optional
+        'PCONNECT': True,
     },
 }
 
