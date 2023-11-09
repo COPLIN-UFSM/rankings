@@ -5,3 +5,4 @@ django-crispy-forms
 crispy-bootstrap5
 ibm-db-django
 django-contrib-comments
+sqlparse
