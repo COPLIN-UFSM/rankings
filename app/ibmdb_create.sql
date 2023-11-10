@@ -1116,3 +1116,22 @@ INSERT INTO R_PILARES(
     (10, 'H-index Citations (Score)', 'H-index Citations (Score)', NULL, NULL),
     (10, 'International Research Network (Rank)', 'International Research Network (Rank)', NULL, NULL),
     (10, 'International Research Network (Score)', 'International Research Network (Score)', NULL, NULL);
+
+INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Green Metric');
+INSERT INTO R_PILARES(
+    ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
+) VALUES
+    (11, 'World Rank', 'World Rank', NULL, NULL),
+    (11, 'Universidade', 'Universidade', NULL, NULL),
+    (11, 'País', 'País', NULL, NULL),
+    (11, 'Score (Overall)', 'Score (Overall)', NULL, NULL),
+    (11, 'Ano', 'Ano', NULL, NULL),
+    (11, 'Setting & Infrastructure', 'Setting & Infrastructure', NULL, NULL),
+    (11, 'Energy & Climate Change', 'Energy & Climate Change', NULL, NULL),
+    (11, 'Waste', 'Waste', NULL, NULL),
+    (11, 'Water', 'Water', NULL, NULL),
+    (11, 'Transportation', 'Transportation', NULL, NULL),
+    (11, 'Education & Research', 'Education & Research', NULL, NULL),
+    (11, 'Setting and Infrastructure', 'Setting and Infrastructure', NULL, NULL),
+    (11, 'Energy and Climate Change', 'Energy and Climate Change', NULL, NULL),
+    (11, 'Education', 'Education', NULL, NULL);
