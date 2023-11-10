@@ -1122,10 +1122,7 @@ INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
     (11, 'World Rank', 'World Rank', NULL, NULL),
-    (11, 'Universidade', 'Universidade', NULL, NULL),
-    (11, 'País', 'País', NULL, NULL),
     (11, 'Score (Overall)', 'Score (Overall)', NULL, NULL),
-    (11, 'Ano', 'Ano', NULL, NULL),
     (11, 'Setting & Infrastructure', 'Setting & Infrastructure', NULL, NULL),
     (11, 'Energy & Climate Change', 'Energy & Climate Change', NULL, NULL),
     (11, 'Waste', 'Waste', NULL, NULL),
