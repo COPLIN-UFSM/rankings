@@ -1,6 +1,7 @@
 # Rankings
 
-Uma aplicação Web para gerenciamento de Rankings Acadêmicos.
+Uma aplicação Web para gerenciamento de Rankings Acadêmicos, criada pela Coordenadoria de Planejamento Informacional 
+da UFSM - COPLIN/PROPLAN.
 
 ## Pré-requisitos
 
@@ -85,6 +86,10 @@ na migração. Simplesmente ignore este erro.
    conda activate rankings
    python manage.py runserver
    ```
+
+## Diagrama do banco de dados
+
+É possível consultar o diagrama do banco de dados no arquivo [SCHEMA](app/database_scripts/SCHEMA.md).
 
 ## Contato
 

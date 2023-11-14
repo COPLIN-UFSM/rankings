@@ -11,8 +11,7 @@ def dict_factory(cursor, row):
     return d
 
 
-def main():
-    read_path = '.'
+def from_ibmdb_to_sqlite(read_path, db_name):
     with open(os.path.join(read_path, 'ibmdb_create.sql'), 'r') as read_file, \
             open(os.path.join(read_path, 'sqlite_create.sql'), 'w') as write_file:
         sql = read_file.read()
@@ -40,15 +39,12 @@ def main():
         #         match = match.replace(match, head + match + ';\n')
         #         write_file.write(match)
 
-    db_name = 'database_sqlite_v2.db'
     if os.path.exists(os.path.join(read_path, db_name)):
         os.remove(os.path.join(read_path, db_name))
 
-    with sqlite3.Connection(db_name) as conn, \
-            open(os.path.join(read_path, 'sqlite_create.sql'), 'r') as read_file, \
-            open(os.path.join(read_path, 'schema.md'), 'w') as write_file:
-        conn.row_factory = dict_factory
 
+def create_sqlite_database(read_path, db_name):
+    with sqlite3.Connection(db_name) as conn, open(os.path.join(read_path, 'sqlite_create.sql'), 'r') as read_file:
         statements = read_file.read().split('\n\n')
 
         cursor = conn.cursor()
@@ -56,29 +52,49 @@ def main():
         for stat in statements:
             cursor.execute(stat)
 
+
+def create_mermaid_graph(read_path, db_name):
+    with sqlite3.Connection(db_name) as conn, open(os.path.join(read_path, 'SCHEMA.md'), 'w') as write_file:
+        conn.row_factory = dict_factory
+        cursor = conn.cursor()
+
         tables = cursor.execute('''
-            select distinct(tbl_name) from sqlite_master where tbl_name not like '%sqlite%';
+            select distinct(tbl_name) 
+            from sqlite_master 
+            where tbl_name not like '%sqlite%';
         ''').fetchall()
 
-        code = dict()
+        code = {'relationships': [], 'tables': []}
         for table in tables:
             table_name = table["tbl_name"]
+
+            query_columns = cursor.execute(f'''PRAGMA table_info({table["tbl_name"]});''').fetchall()
+            code['tables'] += [
+                f'class {table_name} {{\n' + '\n'.join([f'{" " * 8}{x["type"]} {x["name"]}' for x in query_columns])
+            + '\n    }']
+
             matches = cursor.execute(f'''
-            SELECT * FROM pragma_foreign_key_list('{table_name}');
+                SELECT * 
+                FROM pragma_foreign_key_list('{table_name}');
             ''').fetchall()
 
-            code[table_name] = list()
-
             for match in matches:
-                code[table_name] += [f'{table_name} -- {match["to"]} --> {match["table"]}']
+                code['relationships'] += [f'{table_name} --> {match["table"]} : {match["to"]}']
 
-        write_file.write('```mermaid\nflowchart TD\n')
-        write_file.write('\n'.join(['    ' + k for k in code.keys()]))
+        write_file.write('```mermaid\nclassDiagram\n')
+        write_file.write('\n'.join(['    ' + k for k in code['tables']]))
         write_file.write('\n\n')
-        for v in code.values():
-            for p in v:
-                write_file.write(f'    {p}\n')
+        for v in code['relationships']:
+            write_file.write(f'    {v}\n')
         write_file.write('```')
+
+
+def main():
+    read_path = '..'
+    db_name = 'sqlite_model.db'
+    from_ibmdb_to_sqlite(read_path, db_name)
+    create_sqlite_database(read_path, db_name)
+    create_mermaid_graph(read_path, db_name)
 
 
 if __name__ == '__main__':
