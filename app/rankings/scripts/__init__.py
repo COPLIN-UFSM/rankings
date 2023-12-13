@@ -12,8 +12,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from tqdm import tqdm
-from numpy import nan
 
+from .universities import __get_all_universities__
 from ..models import Ranking, Pilar, ApelidoDeUniversidade, ApelidoDePais, Formulario, Universidade, PilarValor, \
     Metrica, MetricaValor
 
@@ -194,20 +194,6 @@ def insert_id_country(df: pd.DataFrame) -> pd.DataFrame:
     joined = joined[original_columns + ['id_pais', 'id_apelido_pais']]
     joined = joined.drop_duplicates(subset=['Ano', 'Universidade', 'id_pais'], keep='first')
     return joined
-
-
-def __get_all_universities__():
-    df = pd.DataFrame(ApelidoDeUniversidade.objects.all().values(
-        'universidade__id_universidade',
-        'id_apelido',
-        'apelido',
-        'universidade__pais_apelido__id_apelido',
-        'universidade__pais_apelido__pais__id_pais',
-        'universidade__pais_apelido__pais__nome_portugues'
-    ))
-    df.columns = ['id_universidade', 'id_apelido_universidade', 'Universidade', 'id_apelido_pais', 'id_pais', 'País']
-
-    return df
 
 
 def __remove_forms__(id_formulario=None) -> None:

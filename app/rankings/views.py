@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.shortcuts import render
 
 from django.db.models import Count
+from tqdm import tqdm
 
 from .forms import InsertRankingForm
 from .models import Pais, Universidade, TipoApelido, ApelidoDePais, ApelidoDeUniversidade
@@ -16,6 +17,7 @@ from .models import MetricaValor, PilarValor, Pilar, Ranking
 from .scripts import get_dataframe, save_ranking_file, load_ranking_file, insert_id_university, \
     check_ranking_file_consistency, insert_id_country, __get_all_universities__, insert_ranking_data, \
     get_canonical_name, __remove_forms__
+from .scripts.universities import __get_unused_universities_nicknames__, remove_unused_universities_and_nicknames
 
 
 def index(request):
@@ -100,7 +102,7 @@ def duplicate_universities_insert(request):
                 child.universidade = parent_uni
                 child.save(update_fields=['universidade'])
 
-            # TODO remover universidades que não forem utilizadas mais!!!
+        remove_unused_universities_and_nicknames()
 
         return success_remove_duplicate_universities(request)
 
