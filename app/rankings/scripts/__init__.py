@@ -1,5 +1,6 @@
 import csv
 import os
+import re
 import string
 import unicodedata
 from io import StringIO
@@ -119,9 +120,12 @@ def check_ranking_file_consistency(df: pd.DataFrame, id_ranking: int) -> pd.Data
             return [None, None]
         if isinstance(_x, float) or isinstance(_x, int):
             return [float(_x), None]
-        for rep in string.punctuation + '—–':
-            _x = _x.replace(rep, ' ')
-        _x = _x.split()
+
+        _x = re.findall('([0-9\.]+)', _x)
+
+        # for rep in string.punctuation + '—–':
+        #     _x = _x.replace(rep, ' ')
+        # _x = _x.split()
         return ([float(y) for y in _x] + [None, None])[:2]
 
     # verifica se o ranking existe no banco de dados
