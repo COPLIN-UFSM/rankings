@@ -1,0 +1,167 @@
+{% extends "rankings/master.html" %}
+
+{% block title %}
+   Verificar universidades duplicadas
+{% endblock %}
+
+{% block additional-stylesheet %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'rankings/universities/duplicate/style.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+
+            <h1>Unir universidades replicadas</h1>
+
+            <p class="lead">
+                Esta página permite unir universidades que estão replicadas no banco de dados sob nomes diferentes.
+                Para começar, filtre as universidades por país, e marque quais universidades devem ser unidas sob uma
+                mesma entrada (e.g. "UFSM" e "Universidade Federal de Santa Maria" referem-se à mesma universidade, logo
+                devem ser unidas).
+            </p>
+            <p class="lead">
+                O número atribuído a cada linha não importa; basta que seja o mesmo número para as linhas potencialmente
+                duplicadas.
+            </p>
+
+
+            <div id="div-inputs" class="form-group">
+                <div id="input-group-original">
+                    <div class="row">
+                        <div class="col">
+                            <label for="input-datalist-original">Nome da universidade (qualquer idioma)</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <input
+                                id="input-datalist-original" class="form-control"
+                                type="text" placeholder="nome"
+                                list="datalist-universities"
+                            >
+                            <datalist id="datalist-universities">
+                                <option>UFSM</option>
+                                <option>Universidade Federal de Santa Maria</option>
+                                <option>Federal University of Santa Maria</option>
+                                <option>Universidade Federal de Santa Maria (UFSM)</option>
+                            </datalist>
+                        </div>
+                        <div class="col">
+                            <button id="button-remove-original" type="button" class="btn btn-danger" disabled>
+                                Remover
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script
+        src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.3.7/dist/latest/bootstrap-autocomplete.min.js">
+    </script>
+    <script type="application/javascript">
+        let counter = 1;
+
+        function removeInputGroup(event) {
+            let id_caller = event.target.id.split('-').pop();
+            document.getElementById('input-group-' + id_caller).remove();
+        }
+
+        function createNewInputTextWithAutoComplete(event) {
+            if(event.key === 'Enter') {
+                let group = document.getElementById('div-inputs');
+
+                let div = document.createElement('div');
+                div.setAttribute('id', 'input-group-' + counter);
+
+                let row_header = document.createElement('div');
+                row_header.setAttribute('class', 'row');
+                let col_header = document.createElement('div');
+                col_header.setAttribute('class', 'col');
+                let label = document.createElement('label');
+                label.setAttribute('for', 'input-datalist-' + counter);
+                label.innerHTML = 'Nome da Universidade (qualquer idioma)';
+                col_header.appendChild(label);
+                row_header.appendChild(col_header);
+
+
+                let row_body = document.createElement('div');
+                row_body.setAttribute('class', 'row');
+                let col_body_0 = document.createElement('div');
+                col_body_0.setAttribute('class', 'col');
+                let col_body_1 = document.createElement('div');
+                col_body_1.setAttribute('class', 'col');
+
+
+                let input = document.createElement('input');
+                input.setAttribute('id', 'input-datalist-' + counter);
+                input.setAttribute('class', 'form-control');
+                input.setAttribute('type', 'text');
+                input.setAttribute('placeholder', 'nome');
+                input.setAttribute('list', 'datalist-universities');
+
+                let button_remove = document.createElement('button');
+                button_remove.setAttribute('id', 'button-remove-' + counter);
+                button_remove.setAttribute('type', 'button');
+                button_remove.setAttribute('class', 'btn btn-danger');
+                button_remove.innerHTML = 'Remover';
+                button_remove.addEventListener('click', removeInputGroup);
+
+                col_body_0.appendChild(input);
+                col_body_1.appendChild(button_remove);
+                row_body.appendChild(col_body_0);
+                row_body.appendChild(col_body_1);
+
+                input.addEventListener("keypress", createNewInputTextWithAutoComplete);
+
+                div.appendChild(row_header);
+                div.appendChild(row_body);
+
+                group.appendChild(div);
+
+                input.focus();
+
+                counter += 1;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', e => {
+            $('#input-datalist').autocomplete()
+        }, false);
+
+
+        document.getElementById('input-datalist-original').addEventListener("keypress", createNewInputTextWithAutoComplete);
+
+
+    </script>
+
+{#        function showSpinner() {#}
+{#            document.getElementById('spinner-block').style.display = "block";#}
+{#        }#}
+{#        function hideSpinner() {#}
+{#            document.getElementById('spinner-block').style.display = "none";#}
+{#        }#}
+{#        function validate(event) {#}
+{#            let assigned = null;#}
+{#            let table = document.getElementById("table-duplicate-universities");#}
+{#            let selects = table.getElementsByTagName("select");#}
+{#            for(let i = 0; i < selects.length; i++) {#}
+{#                if(selects[i].value.length === 0) {#}
+{#                    return false;#}
+{#                }#}
+{#            }#}
+{#            let form = document.getElementById("form-rows-universities");#}
+{#            form.enctype = "multipart/form-data";#}
+{#            form.action = "/rankings/universities/duplicate/insert/";#}
+{#            form.method = "POST";#}
+{#            showSpinner();#}
+{#            form.submit();#}
+{#            return true;#}
+{#        }#}
+{#        hideSpinner();#}
+{% endblock %}

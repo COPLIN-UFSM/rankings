@@ -63,6 +63,53 @@ def success_remove_duplicate_universities(request):
     raise PermissionDenied()
 
 
+def merger_universities_preview(request):
+    return render(
+        request,
+        'rankings/universities/merger/preview.html',
+        # context={
+        #     'universities_list': universities_list,
+        #     'options': [{'value': '', 'text': ''}, {'value': 'NA', 'text': 'NA'}] +
+        #                [{'value': f'{n}', 'text': f'{n}'} for n in range(1, len(universities_list) + 1)]
+        # }
+    )
+
+
+def duplicate_universities_preview(request):
+    universities = __get_all_universities__()
+    universities = universities.drop_duplicates(subset=['id_universidade', 'id_pais'], keep='first')
+
+    universities['Universidade (canonical)'] = universities['Universidade'].apply(lambda x: hash(get_canonical_name(x)))
+
+    double_index = universities.duplicated(subset=['Universidade (canonical)', 'id_pais'], keep=False)
+
+    if double_index.sum() == 0:
+        return render(request, 'rankings/universities/duplicate/not_found.html')
+
+    subset = universities.loc[double_index]
+    subset = subset.sort_values(by='Universidade (canonical)')
+    subset['assigned'] = ''
+
+    canonical_names = subset['Universidade (canonical)'].unique()
+
+    for i, name in enumerate(canonical_names):
+        subset.loc[subset['Universidade (canonical)'] == name, 'assigned'] = f'{i + 1}'
+
+    universities_list = subset[
+        ['id_universidade', 'id_apelido_universidade', 'Universidade', 'País', 'assigned']
+    ].reset_index().to_dict(orient='records')
+
+    return render(
+        request,
+        'rankings/universities/duplicate/preview.html',
+        context={
+            'universities_list': universities_list,
+            'options': [{'value': '', 'text': ''}, {'value': 'NA', 'text': 'NA'}] +
+                       [{'value': f'{n}', 'text': f'{n}'} for n in range(1, len(universities_list) + 1)]
+        }
+    )
+
+
 def duplicate_universities_insert(request):
     if request.method == 'POST':
         form = request.POST
@@ -107,41 +154,6 @@ def duplicate_universities_insert(request):
         return success_remove_duplicate_universities(request)
 
     raise PermissionDenied()
-
-
-def duplicate_universities_preview(request):
-    universities = __get_all_universities__()
-    universities = universities.drop_duplicates(subset=['id_universidade', 'id_pais'], keep='first')
-
-    universities['Universidade (canonical)'] = universities['Universidade'].apply(lambda x: hash(get_canonical_name(x)))
-
-    double_index = universities.duplicated(subset=['Universidade (canonical)', 'id_pais'], keep=False)
-
-    if double_index.sum() == 0:
-        return render(request, 'rankings/universities/duplicate/not_found.html')
-
-    subset = universities.loc[double_index]
-    subset = subset.sort_values(by='Universidade (canonical)')
-    subset['assigned'] = ''
-
-    canonical_names = subset['Universidade (canonical)'].unique()
-
-    for i, name in enumerate(canonical_names):
-        subset.loc[subset['Universidade (canonical)'] == name, 'assigned'] = f'{i + 1}'
-
-    universities_list = subset[
-        ['id_universidade', 'id_apelido_universidade', 'Universidade', 'País', 'assigned']
-    ].reset_index().to_dict(orient='records')
-
-    return render(
-        request,
-        'rankings/universities/duplicate/preview.html',
-        context={
-            'universities_list': universities_list,
-            'options': [{'value': '', 'text': ''}, {'value': 'NA', 'text': 'NA'}] +
-                       [{'value': f'{n}', 'text': f'{n}'} for n in range(1, len(universities_list) + 1)]
-        }
-    )
 
 
 def missing_countries_insert(request):
