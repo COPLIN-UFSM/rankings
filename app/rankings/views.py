@@ -64,14 +64,28 @@ def success_remove_duplicate_universities(request):
 
 
 def merger_universities_preview(request):
+    # countries_list = Pais.objects.order_by('nome_portugues').values('id_pais', 'nome_portugues')
+    unis = __get_all_universities__()
+    groups = unis.groupby(by=['id_pais', 'País']).groups
+    countries_list = [{'id_pais': f'{c[0]}', 'nome_pais_portugues': f'{c[1]}'} for c in groups.keys()]
+    universities_per_country = []
+    for keys, indices in groups.items():
+        universities_per_country += [
+            {
+                'id_pais': keys[0],
+                'universities': unis.loc[
+                     indices, ['id_apelido_universidade', 'Universidade']
+                ].to_dict(orient='records')
+             }
+        ]
+
     return render(
         request,
         'rankings/universities/merger/preview.html',
-        # context={
-        #     'universities_list': universities_list,
-        #     'options': [{'value': '', 'text': ''}, {'value': 'NA', 'text': 'NA'}] +
-        #                [{'value': f'{n}', 'text': f'{n}'} for n in range(1, len(universities_list) + 1)]
-        # }
+        context={
+            'countries_list': countries_list,
+            'universities_per_country': universities_per_country
+        }
     )
 
 

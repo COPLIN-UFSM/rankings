@@ -26,36 +26,89 @@
                 duplicadas.
             </p>
 
+            <form id="form-universities-groups" onsubmit="return false;">  <!--  onsubmit="return validate(event)"-->
+                {% csrf_token %}
 
-            <div id="div-inputs" class="form-group">
-                <div id="input-group-original">
-                    <div class="row">
-                        <div class="col">
-                            <label for="input-datalist-original">Nome da universidade (qualquer idioma)</label>
+                <div id="div-inputs" class="form-group">
+                    <label for="input-country">País</label>
+                    <select class="custom-select form-select" id="input-country">
+                        {% for country in countries_list %}
+                            {% if country.first %}
+                                <option value="{{ country.id_pais }}" selected>
+                                    {{ country.nome_pais_portugues }}
+                                </option>
+                            {% else %}
+                                <option value="{{ country.id_pais }}">
+                                    {{ country.nome_pais_portugues }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% for country_group in universities_per_country %}
+                        <datalist id="datalist-universities-country-{{ country_group.id_pais }}">
+                            {% for university in country_group.universities %}
+                                <option>
+                                    {{ university.Universidade }}
+                                </option>
+{#                                <option value="{{ university.id_apelido_universidade }}"#}
+{#                                        label="{{ university.Universidade }}">#}
+{#                                    {{ university.Universidade }}#}
+{#                                </option>#}
+                            {% endfor %}
+                        </datalist>
+                    {% endfor %}
+
+                    <datalist id="datalist-universities">
+                        <option>UFSM</option>
+                        <option>Universidade Federal de Santa Maria</option>
+                        <option>Federal University of Santa Maria</option>
+                        <option>Universidade Federal de Santa Maria (UFSM)</option>
+                    </datalist>
+
+                    <div id="input-group-original">
+                        <div class="row">
+                            <div class="col-6">
+                                <label for="input-datalist-original">Nome da universidade (qualquer idioma)</label>
+                            </div>
+                            <div class="col-2">
+                                <label class="form-check-label" for="flexRadioOriginalPT">Português</label>
+                            </div>
+                            <div class="col-2">
+                                <label class="form-check-label" for="flexRadioOriginalEN">Inglês</label>
+                            </div>
+                            <div class="col-2">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <input
+                                    id="input-datalist-original" class="form-control"
+                                    type="text" placeholder="nome"
+                                    list="datalist-universities-country-{{ countries_list.0.id_pais }}"
+                                >
+                            </div>
+                            <div class="col-2">
+                                <input class="form-check-input group-pt" type="radio" name="flexRadioOriginalPT" id="flexRadioOriginalPT">
+                            </div>
+                            <div class="col-2">
+                                <input class="form-check-input group-en" type="radio" name="flexRadioOriginalEN" id="flexRadioOriginalEN">
+                            </div>
+                            <div class="col-2">
+                                <button id="button-remove-original" type="button" class="btn btn-danger" disabled>
+                                    Remover
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col">
-                            <input
-                                id="input-datalist-original" class="form-control"
-                                type="text" placeholder="nome"
-                                list="datalist-universities"
-                            >
-                            <datalist id="datalist-universities">
-                                <option>UFSM</option>
-                                <option>Universidade Federal de Santa Maria</option>
-                                <option>Federal University of Santa Maria</option>
-                                <option>Universidade Federal de Santa Maria (UFSM)</option>
-                            </datalist>
-                        </div>
-                        <div class="col">
-                            <button id="button-remove-original" type="button" class="btn btn-danger" disabled>
-                                Remover
-                            </button>
+                    <div id="div-button-send" style="margin-top: 10px;">
+                        <div class="row">
+                            <div class="col-12">
+                                <button id="button-send-data" type="button" class="btn btn-success">Enviar</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 {% endblock %}
@@ -67,75 +120,181 @@
     <script type="application/javascript">
         let counter = 1;
 
+        function checkRadialButtonPressed(event) {
+            let classes = event.target.classList;
+            let is_pt = false;
+            let is_en = false;
+            for(let i = 0; i < classes.length; i++) {
+                if(classes[i] === 'group-pt') {
+                    is_pt = true;
+                    break;
+                } else if(classes[i] === 'group-en') {
+                    is_en = true;
+                }
+            }
+            if(!is_pt && !is_en) {
+                alert('nenhum grupo selecionado!');
+            }
+            let group_name = is_pt? 'group-pt' : 'group-en';
+            let buttons = document.getElementsByClassName(group_name);
+            for(let i = 0; i < buttons.length; i++) {
+                if(buttons[i].id !== event.target.id) {
+                    buttons[i].checked = false;
+                }
+            }
+        }
+
         function removeInputGroup(event) {
             let id_caller = event.target.id.split('-').pop();
             document.getElementById('input-group-' + id_caller).remove();
         }
 
-        function createNewInputTextWithAutoComplete(event) {
-            if(event.key === 'Enter') {
-                let group = document.getElementById('div-inputs');
+        function createNewInputGroup() {
+            let group = document.getElementById('div-inputs');
 
-                let div = document.createElement('div');
-                div.setAttribute('id', 'input-group-' + counter);
+            let new_div = document.createElement('div');
+            new_div.setAttribute('id', 'input-group-' + counter);
 
-                let row_header = document.createElement('div');
-                row_header.setAttribute('class', 'row');
-                let col_header = document.createElement('div');
-                col_header.setAttribute('class', 'col');
-                let label = document.createElement('label');
-                label.setAttribute('for', 'input-datalist-' + counter);
-                label.innerHTML = 'Nome da Universidade (qualquer idioma)';
-                col_header.appendChild(label);
-                row_header.appendChild(col_header);
+            let row_header = document.createElement('div');
+            row_header.setAttribute('class', 'row');
+            let col_header_0 = document.createElement('div');
+            col_header_0.setAttribute('class', 'col-6');
+            let label_0 = document.createElement('label');
+            label_0.setAttribute('for', 'input-datalist-' + counter);
+            label_0.innerHTML = 'Nome da Universidade (qualquer idioma)';
+            col_header_0.appendChild(label_0);
+            let col_header_1 = document.createElement('div');
+            col_header_1.setAttribute('class', 'col-2');
+            let label_1 = document.createElement('label');
+            label_1.setAttribute('for', 'flexRadioPT-' + counter);
+            label_1.innerHTML = 'Português';
+            col_header_1.appendChild(label_1);
+            let col_header_2 = document.createElement('div');
+            col_header_2.setAttribute('class', 'col-2');
+            let label_2 = document.createElement('label');
+            label_2.setAttribute('for', 'flexRadioEN-' + counter);
+            label_2.innerHTML = 'Inglês';
+            col_header_2.appendChild(label_2);
+            let col_header_3 = document.createElement('div');
+            col_header_3.setAttribute('class', 'col-2');
+            row_header.appendChild(col_header_0);
+            row_header.appendChild(col_header_1);
+            row_header.appendChild(col_header_2);
+            row_header.appendChild(col_header_3);
 
+            let row_body = document.createElement('div');
+            row_body.setAttribute('class', 'row');
+            let col_body_0 = document.createElement('div');
+            col_body_0.setAttribute('class', 'col-6');
+            let col_body_1 = document.createElement('div');
+            col_body_1.setAttribute('class', 'col-2');
+            let radial_pt = document.createElement('input');
+            radial_pt.setAttribute('class', 'form-check-input group-pt');
+            radial_pt.setAttribute('type', 'radio');
+            radial_pt.setAttribute('name', 'flexRadioPT-' + counter);
+            radial_pt.setAttribute('id', 'flexRadioPT-' + counter);
+            radial_pt.addEventListener('click', checkRadialButtonPressed);
+            col_body_1.appendChild(radial_pt);
+            let col_body_2 = document.createElement('div');
+            col_body_2.setAttribute('class', 'col-2');
+            let radial_en = document.createElement('input');
+            radial_en.setAttribute('class', 'form-check-input group-en');
+            radial_en.setAttribute('type', 'radio');
+            radial_en.setAttribute('name', 'flexRadioEN-' + counter);
+            radial_en.setAttribute('id', 'flexRadioEN-' + counter);
+            radial_en.addEventListener('click', checkRadialButtonPressed);
+            col_body_2.appendChild(radial_en);
+            let col_body_3 = document.createElement('div');
+            col_body_3.setAttribute('class', 'col-2');
 
-                let row_body = document.createElement('div');
-                row_body.setAttribute('class', 'row');
-                let col_body_0 = document.createElement('div');
-                col_body_0.setAttribute('class', 'col');
-                let col_body_1 = document.createElement('div');
-                col_body_1.setAttribute('class', 'col');
+            let selectedCountry = document.getElementById('input-country').value;
 
+            let input = document.createElement('input');
+            input.setAttribute('id', 'input-datalist-' + counter);
+            input.setAttribute('class', 'form-control');
+            input.setAttribute('type', 'text');
+            input.setAttribute('placeholder', 'nome');
+            input.setAttribute('list', 'datalist-universities-country-' + selectedCountry);
 
-                let input = document.createElement('input');
-                input.setAttribute('id', 'input-datalist-' + counter);
-                input.setAttribute('class', 'form-control');
-                input.setAttribute('type', 'text');
-                input.setAttribute('placeholder', 'nome');
-                input.setAttribute('list', 'datalist-universities');
+            let button_remove = document.createElement('button');
+            button_remove.setAttribute('id', 'button-remove-' + counter);
+            button_remove.setAttribute('type', 'button');
+            button_remove.setAttribute('class', 'btn btn-danger');
+            button_remove.innerHTML = 'Remover';
+            button_remove.addEventListener('click', removeInputGroup);
 
-                let button_remove = document.createElement('button');
-                button_remove.setAttribute('id', 'button-remove-' + counter);
-                button_remove.setAttribute('type', 'button');
-                button_remove.setAttribute('class', 'btn btn-danger');
-                button_remove.innerHTML = 'Remover';
-                button_remove.addEventListener('click', removeInputGroup);
+            col_body_0.appendChild(input);
+            col_body_3.appendChild(button_remove);
+            row_body.appendChild(col_body_0);
+            row_body.appendChild(col_body_1);
+            row_body.appendChild(col_body_2);
+            row_body.appendChild(col_body_3);
 
-                col_body_0.appendChild(input);
-                col_body_1.appendChild(button_remove);
-                row_body.appendChild(col_body_0);
-                row_body.appendChild(col_body_1);
+            input.addEventListener("keypress", keyboardCallBack);
 
-                input.addEventListener("keypress", createNewInputTextWithAutoComplete);
+            new_div.appendChild(row_header);
+            new_div.appendChild(row_body);
 
-                div.appendChild(row_header);
-                div.appendChild(row_body);
+            let div_send_button = document.getElementById('div-button-send');
+            div_send_button.remove();
 
-                group.appendChild(div);
+            group.appendChild(new_div);
+            group.appendChild(div_send_button);
 
-                input.focus();
+            input.focus();
 
-                counter += 1;
+            counter += 1;
+        }
+
+        function keyboardCallBack(event) {
+            if ((event.shiftKey) && (event.key === 'Enter')) {
+                sendData(event);
+            } else if(event.key === 'Enter') {
+                createNewInputGroup();
             }
         }
 
-        document.addEventListener('DOMContentLoaded', e => {
-            $('#input-datalist').autocomplete()
-        }, false);
+        function changeDataList(event) {
+            let forms = document.getElementsByClassName('form-control');
+            let selectedCountry = document.getElementById('input-country').value;
+            for(let i = 0; i < forms.length; i++) {
+                forms[i].setAttribute('list', 'datalist-universities-country-' + selectedCountry);
+            }
+        }
 
+        function sendData(event) {
+            alert('dados enviados para o servidor!');
+        }
 
-        document.getElementById('input-datalist-original').addEventListener("keypress", createNewInputTextWithAutoComplete);
+        function validate(event) {
+            // let assigned = null;
+            // let table = document.getElementById("table-duplicate-universities");
+            // let selects = table.getElementsByTagName("select");
+            // for(let i = 0; i < selects.length; i++) {
+            //     if(selects[i].value.length === 0) {
+            //         return false;
+            //     }
+            // }
+            // let form = document.getElementById("form-rows-universities");
+            // form.enctype = "multipart/form-data";
+            // form.action = "/rankings/universities/duplicate/insert/";
+            // form.method = "POST";
+            // showSpinner();
+            // form.submit();
+            // return true;
+        }
+        // hideSpinner();
+
+        // document.addEventListener('DOMContentLoaded', e => {
+        //     $('#input-datalist-original').autocomplete();
+        // }, false);
+
+        document.getElementById('flexRadioOriginalPT').addEventListener('click', checkRadialButtonPressed);
+        document.getElementById('flexRadioOriginalEN').addEventListener('click', checkRadialButtonPressed);
+
+        document.getElementById('button-send-data').addEventListener('click', sendData);
+        document.getElementById('input-datalist-original').addEventListener('keypress', keyboardCallBack);
+        document.getElementById('input-country').addEventListener('change', changeDataList);
 
 
     </script>
