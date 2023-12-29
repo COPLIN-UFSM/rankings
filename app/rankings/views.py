@@ -17,7 +17,8 @@ from .models import MetricaValor, PilarValor, Pilar, Ranking
 from .scripts import get_dataframe, save_ranking_file, load_ranking_file, insert_id_university, \
     check_ranking_file_consistency, insert_id_country, __get_all_universities__, insert_ranking_data, \
     get_canonical_name, __remove_forms__
-from .scripts.universities import __get_unused_universities_nicknames__, remove_unused_universities_and_nicknames
+from .scripts.universities import __get_unused_universities_nicknames__, remove_unused_universities_and_nicknames, \
+    merge_replicate_universities
 
 
 def index(request):
@@ -87,6 +88,34 @@ def merger_universities_preview(request):
             'universities_per_country': universities_per_country
         }
     )
+
+
+def merger_universities_insert(request):
+    if request.method == 'POST':
+        form = request.POST
+
+        _dict = form.dict()
+        keys = list(_dict.keys())
+
+        data = [re.findall('input-datalist-([0-9]+)', x) for x in keys]
+        data = {
+            int(x[0]):
+                {
+                    'name': _dict[f'input-datalist-{x[0]}'],
+                    'use_portuguese': _dict[f'flexRadioPT-{x[0]}'] == 'on' if f'flexRadioPT-{x[0]}' in _dict else False,
+                    'use_english': _dict[f'flexRadioEN-{x[0]}'] == 'on' if f'flexRadioEN-{x[0]}' in _dict else False,
+                }
+            for x in data if len(x) > 0
+        }
+
+        subset = pd.DataFrame(data).T
+
+        remove_unused_universities_and_nicknames()
+        merge_replicate_universities(subset)
+
+        return success_remove_duplicate_universities(request)
+
+    raise PermissionDenied()
 
 
 def duplicate_universities_preview(request):

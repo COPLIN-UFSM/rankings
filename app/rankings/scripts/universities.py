@@ -68,3 +68,7 @@ def remove_unused_universities_and_nicknames():
     process(relationships)
     process(nicknames)
     process(names)
+
+
+def merge_replicate_universities(df):
+    pass
