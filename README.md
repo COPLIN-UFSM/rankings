@@ -24,6 +24,7 @@ As configurações da máquina que o repositório foi desenvolvido encontram-se 
 conda create --name rankings python==3.11.* pip --yes
 conda activate rankings
 pip install ibm_db
+pip install "git+https://github.com/COPLIN-UFSM/db2.git"
 conda install --file requirements.txt --yes
 pip install --requirement pip_requirements.txt
 ```
