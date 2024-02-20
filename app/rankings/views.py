@@ -111,7 +111,7 @@ def merger_universities_insert(request):
         subset = pd.DataFrame(data).T
 
         remove_unused_universities_and_nicknames()
-        merge_replicate_universities(subset)
+        merge_replicate_universities(subset)  # TODO implement!
 
         return success_remove_duplicate_universities(request)
 
