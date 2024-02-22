@@ -70,29 +70,32 @@ def get_metrics(df: pd.DataFrame) -> list:
 
 
 def get_pillars(df, id_ranking) -> list:
-    en = pd.DataFrame(Pilar.objects.filter(ranking__id_ranking=id_ranking).values('id_pilar', 'nome_ingles'))
-    pt = pd.DataFrame(Pilar.objects.filter(ranking__id_ranking=id_ranking).values('id_pilar', 'nome_portugues'))
+    en = set(pd.DataFrame(Pilar.objects.filter(ranking__id_ranking=id_ranking).values('id_pilar', 'nome_ingles')).to_dict(orient='list')['nome_ingles'])
+    pt = set(pd.DataFrame(Pilar.objects.filter(ranking__id_ranking=id_ranking).values('id_pilar', 'nome_portugues')).to_dict(orient='list')['nome_portugues'])
 
     columns = set(df.columns)
 
-    is_english = len(set(en.to_dict(orient='list')['nome_ingles']).intersection(columns)) == len(en)
-    is_portuguese = len(set(pt.to_dict(orient='list')['nome_portugues']).intersection(columns)) == len(pt)
-
-    if is_english:
-        elected = en
-    elif is_portuguese:
-        elected = pt
+    if len(en.intersection(columns)) == len(en):
+        elected = pd.DataFrame(Pilar.objects.filter(ranking__id_ranking=id_ranking).values('id_pilar', 'nome_ingles'))
+    elif len(pt.intersection(columns)) == len(pt):
+        elected = pd.DataFrame(Pilar.objects.filter(ranking__id_ranking=id_ranking).values('id_pilar', 'nome_portugues'))
     else:
-        english_names = '\n'.join(en["nome_ingles"].values.tolist())
-        portuguese_names = '\n'.join(pt["nome_portugues"].values.tolist())
+
+        if len(en.intersection(columns)) > len(pt.intersection(columns)):
+            missing = en - columns
+        else:
+            missing = pt - columns
+
+        missing_html = ''.join([f'<li>{x}</li>' for x in missing])
 
         raise ValidationError(
-            f'A planilha não possui todos os pilares do ranking informado! Se novos pilares foram adicionados ao '
-            f'Ranking, você terá que adicioná-los manualmente na tela de administrador. Os nomes dos pilares devem ser'
-            f'consistentes: ou todos escritos em inglês, ou todos escritos em português. Verifique a grafia correta na '
-            f'tela de administrador.'
-            f'Nomes em inglês: {english_names}'
-            f'Nomes em português: {portuguese_names}'
+            f'<p>Erro: Os pilares informados na planilha devem ser exatamente os que são informados no banco de dados! '
+            f'Se novos pilares foram adicionados ao Ranking, você terá que adicioná-los manualmente na tela de '
+            f'administrador deste site. Se os nomes dos pilares forem semelhantes, mas não exatamente iguais, você pode'
+            f'simplesmente trocar o nome do pilar na planilha para o nome do banco de dados. Os nomes dos pilares '
+            f'devem ser consistentes: ou todos escritos em inglês, ou todos escritos em português. Verifique a grafia '
+            f'correta na tela de administrador.</p>'
+            f'<p>Pilares que faltam na planilha:</p><ul>{missing_html}</ul>'
         )
 
     elected.columns = ['id_pilar', 'Pilar']

@@ -284,7 +284,7 @@ def ranking_insert(request):
                 return render(
                     request,
                     'rankings/ranking/insert/index.html',
-                    {'form': form, 'error_message': 'Erro: ' + e.message}
+                    {'form': form, 'error_message': e.message}
                 )
     else:
         form = InsertRankingForm()
