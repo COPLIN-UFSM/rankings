@@ -1,23 +1,20 @@
 import re
-import sys
 
 import pandas as pd
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
-from django.shortcuts import render
-
 from django.db.models import Count
-from tqdm import tqdm
+from django.shortcuts import render
+from django.template.loader import render_to_string, get_template
+from django.views.generic import TemplateView
 
 from .forms import InsertRankingForm
+from .models import MetricaValor, PilarValor, Pilar
 from .models import Pais, Universidade, TipoApelido, ApelidoDePais, ApelidoDeUniversidade
-
-from .models import MetricaValor, PilarValor, Pilar, Ranking
-
 from .scripts import get_dataframe, save_ranking_file, load_ranking_file, insert_id_university, \
     check_ranking_file_consistency, insert_id_country, __get_all_universities__, insert_ranking_data, \
     get_canonical_name, __remove_forms__
-from .scripts.universities import __get_unused_universities_nicknames__, remove_unused_universities_and_nicknames, \
+from .scripts.universities import remove_unused_universities_and_nicknames, \
     merge_replicate_universities
 
 
@@ -291,3 +288,41 @@ def ranking_insert(request):
         __remove_forms__()
 
     return render(request, 'rankings/ranking/insert/index.html', {'form': form})
+
+
+class MergerPillarsPreview(TemplateView):
+    template_name = 'rankings/pillars/merger/preview.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        pillars = pd.DataFrame([
+            {
+                'id_ranking': x.ranking.id_ranking, 'nome_ranking': x.ranking.nome,
+                'id_pilar': x.id_pilar, 'nome_pilar': x.nome_ingles
+            }
+            for x in Pilar.objects.all()
+        ])
+
+        groups = pillars.groupby(by=['id_ranking', 'nome_ranking']).groups
+        rankings_list = [{'id_ranking': f'{c[0]}', 'nome_ranking': f'{c[1]}'} for c in groups.keys()]
+        pillars_per_ranking = []
+        for keys, indices in groups.items():
+            pillars_per_ranking += [
+                {
+                    'id_ranking': keys[0],
+                    'pillars': pillars.loc[
+                        indices, ['id_pilar', 'nome_pilar']
+                    ].to_dict(orient='records')
+                }
+            ]
+
+        context['rankings_list'] = rankings_list
+        context['pillars_per_ranking'] = pillars_per_ranking
+
+        input_group_code = get_template('rankings/pillars/merger/input_group.html').template.source
+        input_group_code = input_group_code.replace('\n', '\\n')
+
+        context['input_group_code'] = input_group_code
+
+        return context

@@ -1,0 +1,175 @@
+{% extends "rankings/master.html" %}
+
+{% block title %}
+   Unir Pilares duplicados
+{% endblock %}
+
+{% block additional-stylesheet %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'rankings/universities/duplicate/style.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+
+            <h1>Unir pilares duplicados</h1>
+
+            <p class="lead">
+                Um pilar trocou de nome de um ano para outro, mas a metodologia é a mesma? Nesta página, é possível
+                unir dois (ou mais) pilares em um só. Os dados são preservados (desde que não exista conflito entre os
+                anos informados), e um nome é eleito como o principal.
+            </p>
+
+            <form id="form-pillars-groups" onsubmit="return false;">  <!--  onsubmit="return validate(event)"-->
+                {% csrf_token %}
+
+                <div id="div-inputs" class="form-group">
+                    <label for="input-ranking">Ranking</label>
+                    <select id="input-ranking" name="input-ranking"
+                            class="custom-select form-select"
+                    >
+                        {% for ranking in rankings_list %}
+                            {% if ranking.first %}
+                                <option value="{{ ranking.id_ranking }}" selected>
+                                    {{ ranking.nome_ranking }}
+                                </option>
+                            {% else %}
+                                <option value="{{ ranking.id_ranking }}">
+                                    {{ ranking.nome_ranking }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <!-- adiciona datalists, um para cada ranking -->
+                    {% for ranking_group in pillars_per_ranking %}
+                        <datalist id="datalist-pillars-ranking-{{ ranking_group.id_ranking }}">
+                            {% for pillar in ranking_group.pillars %}
+                                <option>
+                                    {{ pillar.nome_pilar }}
+                                </option>
+                            {% endfor %}
+                        </datalist>
+                    {% endfor %}
+
+                    {% load input_group %}
+                    {%  generate_input_group rankings_list.0 0 %}
+
+                    <div id="div-button-send" style="margin-top: 10px;">
+                        <div class="row">
+                            <div class="col-2">
+                                <button id="button-send-data" type="button" class="btn btn-success">Enviar</button>
+                            </div>
+                            <div class="col-2">
+                                <div id="spinner-block" class="spinner-border" role="status" style="margin-top: 4px;">
+                                    <span class="visually-hidden">Enviando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="application/javascript">
+        let counter = 1;
+
+        {% autoescape off %}
+        let input_group_code_template = '{{ input_group_code }}';
+        {% endautoescape %}
+
+        function showSpinner() {
+            document.getElementById('spinner-block').style.display = "block";
+        }
+        function hideSpinner() {
+            document.getElementById('spinner-block').style.display = "none";
+        }
+
+        function checkRadialButtonPressed(event) {
+            let buttons = document.getElementsByClassName('group-main-pillar-name');
+            for(let i = 0; i < buttons.length; i++) {
+                if(buttons[i].id !== event.target.id) {
+                    buttons[i].checked = false;
+                }
+            }
+        }
+
+        function removeInputGroup(event) {
+            let id_caller = event.target.id.split('-').pop();
+            document.getElementById('input-group-' + id_caller).remove();
+        }
+
+        function createNewInputGroup() {
+            let input_group_code = input_group_code_template;
+
+            let group = document.getElementById('div-inputs');
+            let selectedRanking = document.getElementById('input-ranking').value;
+
+            input_group_code = input_group_code.replaceAll('\{\{ id_group \}\}', counter);
+            input_group_code = input_group_code.replaceAll('\{\{ ranking.id_ranking \}\}', selectedRanking);
+
+            let new_div = document.createElement('div');
+            new_div.innerHTML = input_group_code;
+
+            // passa novamente o botão de enviar para baixo
+            let div_send_button = document.getElementById('div-button-send');
+            div_send_button.remove();
+
+            // adiciona ao documento
+            group.appendChild(new_div);
+            group.appendChild(div_send_button);
+
+            // adiciona callbacks
+            let radialButtonMain = document.getElementById('flexRadioMain-' + counter);
+            radialButtonMain.addEventListener('click', checkRadialButtonPressed);
+
+            let input = document.getElementById('input-datalist-' + counter);
+            input.addEventListener("keypress", keyboardCallBack);
+
+            let button_remove = document.getElementById('button-remove-' + counter);
+            button_remove.addEventListener('click', removeInputGroup);
+
+            input.focus();
+
+            counter += 1;
+        }
+
+        function keyboardCallBack(event) {
+            if ((event.shiftKey) && (event.key === 'Enter')) {
+                sendData(event);
+            } else if(event.key === 'Enter') {
+                createNewInputGroup();
+            }
+        }
+
+        function changeDataList(event) {
+            let forms = document.getElementsByClassName('form-control');
+            let selectedRanking = document.getElementById('input-ranking').value;
+            for(let i = 0; i < forms.length; i++) {
+                forms[i].setAttribute('list', 'datalist-pillars-ranking-' + selectedRanking);
+            }
+        }
+
+        function sendData(event) {
+            let form = document.getElementById("form-pillars-groups")
+            form.enctype = "multipart/form-data";
+            form.action = "/rankings/pillars/merger/insert/";
+            form.method = "POST";
+            showSpinner();
+            form.submit();
+            return true;
+        }
+
+        document.getElementById('button-send-data').addEventListener('click', sendData);
+        document.getElementById('input-datalist-0').addEventListener('keypress', keyboardCallBack);
+        document.getElementById('input-ranking').addEventListener('change', changeDataList);
+        document.getElementById('flexRadioMain-0').addEventListener('click', checkRadialButtonPressed);
+        document.getElementById('button-remove-0').setAttribute('disabled', '');
+
+        hideSpinner();
+
+    </script>
+{% endblock %}

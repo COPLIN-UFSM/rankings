@@ -1,0 +1,31 @@
+<div id="input-group-{{ id_group }}">
+    <div class="row">
+        <div class="col-6">
+            <label for="input-datalist-{{ id_group }}">Nome do Pilar (inglês)</label>
+        </div>
+        <div class="col-3">
+            <label class="form-check-label" for="flexRadioMain-{{ id_group }}">Usar esse nome</label>
+        </div>
+        <div class="col-3">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-6">
+            <input
+                id="input-datalist-{{ id_group }}" name="input-datalist-{{ id_group }}" class="form-control"
+                type="text" placeholder="nome"
+                list="datalist-pillars-ranking-{{ ranking.id_ranking }}"
+            >
+        </div>
+        <div class="col-3">
+            <input id="flexRadioMain-{{ id_group }}" name="flexRadioMain-{{ id_group }}"
+                   class="form-check-input group-main-pillar-name" type="radio"
+            >
+        </div>
+        <div class="col-3">
+            <button id="button-remove-{{ id_group }}" type="button" class="btn btn-danger">
+                Remover
+            </button>
+        </div>
+    </div>
+</div>
