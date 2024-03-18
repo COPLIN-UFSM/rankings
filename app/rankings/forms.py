@@ -36,3 +36,12 @@ class InsertRankingForm(forms.Form):
         widget=forms.Select(choices=[(x.id_ranking, x.nome) for x in Ranking.objects.all()])
     )
     file = forms.FileField(label='Planilha (tipo csv)', validators=[check_dataframe])
+
+
+class RemoveReplicatePillarsForm(forms.Form):
+    pass
+    # ranking = forms.CharField(
+    #     label='Nome do Ranking',
+    #     widget=forms.Select(choices=[(x.id_ranking, x.nome) for x in Ranking.objects.all()])
+    # )
+    # file = forms.FileField(label='Planilha (tipo csv)', validators=[check_dataframe])

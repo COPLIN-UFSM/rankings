@@ -7,9 +7,10 @@ from django.db.models import Count
 from django.shortcuts import render
 from django.template.loader import render_to_string, get_template
 from django.views.generic import TemplateView
+from tqdm import tqdm
 
 from .forms import InsertRankingForm
-from .models import MetricaValor, PilarValor, Pilar
+from .models import MetricaValor, PilarValor, Pilar, PilaresParaGrupos, MetricasParaPilares
 from .models import Pais, Universidade, TipoApelido, ApelidoDePais, ApelidoDeUniversidade
 from .scripts import get_dataframe, save_ranking_file, load_ranking_file, insert_id_university, \
     check_ranking_file_consistency, insert_id_country, __get_all_universities__, insert_ranking_data, \
@@ -293,6 +294,86 @@ def ranking_insert(request):
 class MergerPillarsPreview(TemplateView):
     template_name = 'rankings/pillars/merger/preview.html'
 
+    # def get(self, request, *args, **kwargs):
+    #     raise PermissionDenied()
+
+    def post(self, request, *args, **kwargs):
+        form = request.POST
+
+        _dict = form.dict()
+
+        id_ranking = int(_dict['input-ranking-id'])
+
+        index = 0
+        to_use = None  # pilar a ser usado como principal
+        to_replace_names = []  # pilares a serem substituídos pelo principal
+        while f'input-datalist-{index}' in _dict:
+            nome_pilar = _dict[f'input-datalist-{index}']
+
+            if f'flexRadioMain-{index}' in _dict:
+                to_use = nome_pilar
+            else:
+                to_replace_names += [nome_pilar]
+
+            index += 1
+
+        if len(to_replace_names) == 0 or to_use is None:
+            context = self.get_context_data()
+            context['error_message'] = 'Erro: pelo menos dois pilares devem ser selecionados!'
+            return render(request, self.template_name, context)
+
+        to_replace = Pilar.objects.filter(nome_ingles__in=to_replace_names, ranking_id=id_ranking)
+        to_use = Pilar.objects.filter(nome_ingles=to_use, ranking_id=id_ranking)[0]
+
+        to_replace_ids = [x.id_pilar for x in to_replace]
+
+        # atualiza todas as tabelas
+        # atualiza pilar valor
+        qs = PilarValor.objects.filter(pilar__id_pilar__in=to_replace_ids)
+        with tqdm(range(len(qs)), desc='Atualizando ID_PILAR na tabela R_PILARES_VALORES') as pbar:
+            for q in qs:
+                valor_inicial = q.valor_inicial
+                valor_final = q.valor_final
+                apelido_universidade_id = q.apelido_universidade_id
+                ano = q.ano
+
+                nq = PilarValor.objects.create(
+                    pilar=to_use, apelido_universidade_id=apelido_universidade_id, ano=ano,
+                    valor_inicial=valor_inicial, valor_final=valor_final
+                )
+
+                q.delete()  # deleta instância antiga no banco
+                nq.save()  # salva nova instância no banco
+
+                pbar.update(1)
+
+        # atualiza pilares para grupos
+        qs = PilaresParaGrupos.objects.filter(pilar__id_pilar__in=to_replace_ids)
+        for q in qs:
+            grupo_pilares_id = q.grupo_pilares_id
+
+            nq = PilaresParaGrupos.objects.create(pilar=to_use, grupo_pilares_id=grupo_pilares_id)
+
+            q.delete()  # deleta instância antiga no banco
+            nq.save()  # salva nova instância no banco
+
+        # atualiza metricas para pilares
+        qs = MetricasParaPilares.objects.filter(pilar__id_pilar__in=to_replace_ids)
+        for q in qs:
+            metrica_id = q.metrica_id
+            peso = q.peso
+
+            nq = MetricasParaPilares.objects.create(pilar=to_use, metrica_id=metrica_id, peso=peso)
+
+            q.delete()  # deleta instância antiga no banco
+            nq.save()  # salva nova instância no banco
+
+        # deleta pilares antigos
+        for p in to_replace:
+            p.delete()
+
+        return render(request, 'rankings/pillars/merger/success.html')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -303,6 +384,7 @@ class MergerPillarsPreview(TemplateView):
             }
             for x in Pilar.objects.all()
         ])
+        pillars = pillars.sort_values(by='nome_pilar')
 
         groups = pillars.groupby(by=['id_ranking', 'nome_ranking']).groups
         rankings_list = [{'id_ranking': f'{c[0]}', 'nome_ranking': f'{c[1]}'} for c in groups.keys()]

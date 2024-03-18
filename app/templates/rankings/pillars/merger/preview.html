@@ -13,7 +13,7 @@
     <div class="row">
         <div class="col">
 
-            <h1>Unir pilares duplicados</h1>
+            <h1>Unir pilares replicados</h1>
 
             <p class="lead">
                 Um pilar trocou de nome de um ano para outro, mas a metodologia é a mesma? Nesta página, é possível
@@ -25,8 +25,8 @@
                 {% csrf_token %}
 
                 <div id="div-inputs" class="form-group">
-                    <label for="input-ranking">Ranking</label>
-                    <select id="input-ranking" name="input-ranking"
+                    <label for="input-ranking-id">Ranking</label>
+                    <select id="input-ranking-id" name="input-ranking-id"
                             class="custom-select form-select"
                     >
                         {% for ranking in rankings_list %}
@@ -64,6 +64,16 @@
                                 <div id="spinner-block" class="spinner-border" role="status" style="margin-top: 4px;">
                                     <span class="visually-hidden">Enviando...</span>
                                 </div>
+                            </div>
+                            <div class="col-8"></div>
+                        </div>
+                    </div>
+                    <div id="error-message-area">
+                        <div class="row">
+                            <div class="col">
+                                <p id="error-message-paragraph">
+                                    {{ error_message }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -106,7 +116,7 @@
             let input_group_code = input_group_code_template;
 
             let group = document.getElementById('div-inputs');
-            let selectedRanking = document.getElementById('input-ranking').value;
+            let selectedRanking = document.getElementById('input-ranking-id').value;
 
             input_group_code = input_group_code.replaceAll('\{\{ id_group \}\}', counter);
             input_group_code = input_group_code.replaceAll('\{\{ ranking.id_ranking \}\}', selectedRanking);
@@ -116,11 +126,14 @@
 
             // passa novamente o botão de enviar para baixo
             let div_send_button = document.getElementById('div-button-send');
+            let div_error_message_area = document.getElementById('error-message-area');
             div_send_button.remove();
+            div_error_message_area.remove();
 
             // adiciona ao documento
             group.appendChild(new_div);
             group.appendChild(div_send_button);
+            group.appendChild(div_error_message_area);
 
             // adiciona callbacks
             let radialButtonMain = document.getElementById('flexRadioMain-' + counter);
@@ -147,7 +160,7 @@
 
         function changeDataList(event) {
             let forms = document.getElementsByClassName('form-control');
-            let selectedRanking = document.getElementById('input-ranking').value;
+            let selectedRanking = document.getElementById('input-ranking-id').value;
             for(let i = 0; i < forms.length; i++) {
                 forms[i].setAttribute('list', 'datalist-pillars-ranking-' + selectedRanking);
             }
@@ -156,7 +169,7 @@
         function sendData(event) {
             let form = document.getElementById("form-pillars-groups")
             form.enctype = "multipart/form-data";
-            form.action = "/rankings/pillars/merger/insert/";
+            form.action = "/pillars/merger/preview/";
             form.method = "POST";
             showSpinner();
             form.submit();
@@ -165,7 +178,7 @@
 
         document.getElementById('button-send-data').addEventListener('click', sendData);
         document.getElementById('input-datalist-0').addEventListener('keypress', keyboardCallBack);
-        document.getElementById('input-ranking').addEventListener('change', changeDataList);
+        document.getElementById('input-ranking-id').addEventListener('change', changeDataList);
         document.getElementById('flexRadioMain-0').addEventListener('click', checkRadialButtonPressed);
         document.getElementById('button-remove-0').setAttribute('disabled', '');
 
