@@ -286,7 +286,7 @@
         function sendData(event) {
             let form = document.getElementById("form-universities-groups")
             form.enctype = "multipart/form-data";
-            form.action = "/rankings/universities/merger/insert/";
+            form.action = "/universities/merger/insert/";
             form.method = "POST";
             showSpinner();
             form.submit();
@@ -321,7 +321,7 @@
 {#            }#}
 {#            let form = document.getElementById("form-rows-universities");#}
 {#            form.enctype = "multipart/form-data";#}
-{#            form.action = "/rankings/universities/duplicate/insert/";#}
+{#            form.action = "/universities/duplicate/insert/";#}
 {#            form.method = "POST";#}
 {#            showSpinner();#}
 {#            form.submit();#}

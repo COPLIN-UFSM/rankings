@@ -15,7 +15,7 @@
                 abaixo. Caso não encontre o ranking desejado, será necessário adicioná-lo manualmente na tela de
                 <a href="/admin">administrador.</a></p>
 
-            <form id="form-submit-spreadsheet" action="/rankings/ranking/insert/" method="POST" enctype="multipart/form-data">
+            <form id="form-submit-spreadsheet" action="/ranking/insert/" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 {% load crispy_forms_tags %}
                 {{ form | crispy }}

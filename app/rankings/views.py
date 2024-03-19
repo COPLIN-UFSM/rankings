@@ -108,7 +108,7 @@ def merger_universities_insert(request):
 
         subset = pd.DataFrame(data).T
 
-        remove_unused_universities_and_nicknames()
+        # remove_unused_universities_and_nicknames()
         merge_replicate_universities(subset)  # TODO implement!
 
         return success_remove_duplicate_universities(request)
@@ -190,7 +190,7 @@ def duplicate_universities_insert(request):
                 child.universidade = parent_uni
                 child.save(update_fields=['universidade'])
 
-        remove_unused_universities_and_nicknames()
+        # remove_unused_universities_and_nicknames()
 
         return success_remove_duplicate_universities(request)
 
@@ -357,7 +357,7 @@ class MergerPillarsPreview(TemplateView):
             q.delete()  # deleta instância antiga no banco
             nq.save()  # salva nova instância no banco
 
-        # atualiza metricas para pilares
+        # atualiza métricas para pilares
         qs = MetricasParaPilares.objects.filter(pilar__id_pilar__in=to_replace_ids)
         for q in qs:
             metrica_id = q.metrica_id
