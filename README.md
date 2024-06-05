@@ -88,6 +88,8 @@ na migração. Simplesmente ignore este erro.
    python manage.py runserver
    ```
 
+3. Acesse o site pelo link disponibilizado pelo console: http://localhost:8000/ranking/insert
+
 ## Diagrama do banco de dados
 
 É possível consultar o diagrama do banco de dados no arquivo [SCHEMA](app/database_scripts/SCHEMA.md).
