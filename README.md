@@ -21,53 +21,69 @@ As configurações da máquina que o repositório foi desenvolvido encontram-se 
 ## Instalação
 
 ```bash
-conda create --name rankings python==3.11.* pip --yes
-conda activate rankings
-pip install ibm_db
-pip install "git+https://github.com/COPLIN-UFSM/db2.git"
-conda install --file requirements.txt --yes
-pip install --requirement pip_requirements.txt
+conda env create -f environment.yml
 ```
 
 ## Execução da aplicação
 
 ### Primeira execução
 
-**IMPORTANTE:** caso você não tenha acesso ao banco de dados bee da UFSM, mude no arquivo `settings.py` para usar o
-banco de dados local:
+Siga uma das duas opções abaixo, dependendo do seu caso de uso.
 
-```python
-DATABASES = {
-    # para usar o banco de dados local, use esta opção
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'database_sqlite.db',
-    },
-    # para usar o banco de dados remoto, use esta opção
-    # 'default': {
-    #     "NAME": 'BEE',
-    #     "ENGINE": 'ibm_db_django',
-    #     "DATABASE": get_secret('database'),
-    #     "HOST": get_secret('host'),
-    #     "PORT": get_secret('port'),
-    #     "USER": get_secret('user'),
-    #     "PASSWORD": get_secret('password'),
-    #     "OPTIONS": {
-    #         'dsn': f"DATABASE={get_secret('database')};HOSTNAME={get_secret('host')};"
-    #                f"PORT={get_secret('port')};PROTOCOL=TCPIP;"
-    #     },
-    #     'PCONNECT': True,  
-    # },
-}
-```
+<details>
+<summary><h4>Não tenho acesso ao banco bee da UFSM</h4></summary>
 
-Só é necessário executar este passo-a-passo na **primeira** vez que o banco de dados for criado. Depois disso, 
-é desnecessário.
+1. Será necessário trocar as configurações no [settings.py](app/app/settings.py) para usar um banco de dados local:
 
-1. Entre na pasta `app`
-2. Rode o script `ibmdb_drop.sql` para deletar **todas** as tabelas do banco de dados de rankings;
-3. Rode o script `ibmdb_create.sql` para recriar as tabelas do zero;
-4. Execute os seguintes comandos:
+   ```python
+   DATABASES = {
+       # para usar o banco de dados local, use esta opção
+       'default': {
+           'ENGINE': 'django.db.backends.sqlite3',
+           'NAME': BASE_DIR / 'database_sqlite.db',
+       },
+       # para usar o banco de dados remoto, use esta opção
+       # 'default': {
+       #     "NAME": 'BEE',
+       #     "ENGINE": 'ibm_db_django',
+       #     "DATABASE": get_secret('database'),
+       #     "HOST": get_secret('host'),
+       #     "PORT": get_secret('port'),
+       #     "USER": get_secret('user'),
+       #     "PASSWORD": get_secret('password'),
+       #     "OPTIONS": {
+       #         'dsn': f"DATABASE={get_secret('database')};HOSTNAME={get_secret('host')};"
+       #                f"PORT={get_secret('port')};PROTOCOL=TCPIP;"
+       #     },
+       #     'PCONNECT': True,  
+       # },
+   }
+   ```
+
+2. Rode o script [ibmdb_create.sql](app/database_scripts/ibmdb_create.sql) para criar as tabelas no banco de dados;
+3. Execute os seguintes comandos:
+
+   ```bash
+   conda activate rankings
+   python manage.py makemigrations rankings
+   python manage.py migrate
+   ```
+
+</details>
+
+<details>
+<summary><h4>Tenho acesso ao banco bee</h4></summary>
+
+<details>
+<summary><h5>Quero recriar o banco de dados</h5></summary>
+
+> [!WARNING]  
+> Esta ação irá deletar **todas** as tabelas do banco de dados, referentes aos rankings. Pense bem se é exatamente isso
+> que você quer fazer!
+
+1. Rode o script [ibmdb_drop.sql](app/database_scripts/ibmdb_drop.sql) para deletar **todas** as tabelas do banco de dados de rankings;
+2. Rode o script [ibmdb_create.sql](app/database_scripts/ibmdb_create.sql) para recriar as tabelas do zero;
+3. Execute os seguintes comandos:
 
    ```bash
    conda activate rankings
@@ -77,6 +93,26 @@ Só é necessário executar este passo-a-passo na **primeira** vez que o banco d
 
 **NOTA:** pode ser que ao executar o comando `python manage.py migrate` com o banco de dados IBM DB2, um erro ocorra
 na migração. Simplesmente ignore este erro.
+
+</details>
+
+<details>
+<summary><h5>Quero refletir alterações feitas na estrutura das tabelas do banco de dados</h5></summary>
+
+1. Execute os seguintes comandos:
+
+   ```bash
+   conda activate rankings
+   python manage.py makemigrations rankings
+   python manage.py migrate
+   ```
+
+**NOTA:** pode ser que ao executar o comando `python manage.py migrate` com o banco de dados IBM DB2, um erro ocorra
+na migração. Simplesmente ignore este erro.
+
+</details>
+
+</details>
 
 ### Execuções subsequentes
 

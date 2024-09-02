@@ -1,6 +1,0 @@
-requests==2.*
-numpy>=1.23.*
-pandas==1.*
-selenium
-django
-tqdm

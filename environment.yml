@@ -1,0 +1,28 @@
+name: rankings
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - pip
+  - python=3.11.*
+  - pandas=2.*
+  - numpy
+  - matplotlib=3.*
+  - dash=2.*
+  - plotly=5.*
+  - tqdm
+  - requests==2.*
+  - selenium
+  - django
+  - pip:
+      - ibm-db==3.1.4
+      - coplin-db2==1.*
+      - dash-bootstrap-components==1.5.*
+      - wakepy
+      - django-nested-inline
+      - django-bootstrap-v5
+      - django-crispy-forms
+      - crispy-bootstrap5
+      - ibm-db-django
+      - django-contrib-comments
+      - sqlparse
