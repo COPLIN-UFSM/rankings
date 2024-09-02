@@ -77,7 +77,7 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
 <details>
 <summary><h5>Quero recriar o banco de dados</h5></summary>
 
-> [!WARNING]  
+> [!CAUTION]
 > Esta ação irá deletar **todas** as tabelas do banco de dados, referentes aos rankings. Pense bem se é exatamente isso
 > que você quer fazer!
 
@@ -91,8 +91,9 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
    python manage.py migrate
    ```
 
-**NOTA:** pode ser que ao executar o comando `python manage.py migrate` com o banco de dados IBM DB2, um erro ocorra
-na migração. Simplesmente ignore este erro.
+> [!NOTE]
+> Pode ser que ao executar o comando `python manage.py migrate` com o banco de dados IBM DB2, um erro ocorra 
+> na migração. Simplesmente ignore este erro.
 
 </details>
 
@@ -107,8 +108,9 @@ na migração. Simplesmente ignore este erro.
    python manage.py migrate
    ```
 
-**NOTA:** pode ser que ao executar o comando `python manage.py migrate` com o banco de dados IBM DB2, um erro ocorra
-na migração. Simplesmente ignore este erro.
+> [!NOTE]
+> Pode ser que ao executar o comando `python manage.py migrate` com o banco de dados IBM DB2, um erro ocorra 
+> na migração. Simplesmente ignore este erro.
 
 </details>
 
