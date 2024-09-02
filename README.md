@@ -24,14 +24,11 @@ As configurações da máquina que o repositório foi desenvolvido encontram-se 
 conda env create -f environment.yml
 ```
 
-## Execução da aplicação
-
-### Primeira execução
+## Primeira execução
 
 Siga uma das duas opções abaixo, dependendo do seu caso de uso.
 
-<details>
-<summary><h4>Não tenho acesso ao banco bee da UFSM</h4></summary>
+### ❌ Não tenho acesso ao banco bee da UFSM
 
 1. Será necessário trocar as configurações no [settings.py](app/app/settings.py) para usar um banco de dados local:
 
@@ -69,13 +66,9 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
    python manage.py migrate
    ```
 
-</details>
+### ✅ Tenho acesso ao banco bee
 
-<details>
-<summary><h4>Tenho acesso ao banco bee</h4></summary>
-
-<details>
-<summary><h5>Quero recriar o banco de dados</h5></summary>
+#### Opção 1: Quero recriar o banco de dados
 
 > [!CAUTION]
 > Esta ação irá deletar **todas** as tabelas do banco de dados, referentes aos rankings. Pense bem se é exatamente isso
@@ -95,10 +88,7 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
 > Pode ser que ao executar o comando `python manage.py migrate` com o banco de dados IBM DB2, um erro ocorra 
 > na migração. Simplesmente ignore este erro.
 
-</details>
-
-<details>
-<summary><h5>Quero refletir alterações feitas na estrutura das tabelas do banco de dados</h5></summary>
+#### Opção 2: Quero refletir alterações feitas na estrutura das tabelas do banco de dados
 
 1. Execute os seguintes comandos:
 
@@ -112,11 +102,13 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
 > Pode ser que ao executar o comando `python manage.py migrate` com o banco de dados IBM DB2, um erro ocorra 
 > na migração. Simplesmente ignore este erro.
 
-</details>
+## Execuções subsequentes
 
-</details>
+> [!NOTE]
+> Caso esteja rodando a aplicação com conexão ao banco da UFSM, é necessário estar na mesma rede do banco de dados 
+> (rede interna), ou usar a VPN da universidade.
 
-### Execuções subsequentes
+Independente do nível de acesso ao banco de dados da UFSM:
 
 1. Entre na pasta `app`
 2. Execute os seguintes comandos:
