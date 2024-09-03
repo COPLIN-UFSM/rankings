@@ -127,6 +127,7 @@ Independente do nível de acesso ao banco de dados da UFSM:
 ## Contato
 
 Repositório originalmente desenvolvido por Henry Cagnini: [henry.cagnini@ufsm.br]()
+Contribuições de Douglas Pasqualin: [douglas@ufsm.br]()
 
 ## Bibliografia
 
