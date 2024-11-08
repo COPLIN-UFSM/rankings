@@ -128,6 +128,8 @@ Independente do nível de acesso ao banco de dados da UFSM:
 
 Repositório originalmente desenvolvido por Henry Cagnini: [henry.cagnini@ufsm.br]()
 
+Contribuições de Douglas Pasqualin: [douglas@ufsm.br]()
+
 ## Bibliografia
 
 * [Documentação ibm_db](https://www.ibm.com/docs/en/db2/11.5?topic=framework-application-development-db)
