@@ -2202,3 +2202,49 @@ INSERT INTO R_PILARES(ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES) VALUE
 
 create index IX_R_PILARES_VALORES_01
 ON R_PILARES_VALORES (ID_PILAR);
+
+INSERT INTO R_PILARES_GRUPOS(NOME_GRUPO_PORTUGUES, NOME_GRUPO_INGLES)
+VALUES ('Pilares ranqueáveis', 'Rankable Pillars');
+
+-- insere pilares ranqueáveis do shanghai
+INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+select ID_PILAR, (
+    select ID_GRUPO_PILARES
+    from R_PILARES_GRUPOS
+    where NOME_GRUPO_INGLES = 'Rankable Pillars'
+    )
+from R_PILARES
+WHERE ID_RANKING in (
+    select ID_RANKING
+    FROM R_RANKINGS
+    WHERE UPPER(NOME_RANKING) LIKE 'SHANGHAI%'
+) and NOME_PILAR_INGLES <> 'Total Score';
+
+-- insere pilares ranqueáveis do THE (todos os rankings)
+INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+select ID_PILAR, (
+    select ID_GRUPO_PILARES
+    from R_PILARES_GRUPOS
+    where NOME_GRUPO_INGLES = 'Rankable Pillars'
+    )
+from R_PILARES
+WHERE ID_RANKING in (
+    select ID_RANKING
+    FROM R_RANKINGS
+    WHERE UPPER(NOME_RANKING) LIKE 'TIMES HIGHER EDUCATION%'
+) and UPPER(NOME_PILAR_INGLES) like '%(SCORE)';
+
+
+-- insere pilares ranqueáveis do QS (todos os rankings)
+INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+select ID_PILAR, (
+    select ID_GRUPO_PILARES
+    from R_PILARES_GRUPOS
+    where NOME_GRUPO_INGLES = 'Rankable Pillars'
+    )
+from R_PILARES
+WHERE ID_RANKING in (
+    select ID_RANKING
+    FROM R_RANKINGS
+    WHERE UPPER(NOME_RANKING) LIKE 'QS%'
+) and UPPER(NOME_PILAR_INGLES) like '%(SCORE)';
