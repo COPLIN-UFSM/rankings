@@ -2245,7 +2245,31 @@ from R_PILARES
 WHERE ID_RANKING in (
     select ID_RANKING
     FROM R_RANKINGS
-    WHERE UPPER(NOME_RANKING) LIKE 'TIMES HIGHER EDUCATION%'
+    WHERE UPPER(NOME_RANKING) LIKE '%TIMES HIGHER EDUCATION%'
+) and UPPER(NOME_PILAR_INGLES) like '%(SCORE)';
+
+
+-- deleta pilares do THE - use apenas para atualizar!
+-- delete from R_PILARES_PARA_GRUPOS
+-- where id_pilar in (
+--     select ID_PILAR
+--     from R_PILARES rp
+--     inner join R_RANKINGS rr on rp.ID_RANKING = rr.ID_RANKING
+--     WHERE UPPER(NOME_RANKING) LIKE '%TIMES HIGHER EDUCATION%'
+-- );
+
+-- ranking da folha
+INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+select ID_PILAR, (
+    select ID_GRUPO_PILARES
+    from R_PILARES_GRUPOS
+    where NOME_GRUPO_INGLES = 'Rankable Pillars'
+    )
+from R_PILARES
+WHERE ID_RANKING in (
+    select ID_RANKING
+    FROM R_RANKINGS
+    WHERE NOME_RANKING = 'Ranking Universitário Folha de São Paulo'
 ) and UPPER(NOME_PILAR_INGLES) like '%(SCORE)';
 
 
@@ -2262,3 +2286,17 @@ WHERE ID_RANKING in (
     FROM R_RANKINGS
     WHERE UPPER(NOME_RANKING) LIKE 'QS%'
 ) and UPPER(NOME_PILAR_INGLES) like '%(SCORE)';
+
+-- insere pilares ranqueáveis do Green metric (todos menos world rank)
+INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+select ID_PILAR, (
+    select ID_GRUPO_PILARES
+    from R_PILARES_GRUPOS
+    where NOME_GRUPO_INGLES = 'Rankable Pillars'
+    )
+from R_PILARES
+WHERE ID_RANKING in (
+    select ID_RANKING
+    FROM R_RANKINGS
+    WHERE NOME_RANKING LIKE 'Green Metric'
+) and UPPER(NOME_PILAR_INGLES) <> 'World Rank';
