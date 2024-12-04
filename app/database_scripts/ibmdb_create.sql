@@ -998,7 +998,6 @@ INSERT INTO R_PILARES(
     (4, 'Percent of International Students', 'Porcentagem de estudantes internacionais', NULL, NULL),
     (4, 'Female to male students ratio', 'Proporção de estudantes mulheres para estudantes homens', NULL, NULL);
 
-
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS World Ranking');
 INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
@@ -1159,17 +1158,31 @@ INSERT INTO R_PILARES(
     (11, 'Education & Research', 'Education & Research', NULL, NULL),
     (11, 'Education', 'Education', NULL, NULL);
 
-
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Ranking Universitário Folha de São Paulo');
 INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
-    (12, 'Inovação (Ranking)', 'Inovação (Ranking)', NULL, NULL),
-    (12, 'Número de patentes depositadas', 'Número de patentes depositadas', NULL, NULL),
+    (12, 'Ranking Geral', 'Ranking Geral', NULL, NULL),
+    (12, 'Nota Geral', 'Nota Geral', NULL, NULL),
+    (12, 'Instrução dos Professores (Rank)', 'Instrução dos Professores (Rank)', NULL, NULL),
+    (12, 'Instrução dos Professores (Score)', 'Instrução dos Professores (Score)', NULL, NULL),
+    (12, 'Tempo de dedicação dos Professores (Rank)', 'Tempo de dedicação dos Professores (Rank)', NULL, NULL),
+    (12, 'Tempo de dedicação dos Professores (Score)', 'Tempo de dedicação dos Professores (Score)', NULL, NULL),
+    (12, 'No Enade (Rank)', 'No Enade (Rank)', NULL, NULL),
+    (12, 'No Enade (Score)', 'No Enade (Score)', NULL, NULL),
+    (12, 'Desistência (Rank)', 'Desistência (Rank)', NULL, NULL),
+    (12, 'Desistência (Score)', 'Desistência (Score)', NULL, NULL),
+    (12, 'No MEC (Rank)', 'No MEC (Rank)', NULL, NULL),
+    (12, 'No MEC (Score)', 'No MEC (Score)', NULL, NULL),
+    (12, 'Número de patentes depositadas (Score)', 'Número de patentes depositadas (Score)', NULL, NULL),
     (12, 'Número de patentes depositadas (Rank)', 'Número de patentes depositadas (Rank)', NULL, NULL),
-    (12, 'Artigos em colaboração com empresas', 'Artigos em colaboração com empresas', NULL, NULL),
+    (12, 'Artigos em colaboração com empresas (Score)', 'Artigos em colaboração com empresas (Score)', NULL, NULL),
     (12, 'Artigos em colaboração com empresas (Rank)', 'Artigos em colaboração com empresas (Rank)', NULL, NULL),
-    (12, 'Pesquisa (Ranking)', 'Pesquisa (Ranking)', NULL, NULL),
+    (12, 'Citações Internacionais por Docente (Rank)', 'Citações Internacionais por Docente (Rank)', NULL, NULL),
+    (12, 'Citações Internacionais por Docente (Score)', 'Citações Internacionais por Docente (Score)', NULL, NULL),
+    (12, 'Coautoria Internacional (Rank)', 'Coautoria Internacional (Rank)', NULL, NULL),
+    (12, 'Coautoria Internacional (Score)', 'Coautoria Internacional (Score)', NULL, NULL),
+    (12, 'Avaliação do Mercado (Score)', 'Avaliação do Mercado (Score)', NULL, NULL),
     (12, 'Total de Publicação (Rank)', 'Total de Publicação (Rank)', NULL, NULL),
     (12, 'Total de Publicação (Score)', 'Total de Publicação (Score)', NULL, NULL),
     (12, 'Total de Citações (Rank)', 'Total de Citações (Rank)', NULL, NULL),
@@ -1188,7 +1201,6 @@ INSERT INTO R_PILARES(
     (12, 'Bolsista CNPq (Score)', 'Bolsista CNPq (Score)', NULL, NULL),
     (12, 'Teses (Rank)', 'Teses (Rank)', NULL, NULL),
     (12, 'Teses (Score)', 'Teses (Score)', NULL, NULL),
-    (12, 'Geral (Ranking)', 'Geral (Ranking)', NULL, NULL),
     (12, 'Ensino (Rank)', 'Ensino (Rank)', NULL, NULL),
     (12, 'Ensino (Score)', 'Ensino (Score)', NULL, NULL),
     (12, 'Pesquisa (Rank)', 'Pesquisa (Rank)', NULL, NULL),
@@ -1199,26 +1211,16 @@ INSERT INTO R_PILARES(
     (12, 'Inovação (Score)', 'Inovação (Score)', NULL, NULL),
     (12, 'Internacionalização (Rank)', 'Internacionalização (Rank)', NULL, NULL),
     (12, 'Internacionalização (Score)', 'Internacionalização (Score)', NULL, NULL),
-    (12, 'Geral (Score)', 'Geral (Score)', NULL, NULL),
-    (12, 'Mercado (Ranking)', 'Mercado (Ranking)', NULL, NULL),
-    (12, 'Avaliação do Mercado', 'Avaliação do Mercado', NULL, NULL),
-    (12, 'Ensino (Ranking)', 'Ensino (Ranking)', NULL, NULL),
-    (12, 'Instrução dos Professores (Rank)', 'Instrução dos Professores (Rank)', NULL, NULL),
-    (12, 'Instrução dos Professores (Score)', 'Instrução dos Professores (Score)', NULL, NULL),
-    (12, 'Tempo de dedicação dos Professores (Rank)', 'Tempo de dedicação dos Professores (Rank)', NULL, NULL),
-    (12, 'Tempo de dedicação dos Professores (Score)', 'Tempo de dedicação dos Professores (Score)', NULL, NULL),
-    (12, 'no Enade (Rank)', 'no Enade (Rank)', NULL, NULL),
-    (12, 'no Enade (Score)', 'no Enade (Score)', NULL, NULL),
-    (12, 'Desistência (Rank)', 'Desistência (Rank)', NULL, NULL),
-    (12, 'Desistência (Score)', 'Desistência (Score)', NULL, NULL),
-    (12, 'no MEC (Rank)', 'no MEC (Rank)', NULL, NULL),
-    (12, 'no MEC (Score)', 'no MEC (Score)', NULL, NULL),
-    (12, 'Internacionalização (Ranking)', 'Internacionalização (Ranking)', NULL, NULL),
-    (12, 'Citações Internacionais por Docente (Rank)', 'Citações Internacionais por Docente (Rank)', NULL, NULL),
-    (12, 'Citações Internacionais por Docente (Score)', 'Citações Internacionais por Docente (Score)', NULL, NULL),
-    (12, 'Coautoria Internacional (Rank)', 'Coautoria Internacional (Rank)', NULL, NULL),
-    (12, 'Coautoria Internacional (Score)', 'Coautoria Internacional (Score)', NULL, NULL);
-
+    (12, 'Professores com doutorado e mestrado (Rank)', 'Professores com doutorado e mestrado (Rank)', NULL, NULL),
+    (12, 'Professores com doutorado e mestrado (Score)', 'Professores com doutorado e mestrado (Score)', NULL, NULL),
+    (12, 'Nota dos concluintes (Rank)', 'Nota dos concluintes (Rank)', NULL, NULL),
+    (12, 'Nota dos concluintes (Score)', 'Nota dos concluintes (Score)', NULL, NULL),
+    (12, 'Avaliação dos docentes (Rank)', 'Avaliação dos docentes (Rank)', NULL, NULL),
+    (12, 'Avaliação dos docentes (Score)', 'Avaliação dos docentes (Score)', NULL, NULL),
+    (12, 'Número de patentes concedidas (Score)', 'Número de patentes concedidas (Score)', NULL, NULL),
+    (12, 'Número de patentes concedidas (Rank)', 'Número de patentes concedidas (Rank)', NULL, NULL),
+    (12, 'Citaçoes por Docente (Rank)', 'Citaçoes por Docente (Rank)', NULL, NULL),
+    (12, 'Citaçoes por Docente (Score)', 'Citaçoes por Docente (Score)', NULL, NULL);
 
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('CWTS Leiden Ranking - All sciences');
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('CWTS Leiden Ranking - Mathematics and computer science');
@@ -2199,6 +2201,20 @@ INSERT INTO R_PILARES(ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES) VALUE
 INSERT INTO R_PILARES(ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES) VALUES (27, 'PP_short_dist_collab_ub (Frac_counting: 1)', 'PP_short_dist_collab_ub (Frac_counting: 1)');
 INSERT INTO R_PILARES(ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES) VALUES (27, 'P_short_dist_collab (Frac_counting: 1)', 'P_short_dist_collab (Frac_counting: 1)');
 INSERT INTO R_PILARES(ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES) VALUES (27, 'PP_bronze_OA (Frac_counting: 1)', 'PP_bronze_OA (Frac_counting: 1)');
+
+INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - Interdisciplinary Sciences Ranking');
+INSERT INTO R_PILARES(
+    ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
+) VALUES
+    (41, 'World Rank', 'Posição no Ranking Mundial', NULL, NULL),
+    (41, 'Overall (Score)', 'Geral (Score)', NULL, NULL),
+    (41, 'Overall (Rank)', 'Geral (Rank)', NULL, NULL),
+    (41, 'Inputs (Score)', 'Entradas (Score)', NULL, NULL),
+    (41, 'Inputs (Rank)', 'Entradas (Rank)', NULL, NULL),
+    (41, 'Outputs (Score)', 'Saídas (Score)', NULL, NULL),
+    (41, 'Outputs (Rank)', 'Saídas (Rank)', NULL, NULL),
+    (41, 'Process (Score)', 'Processos (Score)', NULL, NULL),
+    (41, 'Process (Rank)', 'Processos (Rank)', NULL, NULL);
 
 create index IX_R_PILARES_VALORES_01
 ON R_PILARES_VALORES (ID_PILAR);
