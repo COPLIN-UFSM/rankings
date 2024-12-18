@@ -2214,6 +2214,35 @@ INSERT INTO R_PILARES(
     (41, 'Process (Score)', 'Processos (Score)', NULL, NULL),
     (41, 'Process (Rank)', 'Processos (Rank)', NULL, NULL);
 
+INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS Sustainability Ranking');
+INSERT INTO R_PILARES(
+    ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
+) VALUES
+    (61, 'Overall (Score)', 'Geral (Score)', NULL, NULL),
+    (61, 'World Rank', 'Posição no Ranking Mundial', NULL, NULL),
+    (61, 'Environmental Impact (Rank)','Impacto Ambiental (Rank)',NULL, NULL),
+    (61, 'Environmental Impact (Score)','Impacto Ambiental (Score)',NULL, NULL),
+    (61, 'Environmental Sustainability (Rank)','Sustentabilidade Ambiental (Rank)',NULL, NULL),
+    (61, 'Environmental Sustainability (Score)','Sustentabilidade Ambiental (Score)',NULL, NULL),
+    (61, 'Environmental Education (Rank)','Educação Ambiental (Rank)',NULL, NULL),
+    (61, 'Environmental Education (Score)','Educação Ambiental (Score)',NULL, NULL),
+    (61, 'Environmental Research (Rank)','Pesquisa Ambiental (Rank)',NULL, NULL),
+    (61, 'Environmental Research (Score)','Pesquisa Ambiental (Score)',NULL, NULL),
+    (61, 'Social Impact (Rank)','Impacto Social (Rank)',NULL, NULL),
+    (61, 'Social Impact (Score)','Impacto Social (Score)',NULL, NULL),
+    (61, 'Equality (Rank)','Igualdade (Rank)',NULL, NULL),
+    (61, 'Equality (Score)','Igualdade (Score)',NULL, NULL),
+    (61, 'Knowledge Exchange (Rank)','Troca de Conhecimentos (Rank)',NULL, NULL),
+    (61, 'Knowledge Exchange (Score)','Troca de Conhecimentos (Score)',NULL, NULL),
+    (61, 'Impact of Education (Rank)','Impacto da Educação (Rank)',NULL, NULL),
+    (61, 'Impact of Education (Score)','Impacto da Educação (Score)',NULL, NULL),
+    (61, 'Employability & Opportunities (Rank)','Empregabilidade & Oportunidades (Rank)',NULL, NULL),
+    (61, 'Employability & Opportunities (Score)','Empregabilidade & Oportunidades (Score)',NULL, NULL),
+    (61, 'Health and Wellbeing (Rank)','Saúde e Bem-estar (Rank)',NULL, NULL),
+    (61, 'Health and Wellbeing (Score)','Saúde e Bem-estar (Score)',NULL, NULL),
+    (61, 'Governance (Rank)','Governança (Rank)',NULL, NULL),
+    (61, 'Governance (Score)','Governança (Score)',NULL, NULL);
+
 create index IX_R_PILARES_VALORES_01
 ON R_PILARES_VALORES (ID_PILAR);
 
