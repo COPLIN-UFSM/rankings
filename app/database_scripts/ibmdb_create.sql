@@ -294,7 +294,7 @@ INSERT INTO R_PAISES(NOME_PAIS_PORTUGUES, NOME_PAIS_INGLES, ID_CONTINENTE) VALUE
     ('Espanha','Spain',4),
     ('Estados Unidos','United States',7),
     ('Estônia','Estonia',4),
-    ('Eswatini','Eswatini',1),
+    ('Essuatíni','Eswatini',1),
     ('Etiópia','Ethiopia',1),
     ('Fiji','Fiji',5),
     ('Filipinas','Philippines',3),
@@ -2243,6 +2243,47 @@ INSERT INTO R_PILARES(
     (61, 'Governance (Rank)','Governança (Rank)',NULL, NULL),
     (61, 'Governance (Score)','Governança (Score)',NULL, NULL);
 
+INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Unirank Latin America');
+INSERT INTO R_PILARES(
+    ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
+) VALUES (
+    (select ID_RANKING from r_rankings where NOME_RANKING = 'Unirank Latin America'),
+    'Rank (Rank)',
+    'Rank (Rank)',
+    NULL,
+    NULL
+);
+
+INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Webometrics World Ranking');
+INSERT INTO R_PILARES(
+    ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
+) VALUES
+    (
+       (select ID_RANKING from r_rankings where NOME_RANKING = 'Webometrics World Ranking'),
+       'World Rank (Rank)',
+       'Ranking Mundial (Rank)',
+       NULL,
+       NULL
+    ), (
+       (select ID_RANKING from r_rankings where NOME_RANKING = 'Webometrics World Ranking'),
+       'Impact (Rank)',
+       'Impacto (Rank)',
+       NULL,
+       NULL
+    ), (
+       (select ID_RANKING from r_rankings where NOME_RANKING = 'Webometrics World Ranking'),
+       'Openness (Rank)',
+       'Abertura (Rank)',
+       NULL,
+       NULL
+    ), (
+       (select ID_RANKING from r_rankings where NOME_RANKING = 'Webometrics World Ranking'),
+       'Excellence (Rank)',
+       'Excelência (Rank)',
+       NULL,
+       NULL
+    );
+
 create index IX_R_PILARES_VALORES_01
 ON R_PILARES_VALORES (ID_PILAR);
 
@@ -2329,3 +2370,30 @@ WHERE ID_RANKING in (
     FROM R_RANKINGS
     WHERE NOME_RANKING LIKE 'Green Metric'
 ) and UPPER(NOME_PILAR_INGLES) <> 'World Rank';
+
+-- insere pilares ranqueáveis do Unirank (o único que tem)
+INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+select ID_PILAR, (
+    select ID_GRUPO_PILARES
+    from R_PILARES_GRUPOS
+    where NOME_GRUPO_INGLES = 'Rankable Pillars'
+    )
+from R_PILARES
+WHERE ID_RANKING in (
+    select ID_RANKING
+    FROM R_RANKINGS
+    WHERE NOME_RANKING LIKE 'Unirank Latin America'
+);
+
+INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+select ID_PILAR, (
+    select ID_GRUPO_PILARES
+    from R_PILARES_GRUPOS
+    where NOME_GRUPO_INGLES = 'Rankable Pillars'
+    )
+from R_PILARES
+WHERE ID_RANKING in (
+    select ID_RANKING
+    FROM R_RANKINGS
+    WHERE NOME_RANKING LIKE 'Webometrics World Ranking'
+);
