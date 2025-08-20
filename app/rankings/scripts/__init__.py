@@ -93,7 +93,7 @@ def get_pillars(df, id_ranking) -> list:
             f'<p>Erro: Os pilares informados na planilha devem ser exatamente os que são informados no banco de dados! '
             f'Se novos pilares foram adicionados ao Ranking, você terá que adicioná-los manualmente na tela de '
             f'administrador deste site. Se os nomes dos pilares forem semelhantes, mas não exatamente iguais, você pode'
-            f'simplesmente trocar o nome do pilar na planilha para o nome do banco de dados. Os nomes dos pilares '
+            f' simplesmente trocar o nome do pilar na planilha para o nome do banco de dados. Os nomes dos pilares '
             f'devem ser consistentes: ou todos escritos em inglês, ou todos escritos em português. Verifique a grafia '
             f'correta na tela de administrador.</p>'
             f'<p>Pilares que faltam na planilha:</p><ul>{missing_html}</ul>'
@@ -333,23 +333,32 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
     # insere id_universidade para linhas que o nome da universidade foi encontrado no banco
     df['id_universidade'] = np.nan
     df['id_apelido_universidade'] = np.nan
-    df['id_universidade'] = df['id_universidade'].astype('Int64')
-    df['id_apelido_universidade'] = df['id_apelido_universidade'].astype('Int64')
+    df.loc[:, 'id_universidade'] = df['id_universidade'].astype(float)
+    df.loc[:, 'id_pais'] = df['id_pais'].astype(float)
+    df.loc[:, 'id_apelido_universidade'] = df['id_apelido_universidade'].astype(float)
+
+    db.loc[:, 'id_universidade'] = db['id_universidade'].astype(float)
+    db.loc[:, 'id_pais'] = db['id_pais'].astype(float)
+    db.loc[:, 'id_apelido_universidade'] = db['id_apelido_universidade'].astype(float)
 
     df_columns = df.columns.tolist()
 
-    joined = df.merge(db, on=['Universidade_encoded', 'id_pais'], how='left', suffixes=('', '_db'))
+    raise NotImplementedError('algum erro na hora de dar join!')
 
-    joined.loc[:, 'id_universidade'] = joined['id_universidade_db']
-    joined.loc[:, 'id_apelido_universidade'] = joined['id_apelido_universidade_db']
+    joined = pd.merge(df, db, on=['Universidade_encoded', 'id_pais'], how='left', suffixes=('', '_db'))
+
+    joined.loc[joined.index, 'id_universidade'] = joined.loc[joined.index, 'id_universidade_db']
+    joined.loc[joined.index, 'id_apelido_universidade'] = joined.loc[joined.index, 'id_apelido_universidade_db']
 
     df = joined[df_columns]
     # TODO esta função está removendo mais linhas do que deveria!
     # df = df.drop_duplicates(subset=['Ano', 'id_pais', 'id_apelido_universidade'], keep='first')
 
     # se alguma universidade do arquivo do ranking anda não tem o id_universidade setado
-    if df['id_apelido_universidade'].isna().sum() > 0:
-        missing = df.loc[df['id_apelido_universidade'].isna()].drop_duplicates(subset=['Universidade_encoded', 'id_pais'])
+    if pd.isna(df['id_apelido_universidade']).sum() > 0:
+        missing = df.loc[pd.isna(df['id_apelido_universidade'])].drop_duplicates(
+            subset=['Universidade_encoded', 'id_pais']
+        )
 
         # candidates = db['Universidade_encoded'].tolist()
 
@@ -358,15 +367,22 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
 
         for i, row in tqdm(missing.iterrows(), total=len(missing), desc='Inserindo universidades no banco'):
             try:
+                uni_name = row['Universidade'].encode('utf-8').decode('latin-1')
+                id_pais = row['id_pais']
+
                 candidates = db.loc[db['id_pais'] == row['id_pais'],'Universidade_encoded'].tolist()
 
                 idx = get_closest_match(row['Universidade_encoded'], candidates, model=model)
                 df.loc[i, 'id_universidade'] = db.loc[idx, 'id_universidade']
-                df.loc[i, 'id_apelido_universidade'] = db.loc[idx, 'id_apelido_universidade']
-            except IndexError:  # nenhuma correspondência encontrada
-                uni_name = row['Universidade'].encode('utf-8').decode('latin-1')
-                id_pais = row['id_pais']
 
+                apelido = ApelidoDeUniversidade(
+                    universidade=Universidade.objects.get(id_universidade=int(db.loc[idx, 'id_universidade'])),
+                    apelido=uni_name
+                )
+                apelido.save()
+                df.loc[i, 'id_apelido_universidade'] = apelido.id_apelido
+
+            except IndexError:  # nenhuma correspondência encontrada
                 universidade = Universidade(
                     nome_portugues=uni_name,
                     nome_ingles=uni_name,
