@@ -21,7 +21,7 @@ As configurações da máquina que o repositório foi desenvolvido encontram-se 
 ## Instalação
 
 ```bash
-conda env create -f environment.yml
+conda env create -f env_windows.yml
 ```
 
 ## Primeira execução

@@ -267,8 +267,15 @@ def __missing_countries_preview__(request, df, id_formulario, id_ranking):
     return __insert_id_university_step__(request, df, id_ranking=id_ranking, id_formulario=id_formulario)
 
 
-def ranking_insert(request):
-    if request.method == 'POST':
+class RankingInsertView(TemplateView):
+    template_name = 'rankings/ranking/insert/index.html'
+
+    def get(self, request, *args, **kwargs):
+        form = InsertRankingForm()
+        __remove_forms__()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
         form = InsertRankingForm(request.POST, request.FILES)
         if form.is_valid():
             df = get_dataframe(request.FILES['file'])
@@ -284,11 +291,6 @@ def ranking_insert(request):
                     'rankings/ranking/insert/index.html',
                     {'form': form, 'error_message': e.message}
                 )
-    else:
-        form = InsertRankingForm()
-        __remove_forms__()
-
-    return render(request, 'rankings/ranking/insert/index.html', {'form': form})
 
 
 class MergerPillarsPreview(TemplateView):

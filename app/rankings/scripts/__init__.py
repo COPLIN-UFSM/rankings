@@ -11,6 +11,7 @@ import pandas as pd
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 from .universities import __get_all_universities__
@@ -326,6 +327,8 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
 
     # bd_unis possui as universidades do banco de dados
     db = __get_all_universities__()
+    df['Universidade_encoded'] = df['Universidade'].apply(lambda x: x.encode('utf-8').decode('latin-1'))
+    db['Universidade_encoded'] = db['Universidade'].apply(lambda x: x.encode('utf-8').decode('latin-1'))
 
     # insere id_universidade para linhas que o nome da universidade foi encontrado no banco
     df['id_universidade'] = np.nan
@@ -335,7 +338,7 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
 
     df_columns = df.columns.tolist()
 
-    joined = df.merge(db, on=['Universidade', 'id_pais'], how='left', suffixes=('', '_db'))
+    joined = df.merge(db, on=['Universidade_encoded', 'id_pais'], how='left', suffixes=('', '_db'))
 
     joined.loc[:, 'id_universidade'] = joined['id_universidade_db']
     joined.loc[:, 'id_apelido_universidade'] = joined['id_apelido_universidade_db']
@@ -346,30 +349,40 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
 
     # se alguma universidade do arquivo do ranking anda não tem o id_universidade setado
     if df['id_apelido_universidade'].isna().sum() > 0:
-        missing = df.loc[df['id_apelido_universidade'].isna()].drop_duplicates(subset=['Universidade', 'id_pais'])
+        missing = df.loc[df['id_apelido_universidade'].isna()].drop_duplicates(subset=['Universidade_encoded', 'id_pais'])
 
-        with tqdm(range(len(missing)), desc='Inserindo universidades no banco') as pbar:
-            for i, row in missing.iterrows():
+        # candidates = db['Universidade_encoded'].tolist()
+
+        from sentence_transformers import SentenceTransformer, util
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+
+        for i, row in tqdm(missing.iterrows(), total=len(missing), desc='Inserindo universidades no banco'):
+            try:
+                candidates = db.loc[db['id_pais'] == row['id_pais'],'Universidade_encoded'].tolist()
+
+                idx = get_closest_match(row['Universidade_encoded'], candidates, model=model)
+                df.loc[i, 'id_universidade'] = db.loc[idx, 'id_universidade']
+                df.loc[i, 'id_apelido_universidade'] = db.loc[idx, 'id_apelido_universidade']
+            except IndexError:  # nenhuma correspondência encontrada
+                uni_name = row['Universidade'].encode('utf-8').decode('latin-1')
+                id_pais = row['id_pais']
+
                 universidade = Universidade(
-                    nome_portugues=row['Universidade'],
-                    nome_ingles=row['Universidade'],
+                    nome_portugues=uni_name,
+                    nome_ingles=uni_name,
                     pais_apelido_id=int(row['id_apelido_pais'])
                 )
                 universidade.save()
+
                 apelido = ApelidoDeUniversidade(
                     universidade=universidade,
-                    apelido=row['Universidade']
+                    apelido=uni_name
                 )
                 apelido.save()
 
-                uni_name = row['Universidade']
-                id_pais = row['id_pais']
-
-                index = (df['Universidade'] == uni_name) & (df['id_pais'] == id_pais)
+                index = (df['Universidade_encoded'] == uni_name) & (df['id_pais'] == id_pais)
                 df.loc[index, 'id_universidade'] = universidade.id_universidade
                 df.loc[index, 'id_apelido_universidade'] = apelido.id_apelido
-
-                pbar.update(1)
 
     return df
 
@@ -428,3 +441,29 @@ def save_ranking_file(df: pd.DataFrame, id_ranking: int, id_formulario: int = No
 
     return df, id_formulario
 
+
+def get_closest_match(name: str, candidates: list, threshold: float = 0.8, model: SentenceTransformer = None) -> int:
+    """
+    Encontra a melhor correspondência para um nome em uma lista de candidatos com base na similaridade de strings.
+
+    :param name: O nome de referência.
+    :param candidates: Lista de nomes candidatos.
+    :param threshold: Limite de similaridade para considerar uma correspondência válida.
+    :return: O nome mais próximo encontrado na lista de candidatos.
+    """
+    from sentence_transformers import SentenceTransformer, util
+
+    if model is None:
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+
+    # Get embeddings
+    ref_emb = model.encode(name, convert_to_tensor=True)
+    candidate_embeddings = model.encode(candidates, convert_to_tensor=True)
+
+    # Compute cosine similarity
+    similarities = util.cos_sim(ref_emb, candidate_embeddings)[0].cpu().numpy()
+    argmax = similarities.argmax()
+    if similarities[argmax] > threshold:
+        return argmax
+
+    raise IndexError(f'Nenhum item da lista de candidatos possui similaridade acima do threshold de {threshold}!')
