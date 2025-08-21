@@ -11,17 +11,21 @@ import pandas as pd
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.shortcuts import render
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 from .universities import __get_all_universities__
 from ..models import Ranking, Pilar, ApelidoDeUniversidade, ApelidoDePais, Formulario, Universidade, PilarValor, \
-    Metrica, MetricaValor
+    Metrica, MetricaValor, Pais, TipoApelido
 
 
 def get_dataframe(file: InMemoryUploadedFile):
+    """
+    Transforma um arquivo CSV em um DataFrame do Pandas.
+    """
     some_file = file.read().decode('utf-8')
-    df = pd.read_csv(StringIO(some_file))
+    df = pd.read_csv(StringIO(some_file), encoding='utf-8')
     return df
 
 
@@ -146,27 +150,46 @@ def check_ranking_file_consistency(df: pd.DataFrame, id_ranking: int) -> pd.Data
     df = df.replace({None: np.nan, '-': np.nan, 'Reporter': np.nan, 'reporter': np.nan,
                      'n/a': np.nan, 'NA': np.nan, 'na': np.nan})
 
+    column_renaming = {}
     for pillar in pillars:
         try:
-            df.loc[:, pillar['Pilar']] = df[pillar['Pilar']].apply(__convert_column_values_to_list__)
+            new_name = pillar['Pilar'] + '_as_list'
+            column_renaming[new_name] = pillar['Pilar']
+
+            df.loc[:, new_name] = df[pillar['Pilar']].apply(__convert_column_values_to_list__)
         except Exception as e:
             raise ValidationError(
                 'Para cada coluna de pilar, os números devem ter a casa decimal como ponto (e.g. 10.9), e serem '
                 'separados por travessão (-), caso possuam mais de um valor.'
             )
+
+    df = df.drop(columns=column_renaming.values())
+    df = df.rename(columns=column_renaming)
+
+    column_renaming = {}
     for metric in metrics:
         try:
-            df.loc[:, metric['Métrica']] = df[metric['Métrica']].apply(__convert_column_values_to_list__)
+            new_name = metric['Métrica'] + '_as_list'
+            column_renaming[new_name] = metric['Métrica']
+
+            df.loc[:, new_name] = df[metric['Métrica']].apply(__convert_column_values_to_list__)
         except Exception as e:
             raise ValidationError(
                 'Para cada coluna de métrica, os números devem ter a casa decimal como ponto (e.g. 10.9), e serem '
                 'separados por travessão (-), caso possuam mais de um valor.'
             )
 
+    df = df.drop(columns=column_renaming.values())
+    df = df.rename(columns=column_renaming)
+
     return df
 
 
-def insert_id_country(df: pd.DataFrame) -> pd.DataFrame:
+def insert_id_pais(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Dado um dataframe que é a coleta de um ranking feita pela internet, insere o id_pais e o id_apelido_pais para cada
+    linha.
+    """
     def __prepare__(_df, set_pais=True, set_apelido=True):
         if set_pais:
             _df['id_pais'] = np.nan
@@ -184,13 +207,13 @@ def insert_id_country(df: pd.DataFrame) -> pd.DataFrame:
 
     original_columns = df.columns.tolist()
 
-    df = __prepare__(df)
+    df = __prepare__(df, set_pais=True, set_apelido=True)
 
     db = pd.DataFrame(ApelidoDePais.objects.all().values('pais_id', 'id_apelido', 'apelido'))
     db.columns = ['id_pais', 'id_apelido_pais', 'País']
     db = __prepare__(db, set_pais=False, set_apelido=False)
 
-    joined = df.merge(db, on='País (canonical)', how='left', suffixes=('', '_db'))
+    joined = pd.merge(df, db, on='País (canonical)', how='left', suffixes=('', '_db'))
 
     joined.loc[:, 'id_pais'] = joined.loc[:, 'id_pais_db']
     joined.loc[:, 'id_apelido_pais'] = joined.loc[:, 'id_apelido_pais_db']
@@ -327,8 +350,12 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
 
     # bd_unis possui as universidades do banco de dados
     db = __get_all_universities__()
-    df['Universidade_encoded'] = df['Universidade'].apply(lambda x: x.encode('utf-8').decode('latin-1'))
-    db['Universidade_encoded'] = db['Universidade'].apply(lambda x: x.encode('utf-8').decode('latin-1'))
+    df['Universidade_encoded'] = df['Universidade'].apply(lambda x: x.upper().strip().encode('unicode_escape').decode('latin-1').upper())
+    db['Universidade_encoded'] = db['Universidade'].apply(lambda x: x.upper().strip().encode('latin-1').decode('latin-1').upper())
+
+    # TODO para debugging
+    # TODO db.loc[db['Universidade'].apply(lambda x: 'College London' in x), ['Universidade', 'Universidade_encoded', 'id_pais', 'id_apelido_pais']]
+    # TODO df.loc[df['Universidade'].apply(lambda x: 'College London' in x), ['Universidade', 'Universidade_encoded', 'id_pais', 'id_apelido_pais']]
 
     # insere id_universidade para linhas que o nome da universidade foi encontrado no banco
     df['id_universidade'] = np.nan
@@ -341,22 +368,23 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
     db.loc[:, 'id_pais'] = db['id_pais'].astype(float)
     db.loc[:, 'id_apelido_universidade'] = db['id_apelido_universidade'].astype(float)
 
-    df_columns = df.columns.tolist()
-
-    raise NotImplementedError('algum erro na hora de dar join!')
-
     joined = pd.merge(df, db, on=['Universidade_encoded', 'id_pais'], how='left', suffixes=('', '_db'))
+
+    # TODO for debugging purposes
+    # joined.loc[joined['Universidade'].apply(lambda x: 'College London' in x), ['Universidade', 'Universidade_db', 'Universidade_encoded', 'id_pais', 'id_apelido_pais', 'id_universidade', 'id_apelido_universidade']]
 
     joined.loc[joined.index, 'id_universidade'] = joined.loc[joined.index, 'id_universidade_db']
     joined.loc[joined.index, 'id_apelido_universidade'] = joined.loc[joined.index, 'id_apelido_universidade_db']
 
-    df = joined[df_columns]
+    df = joined[df.columns]
     # TODO esta função está removendo mais linhas do que deveria!
     # df = df.drop_duplicates(subset=['Ano', 'id_pais', 'id_apelido_universidade'], keep='first')
 
     # se alguma universidade do arquivo do ranking anda não tem o id_universidade setado
     if pd.isna(df['id_apelido_universidade']).sum() > 0:
-        missing = df.loc[pd.isna(df['id_apelido_universidade'])].drop_duplicates(
+        missing = df.loc[
+            pd.isna(df['id_apelido_universidade'])
+        ].drop_duplicates(
             subset=['Universidade_encoded', 'id_pais']
         )
 
@@ -367,16 +395,18 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
 
         for i, row in tqdm(missing.iterrows(), total=len(missing), desc='Inserindo universidades no banco'):
             try:
-                uni_name = row['Universidade'].encode('utf-8').decode('latin-1')
-                id_pais = row['id_pais']
+                uni_name = row['Universidade'].upper().strip().encode('unicode_escape').decode('latin-1').upper()
+                id_pais = row['id_pais']  # TODO alguma coisa está errada está pegando o id!!!!
 
-                candidates = db.loc[db['id_pais'] == row['id_pais'],'Universidade_encoded'].tolist()
+                candidates = db.loc[db['id_pais'] == id_pais]
 
-                idx = get_closest_match(row['Universidade_encoded'], candidates, model=model)
-                df.loc[i, 'id_universidade'] = db.loc[idx, 'id_universidade']
+                idx = get_closest_match(uni_name, candidates['Universidade_encoded'].tolist(), model=model)
+                id_universidade = candidates.iloc[idx]['id_universidade']
+
+                df.loc[i, 'id_universidade'] = id_universidade
 
                 apelido = ApelidoDeUniversidade(
-                    universidade=Universidade.objects.get(id_universidade=int(db.loc[idx, 'id_universidade'])),
+                    universidade=Universidade.objects.get(id_universidade=id_universidade),
                     apelido=uni_name
                 )
                 apelido.save()
@@ -483,3 +513,32 @@ def get_closest_match(name: str, candidates: list, threshold: float = 0.8, model
         return argmax
 
     raise IndexError(f'Nenhum item da lista de candidatos possui similaridade acima do threshold de {threshold}!')
+
+
+def __missing_countries_preview__(request, df, id_formulario, id_ranking):
+    df = insert_id_pais(df)
+    df, id_formulario = save_ranking_file(df, id_ranking=id_ranking, id_formulario=id_formulario)
+
+    # se algum registro não tem id de país setado
+    if df['id_pais'].isna().sum() > 0:
+        df.reset_index(inplace=True)
+        # o índice não quer dizer muita coisa nesse contexto, mas é necessário um número
+        rows = df.loc[df['id_pais'].isna(), ['index', 'id_pais', 'País']].drop_duplicates(subset=['País'])
+        return render(
+            request,
+            'rankings/countries/missing/preview.html',
+            context={
+                'id_formulario': id_formulario,
+                'id_ranking': id_ranking,
+                'rows': rows.to_dict(orient='records'),
+                'country_options': [{'id_pais': '', 'nome_portugues': ''}] + [
+                    {'id_pais': x.id_pais, 'nome_portugues': x.nome_portugues}
+                    for x in Pais.objects.all()
+                ],
+                'country_type_options': [{'id_tipo_apelido': '', 'tipo_apelido': ''}] + pd.DataFrame(
+                    TipoApelido.objects.values('id_tipo_apelido', 'tipo_apelido')
+                ).to_dict(orient='records')
+            }
+        )
+
+    return request, df, id_ranking, id_formulario

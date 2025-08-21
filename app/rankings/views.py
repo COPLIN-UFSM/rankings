@@ -5,49 +5,52 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import Count
 from django.shortcuts import render
-from django.template.loader import render_to_string, get_template
+from django.template.loader import get_template
 from django.views.generic import TemplateView
 from tqdm import tqdm
 
 from .forms import InsertRankingForm
 from .models import MetricaValor, PilarValor, Pilar, PilaresParaGrupos, MetricasParaPilares
-from .models import Pais, Universidade, TipoApelido, ApelidoDePais, ApelidoDeUniversidade
+from .models import Universidade, ApelidoDePais, ApelidoDeUniversidade
 from .scripts import get_dataframe, save_ranking_file, load_ranking_file, insert_id_university, \
-    check_ranking_file_consistency, insert_id_country, __get_all_universities__, insert_ranking_data, \
-    get_canonical_name, __remove_forms__
-from .scripts.universities import remove_unused_universities_and_nicknames, \
-    merge_replicate_universities
+    check_ranking_file_consistency, __get_all_universities__, insert_ranking_data, \
+    get_canonical_name, __remove_forms__, __missing_countries_preview__
+from .scripts.universities import merge_replicate_universities
 
 
-def index(request):
-    n_universidades = Universidade.objects.count()
-    unis_by_pais_apelido = Universidade.objects.all().values('pais_apelido').annotate(total=Count('pais_apelido'))
-    count_values_by_pillar = PilarValor.objects.all().values('pilar_id').annotate(total=Count('pilar_id'))
-    count_values_by_metric = MetricaValor.objects.all().values('metrica_id').annotate(total=Count('metrica_id'))
-    ranking_ids = set()
+class IndexView(TemplateView):
+    template_name = 'rankings/index.html'
 
-    set_countries = set()
-    for x in unis_by_pais_apelido:
-        set_countries = set_countries.union({ApelidoDePais.objects.filter(id_apelido=x['pais_apelido']).first().pais})
+    def get(self, request, *args, **kwargs):
+        n_universidades = Universidade.objects.count()
+        unis_by_pais_apelido = Universidade.objects.all().values('pais_apelido').annotate(total=Count('pais_apelido'))
+        count_values_by_pillar = PilarValor.objects.all().values('pilar_id').annotate(total=Count('pilar_id'))
+        count_values_by_metric = MetricaValor.objects.all().values('metrica_id').annotate(total=Count('metrica_id'))
+        ranking_ids = set()
 
-    for x in count_values_by_pillar:
-        id_pilar = x['pilar_id']
-        ranking_ids = ranking_ids.union({Pilar.objects.filter(id_pilar=id_pilar).first().ranking_id})
+        set_countries = set()
+        for x in unis_by_pais_apelido:
+            set_countries = set_countries.union(
+                {ApelidoDePais.objects.filter(id_apelido=x['pais_apelido']).first().pais})
 
-    n_pillars = len(count_values_by_pillar)
-    n_metrics = len(count_values_by_metric)
+        for x in count_values_by_pillar:
+            id_pilar = x['pilar_id']
+            ranking_ids = ranking_ids.union({Pilar.objects.filter(id_pilar=id_pilar).first().ranking_id})
 
-    context = {
-        'display_greetings': True,
-        'information_list': [
-            {'name': 'universidade' + ('s' if n_universidades != 1 else ''), 'value': n_universidades},
-            {'name': 'país' + ('es' if len(set_countries) != 1 else ''), 'value': len(set_countries)},
-            {'name': 'ranking' + ('s' if len(ranking_ids) != 1 else ''), 'value': len(ranking_ids)},
-            {'name': 'pilar' + ('es' if n_pillars != 1 else ''), 'value': n_pillars},
-            {'name': 'métrica' + ('s' if n_metrics != 1 else ''), 'value': n_metrics}
-        ]
-    }
-    return render(request, 'rankings/index.html', context)
+        n_pillars = len(count_values_by_pillar)
+        n_metrics = len(count_values_by_metric)
+
+        context = {
+            'display_greetings': True,
+            'information_list': [
+                {'name': 'universidade' + ('s' if n_universidades != 1 else ''), 'value': n_universidades},
+                {'name': 'país' + ('es' if len(set_countries) != 1 else ''), 'value': len(set_countries)},
+                {'name': 'ranking' + ('s' if len(ranking_ids) != 1 else ''), 'value': len(ranking_ids)},
+                {'name': 'pilar' + ('es' if n_pillars != 1 else ''), 'value': n_pillars},
+                {'name': 'métrica' + ('s' if n_metrics != 1 else ''), 'value': n_metrics}
+            ]
+        }
+        return render(request, 'rankings/index.html', context)
 
 
 def success_insert_ranking(request):
@@ -231,42 +234,6 @@ def missing_countries_insert(request):
     raise PermissionDenied()
 
 
-def __insert_id_university_step__(request, df, id_ranking, id_formulario):
-    df = insert_id_university(df)
-    df, id_formulario = save_ranking_file(df, id_ranking=id_ranking, id_formulario=id_formulario)
-    insert_ranking_data(df, id_ranking=id_ranking, id_formulario=id_formulario)
-    return success_insert_ranking(request)
-
-
-def __missing_countries_preview__(request, df, id_formulario, id_ranking):
-    df = insert_id_country(df)
-    df, id_formulario = save_ranking_file(df, id_ranking=id_ranking, id_formulario=id_formulario)
-
-    # se algum registro não tem id de país setado
-    if df['id_pais'].isna().sum() > 0:
-        df.reset_index(inplace=True)
-        # o índice não quer dizer muita coisa nesse contexto, mas é necessário um número
-        rows = df.loc[df['id_pais'].isna(), ['index', 'id_pais', 'País']].drop_duplicates(subset=['País'])
-        return render(
-            request,
-            'rankings/countries/missing/preview.html',
-            context={
-                'id_formulario': id_formulario,
-                'id_ranking': id_ranking,
-                'rows': rows.to_dict(orient='records'),
-                'country_options': [{'id_pais': '', 'nome_portugues': ''}] + [
-                    {'id_pais': x.id_pais, 'nome_portugues': x.nome_portugues}
-                    for x in Pais.objects.all()
-                ],
-                'country_type_options': [{'id_tipo_apelido': '', 'tipo_apelido': ''}] + pd.DataFrame(
-                    TipoApelido.objects.values('id_tipo_apelido', 'tipo_apelido')
-                ).to_dict(orient='records')
-            }
-        )
-
-    return __insert_id_university_step__(request, df, id_ranking=id_ranking, id_formulario=id_formulario)
-
-
 class RankingInsertView(TemplateView):
     template_name = 'rankings/ranking/insert/index.html'
 
@@ -283,7 +250,14 @@ class RankingInsertView(TemplateView):
             try:
                 df = check_ranking_file_consistency(df, id_ranking)
                 df, id_formulario = save_ranking_file(df, id_ranking)
-                return __missing_countries_preview__(request, df, id_formulario=id_formulario, id_ranking=id_ranking)
+                request, df, id_ranking, id_formulario = __missing_countries_preview__(
+                    request, df, id_formulario=id_formulario, id_ranking=id_ranking
+                )
+                df = insert_id_university(df)
+                df, id_formulario = save_ranking_file(df, id_ranking=id_ranking, id_formulario=id_formulario)
+                insert_ranking_data(df, id_ranking=id_ranking, id_formulario=id_formulario)
+                return success_insert_ranking(request)
+
             except ValidationError as e:
                 messages.error(request, e.message)
                 return render(

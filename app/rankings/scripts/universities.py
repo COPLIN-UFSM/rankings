@@ -12,7 +12,7 @@ def __get_all_universities__():
         'apelido',
         'universidade__pais_apelido__id_apelido',
         'universidade__pais_apelido__pais__id_pais',
-        'universidade__pais_apelido__pais__nome_portugues'
+        'universidade__pais_apelido__pais__nome_ingles'
     ))
     df.columns = ['id_universidade', 'id_apelido_universidade', 'Universidade', 'id_apelido_pais', 'id_pais', 'País']
 
