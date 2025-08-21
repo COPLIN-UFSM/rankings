@@ -290,6 +290,7 @@ def __insert_bulk_data__(to_add_pillars, to_add_metrics):
         try:
             model.objects.bulk_create(rows)  # tenta inserir em conjunto
         except django.db.utils.IntegrityError:  # alguma tupla está duplicada; insere uma a uma
+            raise NotImplementedError('erro está aqui!')
             pass  # ignora
             # for row in rows:
             #     try:
@@ -353,10 +354,6 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
     df['Universidade_encoded'] = df['Universidade'].apply(lambda x: x.upper().strip().encode('unicode_escape').decode('latin-1').upper())
     db['Universidade_encoded'] = db['Universidade'].apply(lambda x: x.upper().strip().encode('latin-1').decode('latin-1').upper())
 
-    # TODO para debugging
-    # TODO db.loc[db['Universidade'].apply(lambda x: 'College London' in x), ['Universidade', 'Universidade_encoded', 'id_pais', 'id_apelido_pais']]
-    # TODO df.loc[df['Universidade'].apply(lambda x: 'College London' in x), ['Universidade', 'Universidade_encoded', 'id_pais', 'id_apelido_pais']]
-
     # insere id_universidade para linhas que o nome da universidade foi encontrado no banco
     df['id_universidade'] = np.nan
     df['id_apelido_universidade'] = np.nan
@@ -370,15 +367,10 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
 
     joined = pd.merge(df, db, on=['Universidade_encoded', 'id_pais'], how='left', suffixes=('', '_db'))
 
-    # TODO for debugging purposes
-    # joined.loc[joined['Universidade'].apply(lambda x: 'College London' in x), ['Universidade', 'Universidade_db', 'Universidade_encoded', 'id_pais', 'id_apelido_pais', 'id_universidade', 'id_apelido_universidade']]
-
     joined.loc[joined.index, 'id_universidade'] = joined.loc[joined.index, 'id_universidade_db']
     joined.loc[joined.index, 'id_apelido_universidade'] = joined.loc[joined.index, 'id_apelido_universidade_db']
 
     df = joined[df.columns]
-    # TODO esta função está removendo mais linhas do que deveria!
-    # df = df.drop_duplicates(subset=['Ano', 'id_pais', 'id_apelido_universidade'], keep='first')
 
     # se alguma universidade do arquivo do ranking anda não tem o id_universidade setado
     if pd.isna(df['id_apelido_universidade']).sum() > 0:
@@ -396,7 +388,7 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
         for i, row in tqdm(missing.iterrows(), total=len(missing), desc='Inserindo universidades no banco'):
             try:
                 uni_name = row['Universidade'].upper().strip().encode('unicode_escape').decode('latin-1').upper()
-                id_pais = row['id_pais']  # TODO alguma coisa está errada está pegando o id!!!!
+                id_pais = row['id_pais']
 
                 candidates = db.loc[db['id_pais'] == id_pais]
 
