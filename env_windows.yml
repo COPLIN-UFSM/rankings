@@ -4,17 +4,13 @@ channels:
   - conda-forge
 dependencies:
   - pip
-  - beautifulsoup4
   - python=3.11.*
   - django==5.2.*
   - pandas=2.*
-  - numpy
-  - matplotlib=3.*
+  - beautifulsoup4
   - pytorch
   - scikit-learn
   - scipy
-  - dash=2.*
-  - plotly=5.*
   - tqdm
   - requests=2.*
   - selenium
@@ -22,8 +18,7 @@ dependencies:
   - pip:
       - ibm_db==3.1.4
       - coplin-db2
-      - ibm-db-django==1.5.3.0
-      - dash-bootstrap-components==1.5.*
+      - ibm-db-django
       - wakepy
       - django-nested-inline
       - django-bootstrap-v5

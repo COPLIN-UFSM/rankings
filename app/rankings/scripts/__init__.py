@@ -5,15 +5,18 @@ import string
 import unicodedata
 from io import StringIO
 
-import django
 import numpy as np
 import pandas as pd
+from db2 import DB2Connection
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.shortcuts import render
-from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
+
+import itertools as it
+
+from sentence_transformers import SentenceTransformer, util
 
 from .universities import __get_all_universities__
 from ..models import Ranking, Pilar, ApelidoDeUniversidade, ApelidoDePais, Formulario, Universidade, PilarValor, \
@@ -285,28 +288,6 @@ def __append_row__(i, row, pillars, metrics, to_add_pillars, to_add_metrics):
     return to_add_pillars, to_add_metrics
 
 
-def __insert_bulk_data__(to_add_pillars, to_add_metrics):
-    def __insert_rows__(rows, model):
-        try:
-            model.objects.bulk_create(rows)  # tenta inserir em conjunto
-        except django.db.utils.IntegrityError:  # alguma tupla está duplicada; insere uma a uma
-            raise NotImplementedError('erro está aqui!')
-            pass  # ignora
-            # for row in rows:
-            #     try:
-            #         row.save()
-            #     except django.db.utils.IntegrityError:  # se continuar dando erro, ignora e segue em frente
-            #         pass
-
-    __insert_rows__(to_add_pillars, PilarValor)
-    __insert_rows__(to_add_metrics, MetricaValor)
-
-    to_add_pillars = []
-    to_add_metrics = []
-
-    return to_add_pillars, to_add_metrics
-
-
 def insert_ranking_data(df, id_ranking, id_formulario, batch_size=999):
     """
     Insere os dados do formulário nas tabelas pertinentes.
@@ -326,17 +307,58 @@ def insert_ranking_data(df, id_ranking, id_formulario, batch_size=999):
     pillars = get_pillars(df, id_ranking=id_ranking)
     metrics = get_metrics(df)
 
-    with tqdm(range(len(df)), desc='inserindo valores dos pilares e métricas...') as pbar:
-        to_add_pillars = []
-        to_add_metrics = []
-        for i, row in df.iterrows():
-            to_add_pillars, to_add_pillars, __append_row__(i, row, pillars, metrics, to_add_pillars, to_add_metrics)
-            if len(to_add_pillars) >= batch_size or len(to_add_metrics) >= batch_size:
-                to_add_pillars, to_add_metrics = __insert_bulk_data__(to_add_pillars, to_add_metrics)
+    ano = df['Ano'].iloc[0]
+    db_pillar_values = pd.DataFrame(
+        PilarValor.objects.filter(pilar__ranking__id_ranking=id_ranking, ano=ano).values_list(
+        'apelido_universidade_id', 'pilar_id', 'ano'
+        ),
+        columns=['id_apelido_universidade', 'id_pilar', 'ano']
+    )
 
-            pbar.update(1)
+    to_add_pillars = []
+    to_add_metrics = []
+    for i, row in df.iterrows():
+        to_add_pillars, to_add_metrics = __append_row__(i, row, pillars, metrics, to_add_pillars, to_add_metrics)
 
-    to_add_pillars, to_add_metrics = __insert_bulk_data__(to_add_pillars, to_add_metrics)
+    df_pillar_values = pd.DataFrame(
+        [(x.apelido_universidade_id, x.pilar_id, x.ano) for x in to_add_pillars],
+        columns=['id_apelido_universidade', 'id_pilar', 'ano']
+    )
+
+    # TODO inserir métricas tb!
+    merged = pd.merge(
+        df_pillar_values,
+        db_pillar_values,
+        on=['id_apelido_universidade', 'id_pilar', 'ano'],
+        how='left',
+        indicator=True
+    )
+
+    filtered_pillars = list(it.compress(
+        to_add_pillars,
+        (merged['_merge'] == 'left_only').values.tolist()
+    ))
+
+    # já tentei inserir com o coplin-db2, mas demora tanto tempo quanto... o gargalo é no banco de dados!
+    for pv in tqdm(filtered_pillars, desc='Inserindo valores dos pilares no banco de dados'):
+        pv.save()
+
+    # mas deixo aqui o código caso no futuro uma solução diferente seja implementada
+    # with DB2Connection(settings.DATABASE_CREDENTIALS_PATH) as conn:
+    #     for pv in tqdm(filtered_pillars, desc='Inserindo valores dos pilares no banco de dados'):
+            # conn.insert(
+            #     table_name='R_PILARES_VALORES',
+            #     row={
+            #         'ID_APELIDO_UNIVERSIDADE': pv.apelido_universidade_id,
+            #         'ID_PILAR': pv.pilar_id,
+            #         'ANO': pv.ano,
+            #         'VALOR_INICIAL': pv.valor_inicial,
+            #         'VALOR_FINAL': pv.valor_final
+            #     }
+            # )
+
+    # PilarValor.objects.bulk_create(filtered_pillars)
+    # MetricaValor.objects.bulk_create(to_add_metrics)
 
     __remove_forms__(id_formulario=id_formulario)
 
@@ -379,8 +401,6 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
         ].drop_duplicates(
             subset=['Universidade_encoded', 'id_pais']
         )
-
-        # candidates = db['Universidade_encoded'].tolist()
 
         from sentence_transformers import SentenceTransformer, util
         model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -489,8 +509,6 @@ def get_closest_match(name: str, candidates: list, threshold: float = 0.8, model
     :param threshold: Limite de similaridade para considerar uma correspondência válida.
     :return: O nome mais próximo encontrado na lista de candidatos.
     """
-    from sentence_transformers import SentenceTransformer, util
-
     if model is None:
         model = SentenceTransformer('all-MiniLM-L6-v2')
 

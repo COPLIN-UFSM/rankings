@@ -125,6 +125,10 @@ DATABASES = {
     },
 }
 
+# DATABASE_CREDENTIALS_PATH = os.path.join(
+#     os.path.dirname(os.path.abspath(__file__)),
+#     '..', 'instance', 'database_credentials.json'
+# )
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -154,8 +158,8 @@ TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
-USE_TZ = False  # TODO precisa ser falso para usar ibm db2
-# USE_TZ = True  # TODO pode ser true para sqlite
+USE_TZ = False  # precisa ser falso para usar ibm db2
+# USE_TZ = True  # pode ser true para sqlite
 
 # para usar boostrap nos formulários
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'

@@ -99,12 +99,14 @@ class GrupoGeopolitico(models.Model):
 class PaisesParaGruposGeopoliticos(models.Model):
     grupo_geopolitico = models.OneToOneField(
         GrupoGeopolitico, models.DO_NOTHING, db_column='ID_GRUPO_GEOPOLITICO',
-        primary_key=True, blank=True, null=False, verbose_name='Nome (PT-BR)'
+        blank=True, null=False, verbose_name='Nome (PT-BR)'
     )
     pais = models.ForeignKey(
         Pais, models.DO_NOTHING, db_column='ID_PAIS', blank=True, null=False,
         verbose_name='Nome (PT-BR)'
     )
+
+    pk = models.CompositePrimaryKey('grupo_geopolitico_id', 'pais_id')
 
     class Meta:
         managed = False
@@ -185,13 +187,15 @@ class GrupoDeUniversidades(models.Model):
 
 class UniversidadesParaGrupos(models.Model):
     universidade = models.OneToOneField(
-        Universidade, models.DO_NOTHING, db_column='ID_UNIVERSIDADE', primary_key=True, blank=False, null=False,
+        Universidade, models.DO_NOTHING, db_column='ID_UNIVERSIDADE', blank=False, null=False,
         verbose_name='Universidade'
     )
     grupo_universidades = models.ForeignKey(
         GrupoDeUniversidades, models.DO_NOTHING, db_column='ID_GRUPO_UNIVERSIDADES', blank=False, null=False,
         verbose_name='Grupo de Universidades'
     )
+
+    pk = models.CompositePrimaryKey('universidade_id', 'grupo_universidades_id')
 
     class Meta:
         managed = False
@@ -259,12 +263,14 @@ class GrupoDePilares(models.Model):
 
 class PilaresParaGrupos(models.Model):
     pilar = models.OneToOneField(
-        Pilar, models.DO_NOTHING, db_column='ID_PILAR', primary_key=True, blank=False, null=False, verbose_name='Pilar'
+        Pilar, models.DO_NOTHING, db_column='ID_PILAR', blank=False, null=False, verbose_name='Pilar'
     )
     grupo_pilares = models.ForeignKey(
         GrupoDePilares, models.DO_NOTHING, db_column='ID_GRUPO_PILARES', blank=False, null=False,
         verbose_name='Grupo de pilares'
     )
+
+    pk = models.CompositePrimaryKey('pilar_id', 'grupo_pilares_id')
 
     class Meta:
         managed = False
@@ -278,7 +284,7 @@ class PilaresParaGrupos(models.Model):
 
 class PilarValor(models.Model):
     apelido_universidade = models.OneToOneField(
-        ApelidoDeUniversidade, models.DO_NOTHING, db_column='ID_APELIDO_UNIVERSIDADE', primary_key=True,
+        ApelidoDeUniversidade, models.DO_NOTHING, db_column='ID_APELIDO_UNIVERSIDADE',
         blank=False, null=False
     )
     pilar = models.ForeignKey(
@@ -287,6 +293,8 @@ class PilarValor(models.Model):
     ano = models.IntegerField(db_column='ANO', verbose_name='Ano', blank=False, null=False)
     valor_inicial = models.FloatField(db_column='VALOR_INICIAL', blank=True, null=True, verbose_name='Valor Inicial')
     valor_final = models.FloatField(db_column='VALOR_FINAL', blank=True, null=True, verbose_name='Valor Final')
+
+    pk = models.CompositePrimaryKey('apelido_universidade_id', 'pilar_id', 'ano')
 
     @property
     def ranking(self):
@@ -326,7 +334,7 @@ class Metrica(models.Model):
 class MetricasParaPilares(models.Model):
     metrica = models.OneToOneField(
         Metrica, models.DO_NOTHING, db_column='ID_METRICA',
-        primary_key=True, blank=False, null=False, verbose_name='Métrica'
+        blank=False, null=False, verbose_name='Métrica'
     )
     pilar = models.ForeignKey(
         Pilar, models.DO_NOTHING, db_column='ID_PILAR', blank=False, null=False, verbose_name='Pilar'
@@ -334,6 +342,8 @@ class MetricasParaPilares(models.Model):
     peso = models.FloatField(
         db_column='PESO', verbose_name='Ponderação da métrica no pilar', blank=False, null=False, default=1
     )
+
+    pk = models.CompositePrimaryKey('metrica_id', 'pilar_id')
 
     @property
     def ranking(self):
@@ -357,7 +367,7 @@ class MetricaValor(models.Model):
         null=False, verbose_name='Universidade'
     )
     metrica = models.OneToOneField(
-        Metrica, models.DO_NOTHING, db_column='ID_METRICA', primary_key=True, blank=False,
+        Metrica, models.DO_NOTHING, db_column='ID_METRICA', blank=False,
         null=False, verbose_name='Métrica'
     )
     ano = models.IntegerField(db_column='ANO', blank=True, null=False)
@@ -367,6 +377,8 @@ class MetricaValor(models.Model):
     valor_final = models.FloatField(
         db_column='VALOR_FINAL', verbose_name='Valor final intervalo', blank=True, null=True
     )
+
+    pk = models.CompositePrimaryKey('apelido_universidade_id', 'metrica_id', 'ano')
 
     class Meta:
         managed = False
@@ -417,6 +429,8 @@ class Metadado(models.Model):
     id_entidade = models.IntegerField(db_column='ID_ENTIDADE', blank=True, null=True)
     ano = models.IntegerField(db_column='ANO')  
     valor = models.TextField(db_column='VALOR')  
+
+    # pk = models.CompositePrimaryKey('id_metadado', 'tipo_metadado_id', 'tipo_entidade_id', 'ano')
 
     class Meta:
         managed = False
