@@ -311,85 +311,85 @@ class PilarValor(models.Model):
         return ''
 
 
-class Metrica(models.Model):
-    id_metrica = models.AutoField(db_column='ID_METRICA', primary_key=True, blank=True, null=False)
-    nome_portugues = models.CharField('Nome (PT-BR)', max_length=200, db_column='NOME_METRICA_PORTUGUES', blank=False, null=False)
-    nome_ingles = models.CharField('Nome (EN-US)', max_length=200, db_column='NOME_METRICA_INGLES', blank=True, null=True)
+# class Metrica(models.Model):
+#     id_metrica = models.AutoField(db_column='ID_METRICA', primary_key=True, blank=True, null=False)
+#     nome_portugues = models.CharField('Nome (PT-BR)', max_length=200, db_column='NOME_METRICA_PORTUGUES', blank=False, null=False)
+#     nome_ingles = models.CharField('Nome (EN-US)', max_length=200, db_column='NOME_METRICA_INGLES', blank=True, null=True)
 
-    pilares = models.ManyToManyField(
-        to=Pilar,
-        through='MetricasParaPilares'
-    )
+#     pilares = models.ManyToManyField(
+#         to=Pilar,
+#         through='MetricasParaPilares'
+#     )
 
-    class Meta:
-        managed = False
-        db_table = 'R_METRICAS'
-        verbose_name = 'Métrica'
-        verbose_name_plural = 'Métricas'
+#     class Meta:
+#         managed = False
+#         db_table = 'R_METRICAS'
+#         verbose_name = 'Métrica'
+#         verbose_name_plural = 'Métricas'
 
-    def __str__(self):
-        return self.nome_portugues
-
-
-class MetricasParaPilares(models.Model):
-    metrica = models.OneToOneField(
-        Metrica, models.DO_NOTHING, db_column='ID_METRICA',
-        blank=False, null=False, verbose_name='Métrica'
-    )
-    pilar = models.ForeignKey(
-        Pilar, models.DO_NOTHING, db_column='ID_PILAR', blank=False, null=False, verbose_name='Pilar'
-    )
-    peso = models.FloatField(
-        db_column='PESO', verbose_name='Ponderação da métrica no pilar', blank=False, null=False, default=1
-    )
-
-    pk = models.CompositePrimaryKey('metrica_id', 'pilar_id')
-
-    @property
-    def ranking(self):
-        return self.pilar.id_ranking
-
-    class Meta:
-        managed = False
-        db_table = 'R_METRICAS_PARA_PILARES'
-        verbose_name = 'Valor da Métrica'
-        verbose_name_plural = 'Valores das Métricas'
-        unique_together = (('metrica', 'pilar'),)
-        ordering = ['metrica', 'pilar']
-
-    def __str__(self):
-        return ''
+#     def __str__(self):
+#         return self.nome_portugues
 
 
-class MetricaValor(models.Model):
-    apelido_universidade = models.ForeignKey(
-        ApelidoDeUniversidade, models.DO_NOTHING, db_column='ID_APELIDO_UNIVERSIDADE', blank=False,
-        null=False, verbose_name='Universidade'
-    )
-    metrica = models.OneToOneField(
-        Metrica, models.DO_NOTHING, db_column='ID_METRICA', blank=False,
-        null=False, verbose_name='Métrica'
-    )
-    ano = models.IntegerField(db_column='ANO', blank=True, null=False)
-    valor_inicial = models.FloatField(
-        db_column='VALOR_INICIAL', verbose_name='Valor inicial intervalo', blank=True, null=True
-    )
-    valor_final = models.FloatField(
-        db_column='VALOR_FINAL', verbose_name='Valor final intervalo', blank=True, null=True
-    )
+# class MetricasParaPilares(models.Model):
+#     metrica = models.OneToOneField(
+#         Metrica, models.DO_NOTHING, db_column='ID_METRICA',
+#         blank=False, null=False, verbose_name='Métrica'
+#     )
+#     pilar = models.ForeignKey(
+#         Pilar, models.DO_NOTHING, db_column='ID_PILAR', blank=False, null=False, verbose_name='Pilar'
+#     )
+#     peso = models.FloatField(
+#         db_column='PESO', verbose_name='Ponderação da métrica no pilar', blank=False, null=False, default=1
+#     )
 
-    pk = models.CompositePrimaryKey('apelido_universidade_id', 'metrica_id', 'ano')
+#     pk = models.CompositePrimaryKey('metrica_id', 'pilar_id')
 
-    class Meta:
-        managed = False
-        db_table = 'R_METRICAS_VALORES'
-        verbose_name = 'Valor da Métrica'
-        verbose_name_plural = 'Valores das Métricas'
-        unique_together = (('metrica', 'apelido_universidade', 'ano'),)
-        ordering = ['-ano', 'apelido_universidade', 'metrica']
+#     @property
+#     def ranking(self):
+#         return self.pilar.id_ranking
 
-    def __str__(self):
-        return ''
+#     class Meta:
+#         managed = False
+#         db_table = 'R_METRICAS_PARA_PILARES'
+#         verbose_name = 'Valor da Métrica'
+#         verbose_name_plural = 'Valores das Métricas'
+#         unique_together = (('metrica', 'pilar'),)
+#         ordering = ['metrica', 'pilar']
+
+#     def __str__(self):
+#         return ''
+
+
+# class MetricaValor(models.Model):
+#     apelido_universidade = models.ForeignKey(
+#         ApelidoDeUniversidade, models.DO_NOTHING, db_column='ID_APELIDO_UNIVERSIDADE', blank=False,
+#         null=False, verbose_name='Universidade'
+#     )
+#     metrica = models.OneToOneField(
+#         Metrica, models.DO_NOTHING, db_column='ID_METRICA', blank=False,
+#         null=False, verbose_name='Métrica'
+#     )
+#     ano = models.IntegerField(db_column='ANO', blank=True, null=False)
+#     valor_inicial = models.FloatField(
+#         db_column='VALOR_INICIAL', verbose_name='Valor inicial intervalo', blank=True, null=True
+#     )
+#     valor_final = models.FloatField(
+#         db_column='VALOR_FINAL', verbose_name='Valor final intervalo', blank=True, null=True
+#     )
+
+#     pk = models.CompositePrimaryKey('apelido_universidade_id', 'metrica_id', 'ano')
+
+#     class Meta:
+#         managed = False
+#         db_table = 'R_METRICAS_VALORES'
+#         verbose_name = 'Valor da Métrica'
+#         verbose_name_plural = 'Valores das Métricas'
+#         unique_together = (('metrica', 'apelido_universidade', 'ano'),)
+#         ordering = ['-ano', 'apelido_universidade', 'metrica']
+
+#     def __str__(self):
+#         return ''
 
 
 # ----------------- #
@@ -397,45 +397,45 @@ class MetricaValor(models.Model):
 # ----------------- #
 
 
-class TipoDeEntidade(models.Model):
-    id_tipo_entidade = models.AutoField(db_column='ID_TIPO_ENTIDADE', primary_key=True, blank=True, null=False)
-    nome = models.TextField(db_column='NOME_TIPO_ENTIDADE')
+# class TipoDeEntidade(models.Model):
+#     id_tipo_entidade = models.AutoField(db_column='ID_TIPO_ENTIDADE', primary_key=True, blank=True, null=False)
+#     nome = models.TextField(db_column='NOME_TIPO_ENTIDADE')
 
-    class Meta:
-        managed = False
-        db_table = 'R_TIPOS_ENTIDADES'
-        verbose_name = 'Tipo de Entidade'
-        verbose_name_plural = 'Tipos de Entidades'
+#     class Meta:
+#         managed = False
+#         db_table = 'R_TIPOS_ENTIDADES'
+#         verbose_name = 'Tipo de Entidade'
+#         verbose_name_plural = 'Tipos de Entidades'
 
-    def __str__(self):
-        return self.nome
-
-
-class TipoDeMetadado(models.Model):
-    id_tipo_metadado = models.AutoField(db_column='ID_TIPO_METADADO', primary_key=True, blank=True, null=False)
-    nome = models.TextField(db_column='NOME_TIPO_METADADO')
-
-    class Meta:
-        managed = False
-        db_table = 'R_TIPOS_METADADOS'
-        verbose_name = 'Tipo de Metadado'
-        verbose_name_plural = 'Tipos de Metadados'
+#     def __str__(self):
+#         return self.nome
 
 
-class Metadado(models.Model):
-    id_metadado = models.AutoField(db_column='ID_METADADO', primary_key=True, blank=True, null=False)
-    tipo_metadado = models.ForeignKey(TipoDeMetadado, models.DO_NOTHING, db_column='ID_TIPO_METADADO', blank=True, null=False)
-    tipo_entidade = models.ForeignKey(TipoDeEntidade, models.DO_NOTHING, db_column='ID_TIPO_ENTIDADE', blank=True, null=False)
-    id_entidade = models.IntegerField(db_column='ID_ENTIDADE', blank=True, null=True)
-    ano = models.IntegerField(db_column='ANO')  
-    valor = models.TextField(db_column='VALOR')  
+# class TipoDeMetadado(models.Model):
+#     id_tipo_metadado = models.AutoField(db_column='ID_TIPO_METADADO', primary_key=True, blank=True, null=False)
+#     nome = models.TextField(db_column='NOME_TIPO_METADADO')
 
-    # pk = models.CompositePrimaryKey('id_metadado', 'tipo_metadado_id', 'tipo_entidade_id', 'ano')
+#     class Meta:
+#         managed = False
+#         db_table = 'R_TIPOS_METADADOS'
+#         verbose_name = 'Tipo de Metadado'
+#         verbose_name_plural = 'Tipos de Metadados'
 
-    class Meta:
-        managed = False
-        db_table = 'R_METADADOS'
-        ordering = ['-ano', 'tipo_entidade', 'tipo_metadado']
+
+# class Metadado(models.Model):
+#     id_metadado = models.AutoField(db_column='ID_METADADO', primary_key=True, blank=True, null=False)
+#     tipo_metadado = models.ForeignKey(TipoDeMetadado, models.DO_NOTHING, db_column='ID_TIPO_METADADO', blank=True, null=False)
+#     tipo_entidade = models.ForeignKey(TipoDeEntidade, models.DO_NOTHING, db_column='ID_TIPO_ENTIDADE', blank=True, null=False)
+#     id_entidade = models.IntegerField(db_column='ID_ENTIDADE', blank=True, null=True)
+#     ano = models.IntegerField(db_column='ANO')  
+#     valor = models.TextField(db_column='VALOR')  
+
+#     # pk = models.CompositePrimaryKey('id_metadado', 'tipo_metadado_id', 'tipo_entidade_id', 'ano')
+
+#     class Meta:
+#         managed = False
+#         db_table = 'R_METADADOS'
+#         ordering = ['-ano', 'tipo_entidade', 'tipo_metadado']
 
 
 class Formulario(models.Model):

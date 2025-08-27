@@ -5,7 +5,6 @@ channels:
 dependencies:
   - pip
   - python=3.11.*
-  - django==5.2.*
   - pandas=2.*
   - beautifulsoup4
   - pytorch
@@ -21,6 +20,7 @@ dependencies:
       - ibm-db-django
       - wakepy
       - django-nested-inline
+      - django==5.2.*
       - django-bootstrap-v5
       - django-crispy-forms
       - crispy-bootstrap5
