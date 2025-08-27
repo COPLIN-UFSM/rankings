@@ -17,8 +17,8 @@ class Continente(models.Model):
     list_display = ['nome_continente_portugues', 'nome_continente_ingles']
 
     id_continente = models.AutoField(db_column='ID_CONTINENTE', primary_key=True, blank=True, null=False)
-    nome_portugues = models.CharField('Nome (PT-BR)', max_length=200, db_column='NOME_CONTINENTE_PORTUGUES', blank=False, null=False)
-    nome_ingles = models.CharField('Nome (EN-US)', max_length=200, db_column='NOME_CONTINENTE_INGLES', blank=True, null=True)
+    nome_portugues = models.CharField('Nome (PT-BR)', max_length=512, db_column='NOME_CONTINENTE_PORTUGUES', blank=False, null=False)
+    nome_ingles = models.CharField('Nome (EN-US)', max_length=512, db_column='NOME_CONTINENTE_INGLES', blank=True, null=True)
 
     class Meta:
         managed = False
@@ -33,8 +33,8 @@ class Pais(models.Model):
     continente = models.ForeignKey(
         Continente, models.DO_NOTHING, db_column='ID_CONTINENTE', verbose_name='Continente', blank=False, null=False
     )
-    nome_portugues = models.CharField('Nome (PT-BR)', blank=False, null=False, max_length=200, db_column='NOME_PAIS_PORTUGUES')
-    nome_ingles = models.CharField('Nome (EN-US)', blank=True, null=True, max_length=200, db_column='NOME_PAIS_INGLES')
+    nome_portugues = models.CharField('Nome (PT-BR)', blank=False, null=False, max_length=512, db_column='NOME_PAIS_PORTUGUES')
+    nome_ingles = models.CharField('Nome (EN-US)', blank=True, null=True, max_length=512, db_column='NOME_PAIS_INGLES')
 
     class Meta:
         managed = False
@@ -48,7 +48,7 @@ class Pais(models.Model):
 
 class TipoApelido(models.Model):
     id_tipo_apelido = models.AutoField(db_column='ID_TIPO_APELIDO', primary_key=True, blank=True, null=False)
-    tipo_apelido = models.CharField('Tipo Apelido', max_length=200, db_column='TIPO_APELIDO', blank=False, null=False)
+    tipo_apelido = models.CharField('Tipo Apelido', max_length=512, db_column='TIPO_APELIDO', blank=False, null=False)
 
     class Meta:
         managed = False
@@ -63,7 +63,7 @@ class TipoApelido(models.Model):
 class ApelidoDePais(models.Model):
     id_apelido = models.AutoField(db_column='ID_APELIDO_PAIS', primary_key=True, blank=True, null=False)
     tipo_apelido = models.ForeignKey(TipoApelido, models.DO_NOTHING, db_column='ID_TIPO_APELIDO', blank=False, null=False)
-    apelido = models.CharField('Apelido', db_column='APELIDO', max_length=200, blank=False, null=False)
+    apelido = models.CharField('Apelido', db_column='APELIDO', max_length=512, blank=False, null=False)
     pais = models.ForeignKey(Pais, models.DO_NOTHING, db_column='ID_PAIS', blank=False, null=False)
 
     class Meta:
@@ -78,9 +78,9 @@ class ApelidoDePais(models.Model):
 
 class GrupoGeopolitico(models.Model):
     id_grupo_geopolitico = models.AutoField(db_column='ID_GRUPO_GEOPOLITICO', primary_key=True, blank=True, null=False)
-    nome_portugues = models.CharField('Nome (PT-BR)', db_column='NOME_GRUPO_PORTUGUES', max_length=200, blank=False, null=False)
-    nome_ingles = models.CharField('Nome (EN-US)', db_column='NOME_GRUPO_INGLES', max_length=200, blank=True, null=True)
-    sigla = models.CharField('Sigla', max_length=200, db_column='SIGLA', blank=True, null=True)
+    nome_portugues = models.CharField('Nome (PT-BR)', db_column='NOME_GRUPO_PORTUGUES', max_length=512, blank=False, null=False)
+    nome_ingles = models.CharField('Nome (EN-US)', db_column='NOME_GRUPO_INGLES', max_length=512, blank=True, null=True)
+    sigla = models.CharField('Sigla', max_length=512, db_column='SIGLA', blank=True, null=True)
     paises = models.ManyToManyField(
         to=Pais,
         through='PaisesParaGruposGeopoliticos'
@@ -121,17 +121,38 @@ class PaisesParaGruposGeopoliticos(models.Model):
 # ----- Universidades ----- #
 # ------------------------- #
 
+class IES(models.Model):
+    cod_ies = models.AutoField('Código IES', db_column='COD_IES', primary_key=True, blank=False, null=False)
+    sigla_ies = models.CharField('Sigla', max_length=64, db_column='SIGLA_IES', blank=True, null=True)
+    nome_ies = models.CharField(
+        'Nome (PT-BR)', max_length=512, db_column='NOME_IES', blank=False, null=False
+    )
+
+    class Meta:
+        managed = False
+        db_table = 'IES'
+        verbose_name = 'Instituição de Ensino Superior'
+        verbose_name_plural = 'Instituições de Ensino Superior'
+
+    def __str__(self):
+        return self.sigla_ies
+
+
 class Universidade(models.Model):
     id_universidade = models.AutoField(db_column='ID_UNIVERSIDADE', primary_key=True, blank=True, null=False)
+
+    cod_ies = models.AutoField('Código IES', db_column='COD_IES', primary_key=False, blank=True, null=True)
+
     nome_portugues = models.CharField(
-        'Nome (PT-BR)', max_length=200, db_column='NOME_UNIVERSIDADE_PORTUGUES', blank=False, null=False
+        'Nome (PT-BR)', max_length=512, db_column='NOME_UNIVERSIDADE_PORTUGUES', blank=False, null=False
     )
     nome_ingles = models.CharField(
-        'Nome (EN-US)', max_length=200, db_column='NOME_UNIVERSIDADE_INGLES', blank=True, null=True
+        'Nome (EN-US)', max_length=512, db_column='NOME_UNIVERSIDADE_INGLES', blank=True, null=True
     )
-    sigla = models.CharField('Sigla', db_column='SIGLA', max_length=200, blank=True, null=True)
+    sigla = models.CharField('Sigla', db_column='SIGLA', max_length=512, blank=True, null=True)
     pais_apelido = models.ForeignKey(
-        ApelidoDePais, models.DO_NOTHING, db_column='ID_APELIDO_PAIS', verbose_name='País (apelido)', blank=False, null=False
+        ApelidoDePais, models.DO_NOTHING, db_column='ID_APELIDO_PAIS', verbose_name='País (apelido)',
+        blank=False, null=False
     )
 
     @property
@@ -151,7 +172,7 @@ class Universidade(models.Model):
 class ApelidoDeUniversidade(models.Model):
     id_apelido = models.AutoField(db_column='ID_APELIDO_UNIVERSIDADE', primary_key=True, blank=True, null=False)
     universidade = models.ForeignKey(Universidade, models.DO_NOTHING, db_column='ID_UNIVERSIDADE', blank=False, null=False)
-    apelido = models.CharField('Apelido', max_length=200, db_column='APELIDO', blank=True, null=True)
+    apelido = models.CharField('Apelido', max_length=512, db_column='APELIDO', blank=True, null=True)
 
     class Meta:
         managed = False
@@ -167,8 +188,8 @@ class GrupoDeUniversidades(models.Model):
     id_grupo_universidades = models.AutoField(
         db_column='ID_GRUPO_UNIVERSIDADES', primary_key=True, blank=True, null=False
     )
-    nome_portugues = models.CharField('Nome (PT-BR)', max_length=200, db_column='NOME_GRUPO_PORTUGUES', blank=False, null=False)
-    nome_ingles = models.CharField('Nome (EN-US)', max_length=200, db_column='NOME_GRUPO_INGLES', blank=True, null=True)
+    nome_portugues = models.CharField('Nome (PT-BR)', max_length=512, db_column='NOME_GRUPO_PORTUGUES', blank=False, null=False)
+    nome_ingles = models.CharField('Nome (EN-US)', max_length=512, db_column='NOME_GRUPO_INGLES', blank=True, null=True)
 
     universidades = models.ManyToManyField(
         to=Universidade,
@@ -212,7 +233,7 @@ class UniversidadesParaGrupos(models.Model):
 
 class Ranking(models.Model):
     id_ranking = models.AutoField(db_column='ID_RANKING', primary_key=True, blank=True, null=False)
-    nome = models.CharField('Nome', max_length=200, db_column='NOME_RANKING', unique=True, blank=False, null=False)
+    nome = models.CharField('Nome', max_length=512, db_column='NOME_RANKING', unique=True, blank=False, null=False)
 
     class Meta:
         managed = False
@@ -227,10 +248,10 @@ class Ranking(models.Model):
 class Pilar(models.Model):
     id_pilar = models.AutoField(db_column='ID_PILAR', primary_key=True, blank=True, null=False)
     ranking = models.ForeignKey(Ranking, models.DO_NOTHING, db_column='ID_RANKING', blank=False, null=False)
-    nome_portugues = models.CharField('Nome (PT-BR)', max_length=200, db_column='NOME_PILAR_PORTUGUES', blank=False, null=False)
-    nome_ingles = models.CharField('Nome (EN-US)', max_length=200, db_column='NOME_PILAR_INGLES', blank=True, null=True)
-    descricao_portugues = models.CharField('Descrição (PT-BR)', max_length=200, db_column='DESCRICAO_PILAR_PORTUGUES', blank=True, null=True)
-    descricao_ingles = models.CharField('Descrição (EN-US)', max_length=200, db_column='DESCRICAO_PILAR_INGLES', blank=True, null=True)
+    nome_portugues = models.CharField('Nome (PT-BR)', max_length=512, db_column='NOME_PILAR_PORTUGUES', blank=False, null=False)
+    nome_ingles = models.CharField('Nome (EN-US)', max_length=512, db_column='NOME_PILAR_INGLES', blank=True, null=True)
+    descricao_portugues = models.CharField('Descrição (PT-BR)', max_length=512, db_column='DESCRICAO_PILAR_PORTUGUES', blank=True, null=True)
+    descricao_ingles = models.CharField('Descrição (EN-US)', max_length=512, db_column='DESCRICAO_PILAR_INGLES', blank=True, null=True)
 
     class Meta:
         managed = False
@@ -244,8 +265,8 @@ class Pilar(models.Model):
 
 class GrupoDePilares(models.Model):
     id_grupo_pilares = models.AutoField(db_column='ID_GRUPO_PILARES', primary_key=True, blank=True, null=False)
-    nome_portugues = models.CharField('Nome (PT-BR)', max_length=200, db_column='NOME_GRUPO_PORTUGUES', blank=False, null=False)
-    nome_ingles = models.CharField('Nome (EN-US)', max_length=200, db_column='NOME_GRUPO_INGLES', blank=True, null=True)
+    nome_portugues = models.CharField('Nome (PT-BR)', max_length=512, db_column='NOME_GRUPO_PORTUGUES', blank=False, null=False)
+    nome_ingles = models.CharField('Nome (EN-US)', max_length=512, db_column='NOME_GRUPO_INGLES', blank=True, null=True)
     pilares = models.ManyToManyField(
         to=Pilar,
         through='PilaresParaGrupos'
@@ -313,8 +334,8 @@ class PilarValor(models.Model):
 
 # class Metrica(models.Model):
 #     id_metrica = models.AutoField(db_column='ID_METRICA', primary_key=True, blank=True, null=False)
-#     nome_portugues = models.CharField('Nome (PT-BR)', max_length=200, db_column='NOME_METRICA_PORTUGUES', blank=False, null=False)
-#     nome_ingles = models.CharField('Nome (EN-US)', max_length=200, db_column='NOME_METRICA_INGLES', blank=True, null=True)
+#     nome_portugues = models.CharField('Nome (PT-BR)', max_length=512, db_column='NOME_METRICA_PORTUGUES', blank=False, null=False)
+#     nome_ingles = models.CharField('Nome (EN-US)', max_length=512, db_column='NOME_METRICA_INGLES', blank=True, null=True)
 
 #     pilares = models.ManyToManyField(
 #         to=Pilar,

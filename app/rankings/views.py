@@ -10,7 +10,7 @@ from django.views.generic import TemplateView
 from tqdm import tqdm
 
 from .forms import InsertRankingForm
-from .models import MetricaValor, PilarValor, Pilar, PilaresParaGrupos, MetricasParaPilares
+from .models import PilarValor, Pilar, PilaresParaGrupos
 from .models import Universidade, ApelidoDePais, ApelidoDeUniversidade
 from .scripts import get_dataframe, save_ranking_file, load_ranking_file, insert_id_university, \
     check_ranking_file_consistency, __get_all_universities__, insert_ranking_data, \
@@ -25,7 +25,6 @@ class IndexView(TemplateView):
         n_universidades = Universidade.objects.count()
         unis_by_pais_apelido = Universidade.objects.all().values('pais_apelido').annotate(total=Count('pais_apelido'))
         count_values_by_pillar = PilarValor.objects.all().values('pilar_id').annotate(total=Count('pilar_id'))
-        count_values_by_metric = MetricaValor.objects.all().values('metrica_id').annotate(total=Count('metrica_id'))
         ranking_ids = set()
 
         set_countries = set()
@@ -38,7 +37,6 @@ class IndexView(TemplateView):
             ranking_ids = ranking_ids.union({Pilar.objects.filter(id_pilar=id_pilar).first().ranking_id})
 
         n_pillars = len(count_values_by_pillar)
-        n_metrics = len(count_values_by_metric)
 
         context = {
             'display_greetings': True,
@@ -46,8 +44,7 @@ class IndexView(TemplateView):
                 {'name': 'universidade' + ('s' if n_universidades != 1 else ''), 'value': n_universidades},
                 {'name': 'país' + ('es' if len(set_countries) != 1 else ''), 'value': len(set_countries)},
                 {'name': 'ranking' + ('s' if len(ranking_ids) != 1 else ''), 'value': len(ranking_ids)},
-                {'name': 'pilar' + ('es' if n_pillars != 1 else ''), 'value': n_pillars},
-                {'name': 'métrica' + ('s' if n_metrics != 1 else ''), 'value': n_metrics}
+                {'name': 'pilar' + ('es' if n_pillars != 1 else ''), 'value': n_pillars}
             ]
         }
         return render(request, 'rankings/index.html', context)
@@ -329,17 +326,6 @@ class MergerPillarsPreview(TemplateView):
             grupo_pilares_id = q.grupo_pilares_id
 
             nq = PilaresParaGrupos.objects.create(pilar=to_use, grupo_pilares_id=grupo_pilares_id)
-
-            q.delete()  # deleta instância antiga no banco
-            nq.save()  # salva nova instância no banco
-
-        # atualiza métricas para pilares
-        qs = MetricasParaPilares.objects.filter(pilar__id_pilar__in=to_replace_ids)
-        for q in qs:
-            metrica_id = q.metrica_id
-            peso = q.peso
-
-            nq = MetricasParaPilares.objects.create(pilar=to_use, metrica_id=metrica_id, peso=peso)
 
             q.delete()  # deleta instância antiga no banco
             nq.save()  # salva nova instância no banco

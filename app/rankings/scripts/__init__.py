@@ -19,8 +19,10 @@ import itertools as it
 from sentence_transformers import SentenceTransformer, util
 
 from .universities import __get_all_universities__
-from ..models import Ranking, Pilar, ApelidoDeUniversidade, ApelidoDePais, Formulario, Universidade, PilarValor, \
-    Metrica, MetricaValor, Pais, TipoApelido
+from ..models import (
+    Ranking, Pilar, ApelidoDeUniversidade, ApelidoDePais, Formulario, Universidade, PilarValor,
+    Pais, TipoApelido
+)
 
 
 def get_dataframe(file: InMemoryUploadedFile):
@@ -54,27 +56,6 @@ def get_canonical_name(name: str) -> str:
             transf += [unicodedata.normalize('NFKD', p).encode('ascii', 'ignore').decode()]
 
     return ' '.join(transf)
-
-
-def get_metrics(df: pd.DataFrame) -> list:
-    """
-    Retornas as métricas que estão presentes neste documento.
-
-    :param df: Uma planilha com informações de ranking
-    :return: Uma lista de dicionários, um item para cada métrica que está presente no documento.
-    """
-    qs = Metrica.objects.all()
-
-    metrics = \
-        [{'Métrica': m.nome_portugues, 'id_metrica': m.id_metrica} for m in qs] + \
-        [{'Métrica': m.nome_ingles, 'id_metrica': m.id_metrica} for m in qs]
-
-    present = []
-    for metric in metrics:
-        if metric['Métrica'] in df.columns:
-            present += [metric]
-
-    return present
 
 
 def get_pillars(df, id_ranking) -> list:
@@ -147,7 +128,6 @@ def check_ranking_file_consistency(df: pd.DataFrame, id_ranking: int) -> pd.Data
 
     # verifica se todos os pilares estão no documento
     pillars = get_pillars(df, id_ranking=id_ranking)
-    metrics = get_metrics(df)
 
     # reporter é colocado pelo THE ranking para universidades que estão relacionadas mas não possuem uma ordem
     df = df.replace({None: np.nan, '-': np.nan, 'Reporter': np.nan, 'reporter': np.nan,
@@ -170,17 +150,6 @@ def check_ranking_file_consistency(df: pd.DataFrame, id_ranking: int) -> pd.Data
     df = df.rename(columns=column_renaming)
 
     column_renaming = {}
-    for metric in metrics:
-        try:
-            new_name = metric['Métrica'] + '_as_list'
-            column_renaming[new_name] = metric['Métrica']
-
-            df.loc[:, new_name] = df[metric['Métrica']].apply(__convert_column_values_to_list__)
-        except Exception as e:
-            raise ValidationError(
-                'Para cada coluna de métrica, os números devem ter a casa decimal como ponto (e.g. 10.9), e serem '
-                'separados por travessão (-), caso possuam mais de um valor.'
-            )
 
     df = df.drop(columns=column_renaming.values())
     df = df.rename(columns=column_renaming)
@@ -248,7 +217,7 @@ def __remove_forms__(id_formulario=None) -> None:
             os.remove(os.path.join(settings.BASE_DIR, 'uploads', _file))
 
 
-def __append_row__(i, row, pillars, metrics, to_add_pillars, to_add_metrics):
+def __append_row__(i, row, pillars, to_add_pillars):
     for pillar in pillars:
         nome_pilar = pillar['Pilar']
         id_pilar = pillar['id_pilar']
@@ -267,25 +236,7 @@ def __append_row__(i, row, pillars, metrics, to_add_pillars, to_add_metrics):
         )
         to_add_pillars += [pilar_valor]
 
-    for metric in metrics:
-        nome_metrica = metric['Métrica']
-        id_metrica = metric['id_metrica']
-
-        try:
-            m_values = eval(row[nome_metrica])  # converte para uma lista
-        except TypeError:
-            m_values = row[nome_metrica]  # já é uma lista
-
-        metrica_valor = MetricaValor(
-            apelido_universidade_id=int(row['id_apelido_universidade']),
-            metrica_id=int(id_metrica),
-            ano=int(row['Ano']),
-            valor_inicial=m_values[0],
-            valor_final=m_values[1]
-        )
-        to_add_metrics += [metrica_valor]
-
-    return to_add_pillars, to_add_metrics
+    return to_add_pillars
 
 
 def insert_ranking_data(df, id_ranking, id_formulario, batch_size=999):
@@ -305,7 +256,6 @@ def insert_ranking_data(df, id_ranking, id_formulario, batch_size=999):
         raise ValidationError(f'A planilha deve conter uma coluna de nome \'Ano\'!')
 
     pillars = get_pillars(df, id_ranking=id_ranking)
-    metrics = get_metrics(df)
 
     ano = df['Ano'].iloc[0]
     db_pillar_values = pd.DataFrame(
@@ -316,16 +266,14 @@ def insert_ranking_data(df, id_ranking, id_formulario, batch_size=999):
     )
 
     to_add_pillars = []
-    to_add_metrics = []
     for i, row in df.iterrows():
-        to_add_pillars, to_add_metrics = __append_row__(i, row, pillars, metrics, to_add_pillars, to_add_metrics)
+        to_add_pillars = __append_row__(i, row, pillars, to_add_pillars)
 
     df_pillar_values = pd.DataFrame(
         [(x.apelido_universidade_id, x.pilar_id, x.ano) for x in to_add_pillars],
         columns=['id_apelido_universidade', 'id_pilar', 'ano']
     )
 
-    # TODO inserir métricas tb!
     merged = pd.merge(
         df_pillar_values,
         db_pillar_values,
@@ -431,6 +379,8 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
                     pais_apelido_id=int(row['id_apelido_pais'])
                 )
                 universidade.save()
+
+                # TODO se for brasileira, correlacionar com o COD_IES de R_UNIVERSIDADES_PARA_IES!
 
                 apelido = ApelidoDeUniversidade(
                     universidade=universidade,

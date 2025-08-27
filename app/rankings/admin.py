@@ -2,8 +2,7 @@ from django.contrib import admin
 
 from .models import Continente, Pais, ApelidoDePais, GrupoGeopolitico, \
     PaisesParaGruposGeopoliticos, Universidade, ApelidoDeUniversidade, GrupoDeUniversidades, UniversidadesParaGrupos, \
-    Ranking, Pilar, GrupoDePilares, PilaresParaGrupos, PilarValor, Metrica, MetricasParaPilares, \
-    MetricaValor, Metadado, Formulario
+    Ranking, Pilar, GrupoDePilares, PilaresParaGrupos, PilarValor, Formulario
 
 
 # ------------------ #
@@ -216,52 +215,12 @@ class GrupoDePilaresAdmin(admin.ModelAdmin):
     search_fields = ['id_grupo__nome_portugues']
 
 
-class PilarDeMetricaInline(admin.TabularInline):
-    model = MetricasParaPilares
-    extra = 0
-    fk_name = 'metrica'
-    verbose_name = 'Pilares em que esta métrica é usada'
-
-    ordering = ['pilar', 'peso']
-
-    readonly_fields = ['ranking', 'pilar']
-    fieldsets = [
-        (None, {'fields': ['ranking', 'pilar', 'peso']})
-    ]
-
-
-class MetricaAdmin(admin.ModelAdmin):
-    model = Metrica
-
-    ordering = ['nome_portugues', 'nome_ingles']
-
-    fieldsets = [
-        (None, {'fields': ['nome_portugues', 'nome_ingles']})
-    ]
-    list_display = ['nome_portugues', 'nome_ingles']
-    inlines = [PilarDeMetricaInline]
-
-
 admin.site.register(Ranking, RankingAdmin)
 admin.site.register(GrupoDePilares, GrupoDePilaresAdmin)
-# admin.site.register(PilarValor, PilarValorAdmin)
-
-admin.site.register(Metrica, MetricaAdmin)
-# admin.site.register(MetricasValores)
 
 # ----------------- #
 # --- Metadados --- #
 # ----------------- #
-
-
-class MetadadoAdmin(admin.ModelAdmin):
-    model = Metadado
-
-    fieldsets = [
-        (None, {'fields': ['tipo_metadado', 'tipo_entidade', 'id_entidade', 'ano', 'valor']})
-    ]
-    list_display = ('tipo_metadado', 'tipo_entidade', 'id_entidade', 'ano', 'valor')
-    search_fields = ['tipo_metadado', 'tipo_entidade', 'id_entidade', 'ano', 'valor']
 
 
 class FormularioAdmin(admin.ModelAdmin):
@@ -276,6 +235,5 @@ class FormularioAdmin(admin.ModelAdmin):
     search_fields = ['ranking__nome', 'data', 'formulario']
 
 
-admin.site.register(Metadado, MetadadoAdmin)
 admin.site.register(Formulario, FormularioAdmin)
 
