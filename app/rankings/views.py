@@ -1,21 +1,19 @@
 import re
 
-import pandas as pd
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import Count
 from django.shortcuts import render
-from django.template.loader import get_template
 from django.views.generic import TemplateView
-from tqdm import tqdm
 
 from .forms import InsertRankingForm
-from .models import PilarValor, Pilar, PilaresParaGrupos
-from .models import Universidade, ApelidoDePais, ApelidoDeUniversidade
-from .scripts import get_dataframe, save_ranking_file, load_ranking_file, insert_id_university, \
-    check_ranking_file_consistency, __get_all_universities__, insert_ranking_data, \
-    get_canonical_name, __remove_forms__, __missing_countries_preview__
-from .scripts.universities import merge_replicate_universities
+from .models import PilarValor, Pilar
+from .models import Universidade, ApelidoDePais
+from .scripts import (
+    save_ranking_file, load_ranking_file, insert_id_university,
+    insert_ranking_data, \
+    remove_forms, __missing_countries_preview__
+)
 
 
 class IndexView(TemplateView):
@@ -56,149 +54,11 @@ def success_insert_ranking(request):
     raise PermissionDenied()
 
 
-def success_remove_duplicate_universities(request):
-    if request.method == 'POST':
-        return render(request, 'rankings/universities/duplicate/success.html')
-    raise PermissionDenied()
+class MissingCountriesPreview(TemplateView):
+    def get(self, request, *args, **kwargs):
+        raise PermissionDenied()
 
-
-def merger_universities_preview(request):
-    # countries_list = Pais.objects.order_by('nome_portugues').values('id_pais', 'nome_portugues')
-    unis = __get_all_universities__()
-    groups = unis.groupby(by=['id_pais', 'País']).groups
-    countries_list = [{'id_pais': f'{c[0]}', 'nome_pais_portugues': f'{c[1]}'} for c in groups.keys()]
-    universities_per_country = []
-    for keys, indices in groups.items():
-        universities_per_country += [
-            {
-                'id_pais': keys[0],
-                'universities': unis.loc[
-                     indices, ['id_apelido_universidade', 'Universidade']
-                ].to_dict(orient='records')
-             }
-        ]
-
-    return render(
-        request,
-        'rankings/universities/merger/preview.html',
-        context={
-            'countries_list': countries_list,
-            'universities_per_country': universities_per_country
-        }
-    )
-
-
-def merger_universities_insert(request):
-    if request.method == 'POST':
-        form = request.POST
-
-        _dict = form.dict()
-        keys = list(_dict.keys())
-
-        data = [re.findall('input-datalist-([0-9]+)', x) for x in keys]
-        data = {
-            int(x[0]):
-                {
-                    'name': _dict[f'input-datalist-{x[0]}'],
-                    'use_portuguese': _dict[f'flexRadioPT-{x[0]}'] == 'on' if f'flexRadioPT-{x[0]}' in _dict else False,
-                    'use_english': _dict[f'flexRadioEN-{x[0]}'] == 'on' if f'flexRadioEN-{x[0]}' in _dict else False,
-                }
-            for x in data if len(x) > 0
-        }
-
-        subset = pd.DataFrame(data).T
-
-        # remove_unused_universities_and_nicknames()
-        merge_replicate_universities(subset)  # TODO implement!
-
-        return success_remove_duplicate_universities(request)
-
-    raise PermissionDenied()
-
-
-def duplicate_universities_preview(request):
-    universities = __get_all_universities__()
-    universities = universities.drop_duplicates(subset=['id_universidade', 'id_pais'], keep='first')
-
-    universities['Universidade (canonical)'] = universities['Universidade'].apply(lambda x: hash(get_canonical_name(x)))
-
-    double_index = universities.duplicated(subset=['Universidade (canonical)', 'id_pais'], keep=False)
-
-    if double_index.sum() == 0:
-        return render(request, 'rankings/universities/duplicate/not_found.html')
-
-    subset = universities.loc[double_index]
-    subset = subset.sort_values(by='Universidade (canonical)')
-    subset['assigned'] = ''
-
-    canonical_names = subset['Universidade (canonical)'].unique()
-
-    for i, name in enumerate(canonical_names):
-        subset.loc[subset['Universidade (canonical)'] == name, 'assigned'] = f'{i + 1}'
-
-    universities_list = subset[
-        ['id_universidade', 'id_apelido_universidade', 'Universidade', 'País', 'assigned']
-    ].reset_index().to_dict(orient='records')
-
-    return render(
-        request,
-        'rankings/universities/duplicate/preview.html',
-        context={
-            'universities_list': universities_list,
-            'options': [{'value': '', 'text': ''}, {'value': 'NA', 'text': 'NA'}] +
-                       [{'value': f'{n}', 'text': f'{n}'} for n in range(1, len(universities_list) + 1)]
-        }
-    )
-
-
-def duplicate_universities_insert(request):
-    if request.method == 'POST':
-        form = request.POST
-
-        _dict = form.dict()
-        keys = list(_dict.keys())
-
-        lines = [re.findall('university-id-([0-9]+)', x) for x in keys]
-        lines = [int(x[0]) for x in lines if len(x) > 0]
-
-        data = [
-            {
-                'id_apelido_universidade': form[f'university-nickname-id-{i}'],
-                'id_universidade': form[f'university-id-{i}'],
-                'assigned': form[f'select-assigned-{i}']
-            } for i in lines
-        ]
-        subset = pd.DataFrame(data)
-        subset = subset.loc[subset['assigned'] != 'NA']  # remove as não-duplicadas
-
-        values = subset['assigned'].unique()
-
-        for val in values:  # para cada conjunto de universidades que são as mesmas
-            uni_ids = subset.loc[subset['assigned'] == val, ['id_apelido_universidade', 'id_universidade']]
-            parent_id = uni_ids.iloc[0]  # o primeiro registro vira o pai
-            children_id = uni_ids.iloc[1:]  # os outros receberão o id_universidade do pai
-
-            parent = ApelidoDeUniversidade.objects.get(
-                id_apelido=parent_id['id_apelido_universidade']
-            )
-            children = ApelidoDeUniversidade.objects.filter(
-                id_apelido__in=children_id['id_apelido_universidade']
-            )
-            parent_uni = Universidade.objects.get(id_universidade=parent.universidade.id_universidade)
-
-            for child in children:
-                child.universidade = parent_uni
-                child.save(update_fields=['universidade'])
-
-        # remove_unused_universities_and_nicknames()
-
-        return success_remove_duplicate_universities(request)
-
-    raise PermissionDenied()
-
-
-def missing_countries_insert(request):
-    if request.method == 'POST':
+    def post(self, request, *args, **kwargs):
         form = request.POST
         id_formulario = form['id_formulario']
         id_ranking = form['id_ranking']
@@ -236,137 +96,34 @@ class RankingInsertView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         form = InsertRankingForm()
-        __remove_forms__()
+        remove_forms()
         return render(request, self.template_name, {'form': form})
 
     def post(self, request, *args, **kwargs):
         form = InsertRankingForm(request.POST, request.FILES)
-        if form.is_valid():
-            df = get_dataframe(request.FILES['file'])
-            id_ranking = form.cleaned_data['ranking']
-            try:
-                df = check_ranking_file_consistency(df, id_ranking)
-                df, id_formulario = save_ranking_file(df, id_ranking)
-                request, df, id_ranking, id_formulario = __missing_countries_preview__(
-                    request, df, id_formulario=id_formulario, id_ranking=id_ranking
-                )
-                df = insert_id_university(df)
-                df, id_formulario = save_ranking_file(df, id_ranking=id_ranking, id_formulario=id_formulario)
-                insert_ranking_data(df, id_ranking=id_ranking, id_formulario=id_formulario)
-                return success_insert_ranking(request)
+        if not form.is_valid():
+            return render(
+                request,
+                'rankings/ranking/insert/index.html',
+                {'form': form}
+            )
 
-            except ValidationError as e:
-                messages.error(request, e.message)
-                return render(
-                    request,
-                    'rankings/ranking/insert/index.html',
-                    {'form': form, 'error_message': e.message}
-                )
+        df = form.cleaned_data['dataframe']
+        id_ranking = int(form.cleaned_data['ranking'])
+        try:
+            df, id_formulario = save_ranking_file(df, id_ranking)
+            request, df, id_ranking, id_formulario = __missing_countries_preview__(
+                request, df, id_formulario=id_formulario, id_ranking=id_ranking
+            )
+            df = insert_id_university(df)
+            df, id_formulario = save_ranking_file(df, id_ranking=id_ranking, id_formulario=id_formulario)
+            insert_ranking_data(df, id_ranking=id_ranking, id_formulario=id_formulario)
+            return success_insert_ranking(request)
 
-
-class MergerPillarsPreview(TemplateView):
-    template_name = 'rankings/pillars/merger/preview.html'
-
-    # def get(self, request, *args, **kwargs):
-    #     raise PermissionDenied()
-
-    def post(self, request, *args, **kwargs):
-        form = request.POST
-
-        _dict = form.dict()
-
-        id_ranking = int(_dict['input-ranking-id'])
-
-        index = 0
-        to_use = None  # pilar a ser usado como principal
-        to_replace_names = []  # pilares a serem substituídos pelo principal
-        while f'input-datalist-{index}' in _dict:
-            nome_pilar = _dict[f'input-datalist-{index}']
-
-            if f'flexRadioMain-{index}' in _dict:
-                to_use = nome_pilar
-            else:
-                to_replace_names += [nome_pilar]
-
-            index += 1
-
-        if len(to_replace_names) == 0 or to_use is None:
-            context = self.get_context_data()
-            context['error_message'] = 'Erro: pelo menos dois pilares devem ser selecionados!'
-            return render(request, self.template_name, context)
-
-        to_replace = Pilar.objects.filter(nome_ingles__in=to_replace_names, ranking_id=id_ranking)
-        to_use = Pilar.objects.filter(nome_ingles=to_use, ranking_id=id_ranking)[0]
-
-        to_replace_ids = [x.id_pilar for x in to_replace]
-
-        # atualiza todas as tabelas
-        # atualiza pilar valor
-        qs = PilarValor.objects.filter(pilar__id_pilar__in=to_replace_ids)
-        with tqdm(range(len(qs)), desc='Atualizando ID_PILAR na tabela R_PILARES_VALORES') as pbar:
-            for q in qs:
-                valor_inicial = q.valor_inicial
-                valor_final = q.valor_final
-                apelido_universidade_id = q.apelido_universidade_id
-                ano = q.ano
-
-                nq = PilarValor.objects.create(
-                    pilar=to_use, apelido_universidade_id=apelido_universidade_id, ano=ano,
-                    valor_inicial=valor_inicial, valor_final=valor_final
-                )
-
-                q.delete()  # deleta instância antiga no banco
-                nq.save()  # salva nova instância no banco
-
-                pbar.update(1)
-
-        # atualiza pilares para grupos
-        qs = PilaresParaGrupos.objects.filter(pilar__id_pilar__in=to_replace_ids)
-        for q in qs:
-            grupo_pilares_id = q.grupo_pilares_id
-
-            nq = PilaresParaGrupos.objects.create(pilar=to_use, grupo_pilares_id=grupo_pilares_id)
-
-            q.delete()  # deleta instância antiga no banco
-            nq.save()  # salva nova instância no banco
-
-        # deleta pilares antigos
-        for p in to_replace:
-            p.delete()
-
-        return render(request, 'rankings/pillars/merger/success.html')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        pillars = pd.DataFrame([
-            {
-                'id_ranking': x.ranking.id_ranking, 'nome_ranking': x.ranking.nome,
-                'id_pilar': x.id_pilar, 'nome_pilar': x.nome_ingles
-            }
-            for x in Pilar.objects.all()
-        ])
-        pillars = pillars.sort_values(by='nome_pilar')
-
-        groups = pillars.groupby(by=['id_ranking', 'nome_ranking']).groups
-        rankings_list = [{'id_ranking': f'{c[0]}', 'nome_ranking': f'{c[1]}'} for c in groups.keys()]
-        pillars_per_ranking = []
-        for keys, indices in groups.items():
-            pillars_per_ranking += [
-                {
-                    'id_ranking': keys[0],
-                    'pillars': pillars.loc[
-                        indices, ['id_pilar', 'nome_pilar']
-                    ].to_dict(orient='records')
-                }
-            ]
-
-        context['rankings_list'] = rankings_list
-        context['pillars_per_ranking'] = pillars_per_ranking
-
-        input_group_code = get_template('rankings/pillars/merger/input_group.html').template.source
-        input_group_code = input_group_code.replace('\n', '\\n')
-
-        context['input_group_code'] = input_group_code
-
-        return context
+        except ValidationError as e:
+            messages.error(request, e.message)
+            return render(
+                request,
+                'rankings/ranking/insert/index.html',
+                {'form': form, 'error_message': e.message}
+            )

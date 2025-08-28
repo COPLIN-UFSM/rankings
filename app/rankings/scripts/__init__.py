@@ -1,37 +1,21 @@
 import csv
+import itertools as it
 import os
-import re
 import string
-import unicodedata
-from io import StringIO
 
 import numpy as np
 import pandas as pd
-from db2 import DB2Connection
+import unicodedata
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.shortcuts import render
+from sentence_transformers import SentenceTransformer, util
 from tqdm import tqdm
 
-import itertools as it
-
-from sentence_transformers import SentenceTransformer, util
-
-from .universities import __get_all_universities__
 from ..models import (
-    Ranking, Pilar, ApelidoDeUniversidade, ApelidoDePais, Formulario, Universidade, PilarValor,
+    ApelidoDeUniversidade, ApelidoDePais, Formulario, Universidade, PilarValor,
     Pais, TipoApelido
 )
-
-
-def get_dataframe(file: InMemoryUploadedFile):
-    """
-    Transforma um arquivo CSV em um DataFrame do Pandas.
-    """
-    some_file = file.read().decode('utf-8')
-    df = pd.read_csv(StringIO(some_file), encoding='utf-8')
-    return df
 
 
 def get_canonical_name(name: str) -> str:
@@ -56,105 +40,6 @@ def get_canonical_name(name: str) -> str:
             transf += [unicodedata.normalize('NFKD', p).encode('ascii', 'ignore').decode()]
 
     return ' '.join(transf)
-
-
-def get_pillars(df, id_ranking) -> list:
-    en = set(pd.DataFrame(Pilar.objects.filter(ranking__id_ranking=id_ranking).values('id_pilar', 'nome_ingles')).to_dict(orient='list')['nome_ingles'])
-    pt = set(pd.DataFrame(Pilar.objects.filter(ranking__id_ranking=id_ranking).values('id_pilar', 'nome_portugues')).to_dict(orient='list')['nome_portugues'])
-
-    columns = set(df.columns)
-
-    if len(en.intersection(columns)) == len(en):
-        elected = pd.DataFrame(Pilar.objects.filter(ranking__id_ranking=id_ranking).values('id_pilar', 'nome_ingles'))
-    elif len(pt.intersection(columns)) == len(pt):
-        elected = pd.DataFrame(Pilar.objects.filter(ranking__id_ranking=id_ranking).values('id_pilar', 'nome_portugues'))
-    else:
-
-        if len(en.intersection(columns)) > len(pt.intersection(columns)):
-            missing = en - columns
-        else:
-            missing = pt - columns
-
-        missing_html = ''.join([f'<li>{x}</li>' for x in missing])
-
-        raise ValidationError(
-            f'<p>Erro: Os pilares informados na planilha devem ser exatamente os que são informados no banco de dados! '
-            f'Se novos pilares foram adicionados ao Ranking, você terá que adicioná-los manualmente na tela de '
-            f'administrador deste site. Se os nomes dos pilares forem semelhantes, mas não exatamente iguais, você pode'
-            f' simplesmente trocar o nome do pilar na planilha para o nome do banco de dados. Os nomes dos pilares '
-            f'devem ser consistentes: ou todos escritos em inglês, ou todos escritos em português. Verifique a grafia '
-            f'correta na tela de administrador.</p>'
-            f'<p>Pilares que faltam na planilha:</p><ul>{missing_html}</ul>'
-        )
-
-    elected.columns = ['id_pilar', 'Pilar']
-    return elected.to_dict(orient='records')
-
-
-def check_ranking_file_consistency(df: pd.DataFrame, id_ranking: int) -> pd.DataFrame:
-    """
-    Verifica se a planilha de um ranking que está sendo inserido possui todos os pilares do ranking.
-    Se houver alguma inconsistência, levanta uma exceção do tipo ValidationError com a mensagem do erro.
-
-    :param df: DataFrame que está sendo inserido no site
-    :param id_ranking: ID do ranking na tabela Rankings
-    """
-    # verifica colunas básicas
-    if 'Universidade' not in df.columns:
-        raise ValidationError(f'A planilha deve conter uma coluna de nome \'Universidade\'!')
-    if 'País' not in df.columns:
-        raise ValidationError(f'A planilha deve conter uma coluna de nome \'País\'!')
-    if 'Ano' not in df.columns:
-        raise ValidationError(f'A planilha deve conter uma coluna de nome \'Ano\'!')
-
-    def __convert_column_values_to_list__(_x) -> list:
-        if pd.isna(_x):
-            return [None, None]
-        if isinstance(_x, float) or isinstance(_x, int):
-            return [float(_x), None]
-
-        _x = re.findall('([0-9\.]+)', _x)
-
-        # for rep in string.punctuation + '—–':
-        #     _x = _x.replace(rep, ' ')
-        # _x = _x.split()
-        return ([float(y) for y in _x] + [None, None])[:2]
-
-    # verifica se o ranking existe no banco de dados
-    ranking_obj = Ranking.objects.filter(id_ranking=id_ranking).first()
-    if ranking_obj is None:
-        raise ValidationError(f'O ranking informado não foi encontrado na base de dados! Se este for um novo '
-                              f'ranking, você terá que adicioná-lo manualmente na tela de administrador.')
-
-    # verifica se todos os pilares estão no documento
-    pillars = get_pillars(df, id_ranking=id_ranking)
-
-    # reporter é colocado pelo THE ranking para universidades que estão relacionadas mas não possuem uma ordem
-    df = df.replace({None: np.nan, '-': np.nan, 'Reporter': np.nan, 'reporter': np.nan,
-                     'n/a': np.nan, 'NA': np.nan, 'na': np.nan})
-
-    column_renaming = {}
-    for pillar in pillars:
-        try:
-            new_name = pillar['Pilar'] + '_as_list'
-            column_renaming[new_name] = pillar['Pilar']
-
-            df.loc[:, new_name] = df[pillar['Pilar']].apply(__convert_column_values_to_list__)
-        except Exception as e:
-            raise ValidationError(
-                'Para cada coluna de pilar, os números devem ter a casa decimal como ponto (e.g. 10.9), e serem '
-                'separados por travessão (-), caso possuam mais de um valor.'
-            )
-
-    df = df.drop(columns=column_renaming.values())
-    df = df.rename(columns=column_renaming)
-
-    column_renaming = {}
-
-    df = df.drop(columns=column_renaming.values())
-    df = df.rename(columns=column_renaming)
-
-    return df
 
 
 def insert_id_pais(df: pd.DataFrame) -> pd.DataFrame:
@@ -195,7 +80,7 @@ def insert_id_pais(df: pd.DataFrame) -> pd.DataFrame:
     return joined
 
 
-def __remove_forms__(id_formulario=None) -> None:
+def remove_forms(id_formulario=None) -> None:
     """
     Remove formulários do banco de dados e da pasta local do computador.
 
@@ -211,7 +96,6 @@ def __remove_forms__(id_formulario=None) -> None:
     else:  # remove todos os formulários
         Formulario.objects.all().delete()
 
-        from django.conf import settings
         _files = [x for x in os.listdir(os.path.join(settings.BASE_DIR, 'uploads')) if x != '.gitignore']
         for _file in _files:
             os.remove(os.path.join(settings.BASE_DIR, 'uploads', _file))
@@ -255,7 +139,7 @@ def insert_ranking_data(df, id_ranking, id_formulario, batch_size=999):
     if 'Ano' not in df.columns:
         raise ValidationError(f'A planilha deve conter uma coluna de nome \'Ano\'!')
 
-    pillars = get_pillars(df, id_ranking=id_ranking)
+    pillars = fulfill_pillars(df, id_ranking=id_ranking)
 
     ano = df['Ano'].iloc[0]
     db_pillar_values = pd.DataFrame(
@@ -308,7 +192,7 @@ def insert_ranking_data(df, id_ranking, id_formulario, batch_size=999):
     # PilarValor.objects.bulk_create(filtered_pillars)
     # MetricaValor.objects.bulk_create(to_add_metrics)
 
-    __remove_forms__(id_formulario=id_formulario)
+    remove_forms(id_formulario=id_formulario)
 
 
 def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
@@ -320,7 +204,7 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
         raise ValidationError('A coluna \'id_apelido_pais\' precisa estar no DataFrame!')
 
     # bd_unis possui as universidades do banco de dados
-    db = __get_all_universities__()
+    db = get_all_db_universities()
     df['Universidade_encoded'] = df['Universidade'].apply(lambda x: x.upper().strip().encode('unicode_escape').decode('latin-1').upper())
     db['Universidade_encoded'] = db['Universidade'].apply(lambda x: x.upper().strip().encode('latin-1').decode('latin-1').upper())
 
@@ -350,7 +234,6 @@ def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
             subset=['Universidade_encoded', 'id_pais']
         )
 
-        from sentence_transformers import SentenceTransformer, util
         model = SentenceTransformer('all-MiniLM-L6-v2')
 
         for i, row in tqdm(missing.iterrows(), total=len(missing), desc='Inserindo universidades no banco'):
@@ -502,3 +385,20 @@ def __missing_countries_preview__(request, df, id_formulario, id_ranking):
         )
 
     return request, df, id_ranking, id_formulario
+
+
+def get_all_db_universities() -> pd.DataFrame:
+    """
+    Coleta todas as universidades do banco de dados e retorna em um pandas.DataFrame.
+    """
+    df = pd.DataFrame(ApelidoDeUniversidade.objects.all().values(
+        'universidade__id_universidade',
+        'id_apelido',
+        'apelido',
+        'universidade__pais_apelido__id_apelido',
+        'universidade__pais_apelido__pais__id_pais',
+        'universidade__pais_apelido__pais__nome_ingles'
+    ))
+    df.columns = ['id_universidade', 'id_apelido_universidade', 'Universidade', 'id_apelido_pais', 'id_pais', 'País']
+
+    return df

@@ -141,7 +141,7 @@ class IES(models.Model):
 class Universidade(models.Model):
     id_universidade = models.AutoField(db_column='ID_UNIVERSIDADE', primary_key=True, blank=True, null=False)
 
-    cod_ies = models.AutoField('Código IES', db_column='COD_IES', primary_key=False, blank=True, null=True)
+    cod_ies = models.IntegerField('Código IES', db_column='COD_IES', primary_key=False, blank=True, null=True)
 
     nome_portugues = models.CharField(
         'Nome (PT-BR)', max_length=512, db_column='NOME_UNIVERSIDADE_PORTUGUES', blank=False, null=False

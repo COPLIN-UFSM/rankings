@@ -1,33 +1,19 @@
-from datetime import datetime as dt
+import re
+from io import StringIO
 
+import numpy as np
+import pandas as pd
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from .models import Ranking
+from .models import Ranking, Pilar
 
 
-def check_year(year):
-    current_year = dt.now().year
-    if year < 1900:
-        raise ValidationError(f'O menor ano de ranking possível é 1900!')
-    if year > (current_year + 2):
-        raise ValidationError(
-            f'O ano inserido está {year - current_year} anos no futuro! Tem certeza que você digitou certo?'
-        )
-
-
-def check_dataframe(file: InMemoryUploadedFile):
+def check_dataframe_consistency(file: InMemoryUploadedFile):
     ext = file.name.split('.')[-1].lower()
     if ext != 'csv':
-        raise ValidationError('A planilha deve ser do tipo csv!')
-
-    # try:
-    #     df = get_dataframe(file)
-    # except:
-    #     raise ValidationError(
-    #         'Não foi possível abrir a planilha. Verifique se a mesma possui aspas '
-    #         'para delimitar texto e usa vírgula como separador de colunas')
+        raise ValidationError('O arquivo deve ser do tipo csv!')
 
 
 class InsertRankingForm(forms.Form):
@@ -35,13 +21,128 @@ class InsertRankingForm(forms.Form):
         label='Nome do Ranking',
         widget=forms.Select(choices=[(x.id_ranking, x.nome) for x in Ranking.objects.all()])
     )
-    file = forms.FileField(label='Planilha (tipo csv)', validators=[check_dataframe])
+    file = forms.FileField(label='Planilha (tipo csv)', validators=[check_dataframe_consistency])
 
+    @staticmethod
+    def fulfill_pillars(df: pd.DataFrame, id_ranking: int) -> list:
+        """
+        Dado um ID_RANKING e um formulário no formato pd.DataFrame, preenche o ID_PILAR para cada linha do DataFrame.
+        """
+        pillars = Pilar.objects.filter(ranking__id_ranking=id_ranking)
 
-class RemoveReplicatePillarsForm(forms.Form):
-    pass
-    # ranking = forms.CharField(
-    #     label='Nome do Ranking',
-    #     widget=forms.Select(choices=[(x.id_ranking, x.nome) for x in Ranking.objects.all()])
-    # )
-    # file = forms.FileField(label='Planilha (tipo csv)', validators=[check_dataframe])
+        en = set(pd.DataFrame(pillars.values('id_pilar', 'nome_ingles')).to_dict(orient='list')['nome_ingles'])
+        pt = set(pd.DataFrame(pillars.values('id_pilar', 'nome_portugues')).to_dict(orient='list')['nome_portugues'])
+
+        columns = set(df.columns)
+
+        if len(en.intersection(columns)) == len(en):
+            elected = pd.DataFrame(pillars.values('id_pilar', 'nome_ingles'))
+        elif len(pt.intersection(columns)) == len(pt):
+            elected = pd.DataFrame(pillars.values('id_pilar', 'nome_portugues'))
+        else:
+            if len(en.intersection(columns)) > len(pt.intersection(columns)):
+                missing = en - columns
+            else:
+                missing = pt - columns
+
+            missing_html = ''.join([f'<li>{x}</li>' for x in missing])
+
+            raise ValidationError(
+                f'<p>Erro: Os pilares informados na planilha devem ser exatamente os que são informados no banco de dados! '
+                f'Se novos pilares foram adicionados ao Ranking, você terá que adicioná-los manualmente na tela de '
+                f'administrador deste site. Se os nomes dos pilares forem semelhantes, mas não exatamente iguais, você pode'
+                f' simplesmente trocar o nome do pilar na planilha para o nome do banco de dados. Os nomes dos pilares '
+                f'devem ser consistentes: ou todos escritos em inglês, ou todos escritos em português. Verifique a grafia '
+                f'correta na tela de administrador.</p>'
+                f'<p>Pilares que faltam na planilha:</p><ul>{missing_html}</ul>'
+            )
+
+        elected.columns = ['id_pilar', 'Pilar']
+        return elected.to_dict(orient='records')
+
+    @staticmethod
+    def check_ranking_file_consistency(df: pd.DataFrame, id_ranking: int) -> pd.DataFrame:
+        """
+        Verifica se a planilha de um ranking que está sendo inserido possui todos os pilares do ranking.
+        Se houver alguma inconsistência, levanta uma exceção do tipo ValidationError com a mensagem do erro.
+
+        :param df: DataFrame que está sendo inserido no site
+        :param id_ranking: ID do ranking na tabela Rankings
+        """
+        # verifica colunas básicas
+        if 'Universidade' not in df.columns:
+            raise ValidationError(f'A planilha deve conter uma coluna de nome \'Universidade\'!')
+        if 'País' not in df.columns:
+            raise ValidationError(f'A planilha deve conter uma coluna de nome \'País\'!')
+        if 'Ano' not in df.columns:
+            raise ValidationError(f'A planilha deve conter uma coluna de nome \'Ano\'!')
+
+        def __convert_column_values_to_list__(_x) -> list:
+            if pd.isna(_x):
+                return [None, None]
+            if isinstance(_x, float) or isinstance(_x, int):
+                return [float(_x), None]
+
+            _x = re.findall('([0-9\.]+)', _x)
+
+            # for rep in string.punctuation + '—–':
+            #     _x = _x.replace(rep, ' ')
+            # _x = _x.split()
+            return ([float(y) for y in _x] + [None, None])[:2]
+
+        # verifica se o ranking existe no banco de dados
+        ranking_obj = Ranking.objects.filter(id_ranking=id_ranking).first()
+        if ranking_obj is None:
+            raise ValidationError(f'O ranking informado não foi encontrado na base de dados! Se este for um novo '
+                                  f'ranking, você terá que adicioná-lo manualmente na tela de administrador.')
+
+        # verifica se todos os pilares estão no documento
+        pillars = InsertRankingForm.fulfill_pillars(df, id_ranking=id_ranking)
+
+        # reporter é colocado pelo THE ranking para universidades que estão relacionadas mas não possuem uma ordem
+        df = df.replace({None: np.nan, '-': np.nan, 'Reporter': np.nan, 'reporter': np.nan,
+                         'n/a': np.nan, 'NA': np.nan, 'na': np.nan})
+
+        column_renaming = {}
+        for pillar in pillars:
+            try:
+                new_name = pillar['Pilar'] + '_as_list'
+                column_renaming[new_name] = pillar['Pilar']
+
+                df.loc[:, new_name] = df[pillar['Pilar']].apply(__convert_column_values_to_list__)
+            except Exception as e:
+                raise ValidationError(
+                    'Para cada coluna de pilar, os números devem ter a casa decimal como ponto (e.g. 10.9), e serem '
+                    'separados por travessão (-), caso possuam mais de um valor.'
+                )
+
+        df = df.drop(columns=column_renaming.values())
+        df = df.rename(columns=column_renaming)
+
+        column_renaming = {}
+
+        df = df.drop(columns=column_renaming.values())
+        df = df.rename(columns=column_renaming)
+
+        return df
+
+    @staticmethod
+    def to_dataframe(file: InMemoryUploadedFile):
+        """
+        Transforma um arquivo CSV em um pandas.DataFrame.
+        """
+        some_file = file.read().decode('utf-8')
+        df = pd.read_csv(StringIO(some_file), encoding='utf-8')
+        return df
+
+    def clean_file(self):
+        file = self.cleaned_data['file']
+        df = InsertRankingForm.to_dataframe(file.file)
+        id_ranking = int(self.cleaned_data['ranking'])
+
+        df = InsertRankingForm.check_ranking_file_consistency(df, id_ranking)
+        self.cleaned_data['dataframe'] = df
+        return file
+
+    def clean(self):
+        pass

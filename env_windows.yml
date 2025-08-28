@@ -29,3 +29,4 @@ dependencies:
       - sentence-transformers
       - huggingface
       - transformers
+      - pytest
