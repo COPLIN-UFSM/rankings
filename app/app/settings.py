@@ -122,9 +122,6 @@ DATABASES = {
                    f"PORT={get_secret('port')};PROTOCOL=TCPIP;"
         },
         'PCONNECT': True,
-        "TEST": {
-            "NAME": "henry"
-        },
     },
 }
 

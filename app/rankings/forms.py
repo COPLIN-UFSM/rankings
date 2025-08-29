@@ -17,18 +17,23 @@ def check_dataframe_consistency(file: InMemoryUploadedFile):
 
 
 class InsertRankingForm(forms.Form):
-    ranking = forms.CharField(
+    # ranking = forms.CharField(
+    #     label='Nome do Ranking',
+    #     widget=forms.Select(choices=[(x.id_ranking, x.nome) for x in Ranking.objects.all()])
+    # )
+    ranking = forms.ModelChoiceField(
         label='Nome do Ranking',
-        widget=forms.Select(choices=[(x.id_ranking, x.nome) for x in Ranking.objects.all()])
+        queryset=Ranking.objects.all(),
+        widget=forms.Select
     )
     file = forms.FileField(label='Planilha (tipo csv)', validators=[check_dataframe_consistency])
 
     @staticmethod
-    def fulfill_pillars(df: pd.DataFrame, id_ranking: int) -> list:
+    def fulfill_pillars(df: pd.DataFrame, ranking: Ranking) -> list:
         """
         Dado um ID_RANKING e um formulário no formato pd.DataFrame, preenche o ID_PILAR para cada linha do DataFrame.
         """
-        pillars = Pilar.objects.filter(ranking__id_ranking=id_ranking)
+        pillars = Pilar.objects.filter(ranking=ranking)
 
         en = set(pd.DataFrame(pillars.values('id_pilar', 'nome_ingles')).to_dict(orient='list')['nome_ingles'])
         pt = set(pd.DataFrame(pillars.values('id_pilar', 'nome_portugues')).to_dict(orient='list')['nome_portugues'])
@@ -61,13 +66,13 @@ class InsertRankingForm(forms.Form):
         return elected.to_dict(orient='records')
 
     @staticmethod
-    def check_ranking_file_consistency(df: pd.DataFrame, id_ranking: int) -> pd.DataFrame:
+    def check_ranking_file_consistency(df: pd.DataFrame, ranking: Ranking) -> pd.DataFrame:
         """
         Verifica se a planilha de um ranking que está sendo inserido possui todos os pilares do ranking.
         Se houver alguma inconsistência, levanta uma exceção do tipo ValidationError com a mensagem do erro.
 
         :param df: DataFrame que está sendo inserido no site
-        :param id_ranking: ID do ranking na tabela Rankings
+        :param ranking: o ranking na tabela Rankings
         """
         # verifica colunas básicas
         if 'Universidade' not in df.columns:
@@ -91,13 +96,12 @@ class InsertRankingForm(forms.Form):
             return ([float(y) for y in _x] + [None, None])[:2]
 
         # verifica se o ranking existe no banco de dados
-        ranking_obj = Ranking.objects.filter(id_ranking=id_ranking).first()
-        if ranking_obj is None:
+        if ranking is None:
             raise ValidationError(f'O ranking informado não foi encontrado na base de dados! Se este for um novo '
                                   f'ranking, você terá que adicioná-lo manualmente na tela de administrador.')
 
         # verifica se todos os pilares estão no documento
-        pillars = InsertRankingForm.fulfill_pillars(df, id_ranking=id_ranking)
+        pillars = InsertRankingForm.fulfill_pillars(df, ranking=ranking)
 
         # reporter é colocado pelo THE ranking para universidades que estão relacionadas mas não possuem uma ordem
         df = df.replace({None: np.nan, '-': np.nan, 'Reporter': np.nan, 'reporter': np.nan,
@@ -138,9 +142,9 @@ class InsertRankingForm(forms.Form):
     def clean_file(self):
         file = self.cleaned_data['file']
         df = InsertRankingForm.to_dataframe(file.file)
-        id_ranking = int(self.cleaned_data['ranking'])
+        ranking = self.cleaned_data['ranking']
 
-        df = InsertRankingForm.check_ranking_file_consistency(df, id_ranking)
+        df = InsertRankingForm.check_ranking_file_consistency(df, ranking)
         self.cleaned_data['dataframe'] = df
         return file
 

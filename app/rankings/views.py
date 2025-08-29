@@ -88,7 +88,6 @@ class MissingCountriesPreview(TemplateView):
             df.loc[_index, 'id_apelido_pais'] = apelido.id_apelido
 
         return __insert_id_university_step__(request, df, id_ranking=id_ranking, id_formulario=id_formulario)
-    raise PermissionDenied()
 
 
 class RankingInsertView(TemplateView):
@@ -109,15 +108,15 @@ class RankingInsertView(TemplateView):
             )
 
         df = form.cleaned_data['dataframe']
-        id_ranking = int(form.cleaned_data['ranking'])
+        ranking = form.cleaned_data['ranking']
         try:
-            df, id_formulario = save_ranking_file(df, id_ranking)
-            request, df, id_ranking, id_formulario = __missing_countries_preview__(
-                request, df, id_formulario=id_formulario, id_ranking=id_ranking
+            df, id_formulario = save_ranking_file(df, ranking)
+            request, df, ranking, id_formulario = __missing_countries_preview__(
+                request, df, id_formulario=id_formulario, id_ranking=ranking
             )
             df = insert_id_university(df)
-            df, id_formulario = save_ranking_file(df, id_ranking=id_ranking, id_formulario=id_formulario)
-            insert_ranking_data(df, id_ranking=id_ranking, id_formulario=id_formulario)
+            df, id_formulario = save_ranking_file(df, id_ranking=ranking, id_formulario=id_formulario)
+            insert_ranking_data(df, id_ranking=ranking, id_formulario=id_formulario)
             return success_insert_ranking(request)
 
         except ValidationError as e:
