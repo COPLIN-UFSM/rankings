@@ -315,7 +315,8 @@ class PilarValor(models.Model):
     valor_inicial = models.FloatField(db_column='VALOR_INICIAL', blank=True, null=True, verbose_name='Valor Inicial')
     valor_final = models.FloatField(db_column='VALOR_FINAL', blank=True, null=True, verbose_name='Valor Final')
 
-    pk = models.CompositePrimaryKey('apelido_universidade_id', 'pilar_id', 'ano')
+    # pk = models.CompositePrimaryKey('apelido_universidade_id', 'pilar_id', 'ano')
+    pk = models.CompositePrimaryKey('apelido_universidade', 'pilar', 'ano')
 
     @property
     def ranking(self):
@@ -329,7 +330,7 @@ class PilarValor(models.Model):
         unique_together = (('apelido_universidade', 'pilar', 'ano'), )
 
     def __str__(self):
-        return ''
+        return f'{self.apelido_universidade} - {self.pilar} - {self.ano} - {self.valor_inicial} - {self.valor_final}'
 
 
 # class Metrica(models.Model):
