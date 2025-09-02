@@ -124,6 +124,25 @@ Independente do nível de acesso ao banco de dados da UFSM:
 
 É possível consultar o diagrama do banco de dados no arquivo [SCHEMA](app/database_scripts/SCHEMA.md).
 
+## Executando testes
+
+> [!CAUTION]
+> Não use o banco de produção para executar os testes! As tabelas de produção podem ser removidas pelo código Django!
+
+Os testes automatizados usando um banco de dados SQLite (ao invés do IBM DB2) para executar testes. As configurações
+desse banco de dados estão no arquivo [test_settings.py](app/app/test_settings.py) (enquanto o arquivo usado para
+produção é o [settings.py](app/app/settings.py)).
+
+Adicione uma variável de ambiente ao executar os testes na linha de comando:
+
+```bash
+DJANGO_SETTINGS_MODULE=app.test_setings python manage.py test 
+```
+
+Ou, se estiver executando pelo PyCharm, crie uma configuração como na tela abaixo:
+
+![configuração_testes.png](imagens/configura%C3%A7%C3%A3o_testes.png)
+
 ## Contato
 
 Repositório originalmente desenvolvido por Henry Cagnini: [henry.cagnini@ufsm.br]()

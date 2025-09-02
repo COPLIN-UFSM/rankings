@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from .models import Ranking, Pilar
+from .scripts import get_document_pillars
 
 
 def check_dataframe_consistency(file: InMemoryUploadedFile):
@@ -27,43 +28,6 @@ class InsertRankingForm(forms.Form):
         widget=forms.Select
     )
     file = forms.FileField(label='Planilha (tipo csv)', validators=[check_dataframe_consistency])
-
-    @staticmethod
-    def fulfill_pillars(df: pd.DataFrame, ranking: Ranking) -> list:
-        """
-        Dado um ID_RANKING e um formulário no formato pd.DataFrame, preenche o ID_PILAR para cada linha do DataFrame.
-        """
-        pillars = Pilar.objects.filter(ranking=ranking)
-
-        en = set(pd.DataFrame(pillars.values('id_pilar', 'nome_ingles')).to_dict(orient='list')['nome_ingles'])
-        pt = set(pd.DataFrame(pillars.values('id_pilar', 'nome_portugues')).to_dict(orient='list')['nome_portugues'])
-
-        columns = set(df.columns)
-
-        if len(en.intersection(columns)) == len(en):
-            elected = pd.DataFrame(pillars.values('id_pilar', 'nome_ingles'))
-        elif len(pt.intersection(columns)) == len(pt):
-            elected = pd.DataFrame(pillars.values('id_pilar', 'nome_portugues'))
-        else:
-            if len(en.intersection(columns)) > len(pt.intersection(columns)):
-                missing = en - columns
-            else:
-                missing = pt - columns
-
-            missing_html = ''.join([f'<li>{x}</li>' for x in missing])
-
-            raise ValidationError(
-                f'<p>Erro: Os pilares informados na planilha devem ser exatamente os que são informados no banco de dados! '
-                f'Se novos pilares foram adicionados ao Ranking, você terá que adicioná-los manualmente na tela de '
-                f'administrador deste site. Se os nomes dos pilares forem semelhantes, mas não exatamente iguais, você pode'
-                f' simplesmente trocar o nome do pilar na planilha para o nome do banco de dados. Os nomes dos pilares '
-                f'devem ser consistentes: ou todos escritos em inglês, ou todos escritos em português. Verifique a grafia '
-                f'correta na tela de administrador.</p>'
-                f'<p>Pilares que faltam na planilha:</p><ul>{missing_html}</ul>'
-            )
-
-        elected.columns = ['id_pilar', 'Pilar']
-        return elected.to_dict(orient='records')
 
     @staticmethod
     def check_ranking_file_consistency(df: pd.DataFrame, ranking: Ranking) -> pd.DataFrame:
@@ -101,7 +65,7 @@ class InsertRankingForm(forms.Form):
                                   f'ranking, você terá que adicioná-lo manualmente na tela de administrador.')
 
         # verifica se todos os pilares estão no documento
-        pillars = InsertRankingForm.fulfill_pillars(df, ranking=ranking)
+        pillars = get_document_pillars(df, ranking=ranking)
 
         # reporter é colocado pelo THE ranking para universidades que estão relacionadas mas não possuem uma ordem
         df = df.replace({None: np.nan, '-': np.nan, 'Reporter': np.nan, 'reporter': np.nan,
