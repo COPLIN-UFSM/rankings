@@ -9,7 +9,9 @@ from django.test import TransactionTestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from ..forms import InsertRankingForm
-from ..models import Ranking, Pilar, Continente, Pais, ApelidoDePais, TipoApelido, IES
+from ..models import Ranking, Pilar, Continente, Pais, ApelidoDePais, TipoApelido, IES, Universidade, \
+    ApelidoDeUniversidade, PilarValor
+from ..scripts import get_document_pillars
 
 
 class RankingsTransactionTestCase(TransactionTestCase):
@@ -36,7 +38,7 @@ class RankingsTransactionTestCase(TransactionTestCase):
             'ranking': ranking.id_ranking,
             'file': uploaded_file
         }
-        return data
+        return data, df
 
     @classmethod
     def setUpClass(cls):
@@ -129,9 +131,10 @@ class RankingsTransactionTestCase(TransactionTestCase):
         ies.save()
 
 class MissingCountriesPreviewTestCase(RankingsTransactionTestCase):
-    def test_missing_province_form(self):
+    def test_missing_province(self):
         """
-        Testa o envio de um formulário com uma província não-mapeada no banco de dados.
+        Testa o envio de um formulário com uma província não-mapeada no banco de dados, mas que pode ser mapeada
+        para um país existente no banco de dados.
         """
 
         apelido_pais = ApelidoDePais.objects.get(apelido='Test Country')
@@ -165,13 +168,48 @@ class MissingCountriesPreviewTestCase(RankingsTransactionTestCase):
         # verifica se a mensagem de sucesso está na resposta
         self.assertContains(response, 'Sucesso')
 
+        # verifica se os dados foram inseridos no banco
+        self.assertEqual(PilarValor.objects.all().count(), 4)
+
+        pillars = get_document_pillars(df=df, ranking=Ranking.objects.get(nome='Test Ranking'))
+
+        for p in pillars:
+            pv = PilarValor.objects.get(pilar_id=p['id_pilar'])
+            self.assertAlmostEqual(df.iloc[0][p['Pilar']][0], pv.valor_inicial)
+
 
 class RankingsInsertViewTestCase(RankingsTransactionTestCase):
-    def test_correct_form(self):
+    def check_inserted_pillar_values(self, df):
+        # verifica se os dados foram inseridos no banco
+        self.assertEqual(PilarValor.objects.all().count(), 4)
+
+        pillars = get_document_pillars(df=df, ranking=Ranking.objects.get(nome='Test Ranking'))
+
+        for p in pillars:
+            pv = PilarValor.objects.get(pilar_id=p['id_pilar'])
+            self.assertAlmostEqual(df.iloc[0][p['Pilar']], pv.valor_inicial)
+
+    def test_present_country_and_university(self):
         """
-        Testa o envio de um formulário com informações preenchidas corretamente.
+        Testa o envio de um formulário com informações preenchidas corretamente,
+        e uma universidade já existente no banco.
         """
-        data = RankingsInsertViewTestCase.get_form_data('test_ranking_01.csv')
+        # insere universidade no banco
+        universidade = Universidade.objects.create(
+            nome_ingles='Test University',
+            nome_portugues='Universidade Teste',
+            sigla='TU',
+            pais_apelido=ApelidoDePais.objects.get(apelido='Test Country')
+        )
+        universidade.save()
+
+        apelido = ApelidoDeUniversidade.objects.create(
+            universidade=universidade,
+            apelido='Test University'
+        )
+        apelido.save()
+
+        data, df = RankingsInsertViewTestCase.get_form_data('test_ranking_01.csv')
 
         # faz uma requisição POST
         response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
@@ -182,11 +220,62 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
         # verifica se a mensagem de sucesso está na resposta
         self.assertContains(response, "Sucesso")
 
-    def test_missing_province_form(self):
+        self.check_inserted_pillar_values(df)
+
+    def test_missing_university(self):
+        """
+        Testa o envio de um formulário com informações preenchidas corretamente, porém sem a universidade inserida
+        no banco de dados.
+        """
+        data, df = RankingsInsertViewTestCase.get_form_data('test_ranking_01.csv')
+
+        # faz uma requisição POST
+        response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
+
+        # verifica resposta
+        self.assertEqual(response.status_code, 200)  # 302 para redirecionamento
+
+        # verifica se a mensagem de sucesso está na resposta
+        self.assertContains(response, "Sucesso")
+
+        # verifica se os dados foram inseridos no banco
+        self.check_inserted_pillar_values(df)
+
+        # verifica se universidade foi inserida
+        Universidade.objects.get(nome_ingles='Test University')  # lança uma exceção se não existir
+        ApelidoDeUniversidade.objects.get(apelido='Test University')  # lança uma exceção se não existir
+
+
+    def test_ies_correlation(self):
+        """
+        Testa o envio de um formulário com informações preenchidas corretamente, porém sem uma universidade,
+        e esta universidade mapeia para uma IES no banco de dados.
+        """
+        data, df = RankingsInsertViewTestCase.get_form_data('test_ranking_03.csv')
+
+        # faz uma requisição POST
+        response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
+
+        # verifica resposta
+        self.assertEqual(response.status_code, 200)  # 302 para redirecionamento
+
+        # verifica se a mensagem de sucesso está na resposta
+        self.assertContains(response, "Sucesso")
+
+        self.check_inserted_pillar_values(df)
+
+        # verifica se universidade foi inserida
+        Universidade.objects.get(nome_ingles='Test University')  # lança uma exceção se não existir
+        ApelidoDeUniversidade.objects.get(apelido='Test University')  # lança uma exceção se não existir
+
+        # verifica se a universidade está relacionada com a IES correta
+        self.assertEqual(ApelidoDeUniversidade.objects.get(apelido='Test University').universidade.cod_ies, 1)
+
+    def test_missing_province(self):
         """
         Testa o envio de um formulário com uma província não-mapeada no banco de dados.
         """
-        data = RankingsInsertViewTestCase.get_form_data('test_ranking_02.csv')
+        data, df = RankingsInsertViewTestCase.get_form_data('test_ranking_02.csv')
 
         # faz uma requisição POST
         response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)

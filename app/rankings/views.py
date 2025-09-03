@@ -17,8 +17,7 @@ from django.views.generic import TemplateView
 from .forms import InsertRankingForm
 from .models import PilarValor, Pilar, Ranking, TipoApelido, Pais, ApelidoDeUniversidade
 from .models import Universidade, ApelidoDePais
-from .scripts import load_ranking_file, get_canonical_name, get_all_db_universities, get_closest_match, get_all_ies, \
-    get_document_pillars
+from .scripts import get_canonical_name, get_all_db_universities, get_closest_match, get_all_ies, get_document_pillars
 
 
 class IndexView(TemplateView):
@@ -149,6 +148,21 @@ class SuccessInsertRankingView(TemplateView):
 
     @staticmethod
     def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
+        def __prepare__(dfa, encode, decode, clear=False):
+            dfa['Universidade_encoded'] = dfa['Universidade'].apply(
+                lambda x: x.upper().strip().encode(encode).decode(decode).upper()
+            )
+
+            if clear:
+                dfa['id_universidade'] = np.nan
+                dfa['id_apelido_universidade'] = np.nan
+
+            dfa.loc[:, 'id_universidade'] = dfa['id_universidade'].astype(float)
+            dfa.loc[:, 'id_pais'] = dfa['id_pais'].astype(float)
+            dfa.loc[:, 'id_apelido_universidade'] = dfa['id_apelido_universidade'].astype(float)
+
+            return dfa
+
         if 'Universidade' not in df.columns:
             raise ValidationError('A coluna \'Universidade\' precisa estar no DataFrame!')
         if 'id_pais' not in df.columns:
@@ -158,21 +172,9 @@ class SuccessInsertRankingView(TemplateView):
 
         # bd_unis possui as universidades do banco de dados
         db = get_all_db_universities()
-        df['Universidade_encoded'] = df['Universidade'].apply(
-            lambda x: x.upper().strip().encode('unicode_escape').decode('latin-1').upper())
-        db['Universidade_encoded'] = db['Universidade'].apply(
-            lambda x: x.upper().strip().encode('latin-1').decode('latin-1').upper())
 
-        # insere id_universidade para linhas que o nome da universidade foi encontrado no banco
-        df['id_universidade'] = np.nan
-        df['id_apelido_universidade'] = np.nan
-        df.loc[:, 'id_universidade'] = df['id_universidade'].astype(float)
-        df.loc[:, 'id_pais'] = df['id_pais'].astype(float)
-        df.loc[:, 'id_apelido_universidade'] = df['id_apelido_universidade'].astype(float)
-
-        db.loc[:, 'id_universidade'] = db['id_universidade'].astype(float)
-        db.loc[:, 'id_pais'] = db['id_pais'].astype(float)
-        db.loc[:, 'id_apelido_universidade'] = db['id_apelido_universidade'].astype(float)
+        df = __prepare__(df, 'unicode_escape', 'latin-1', clear=True)
+        db = __prepare__(db, 'latin-1', 'latin-1', clear=False)
 
         joined = pd.merge(df, db, on=['Universidade_encoded', 'id_pais'], how='left', suffixes=('', '_db'))
 
@@ -190,6 +192,9 @@ class SuccessInsertRankingView(TemplateView):
         # se alguma universidade do arquivo do ranking anda não tem o id_universidade setado
         if pd.isna(df['id_apelido_universidade']).sum() > 0:
             ies = get_all_ies()
+            ies['nome_ies'] = ies['nome_ies'].apply(
+                lambda x: x.upper().strip().encode('latin-1').decode('latin-1').upper()
+            )
             id_pais_brasil = Pais.objects.filter(nome_portugues__iexact='Brasil').first().id_pais
 
             missing = df.loc[
@@ -201,13 +206,14 @@ class SuccessInsertRankingView(TemplateView):
             model = SentenceTransformer('all-MiniLM-L6-v2')
 
             for i, row in tqdm(missing.iterrows(), total=len(missing), desc='Inserindo universidades no banco'):
+                uni_name = row['Universidade'].strip()
+                uni_name_normalized = uni_name.upper().encode('unicode_escape').decode('latin-1').upper()
+                id_pais = row['id_pais']
+
+                candidates = db.loc[db['id_pais'] == id_pais]
+
                 try:
-                    uni_name = row['Universidade'].upper().strip().encode('unicode_escape').decode('latin-1').upper()
-                    id_pais = row['id_pais']
-
-                    candidates = db.loc[db['id_pais'] == id_pais]
-
-                    idx = get_closest_match(uni_name, candidates['Universidade_encoded'].tolist(), model=model)
+                    idx = get_closest_match(uni_name_normalized, candidates['Universidade_encoded'].tolist(), model=model)
                     id_universidade = candidates.iloc[idx]['id_universidade']
 
                     df.loc[i, 'id_universidade'] = id_universidade
@@ -218,15 +224,21 @@ class SuccessInsertRankingView(TemplateView):
                     )
                     apelido.save()
                     df.loc[i, 'id_apelido_universidade'] = apelido.id_apelido
-
                 except IndexError:  # nenhuma correspondência encontrada
+                    # se for uma universidade brasileira, tenta achar uma correspondência na tabela IES
                     if id_pais == id_pais_brasil:
-                        raise NotImplementedError('correlacionar com IES!')
+                        try:
+                            idx = get_closest_match(uni_name_normalized, ies['nome_ies'].tolist(), model=model)
+                            cod_ies = ies.iloc[idx]['cod_ies']
+                        except IndexError:
+                            cod_ies = None
+                    else:
+                        cod_ies = None
 
                     universidade = Universidade(
                         nome_portugues=uni_name,
-                        cod_ies=None,  # TODO se for brasileira, colcoar COD_IES na universidade!
                         nome_ingles=uni_name,
+                        cod_ies=cod_ies,
                         pais_apelido_id=int(row['id_apelido_pais'])
                     )
                     universidade.save()
@@ -237,7 +249,7 @@ class SuccessInsertRankingView(TemplateView):
                     )
                     apelido.save()
 
-                    index = (df['Universidade_encoded'] == uni_name) & (df['id_pais'] == id_pais)
+                    index = (df['Universidade_encoded'] == uni_name_normalized) & (df['id_pais'] == id_pais)
                     df.loc[index, 'id_universidade'] = universidade.id_universidade
                     df.loc[index, 'id_apelido_universidade'] = apelido.id_apelido
 

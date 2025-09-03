@@ -7,7 +7,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from .models import Ranking, Pilar
+from .models import Ranking
 from .scripts import get_document_pillars
 
 
