@@ -27,7 +27,6 @@
                 {% load crispy_forms_tags %}
                 {{ form | crispy }}
 
-                <input type="hidden" name="id_ranking" value="{{ id_ranking }}">
                 <table id="table-missing-countries" class="standard-table">
                 <thead>
                 <tr>
@@ -50,9 +49,9 @@
                                 <input type="hidden" name="country-name-{{ entry.index }}" value="{{ entry.País }}">
                                 <!--<label for="select-country-{{ entry.index }}"></label>-->
                                 <select
-                                        name="select-country-{{ entry.index }}"
-                                        id="select-country-{{ entry.index }}"
-                                        class="form-select form-select-sm"
+                                    name="select-country-{{ entry.index }}"
+                                    id="select-country-{{ entry.index }}"
+                                    class="form-select form-select-sm"
                                 >
                                     {% for option in country_options %}
                                         {% if option.first %}

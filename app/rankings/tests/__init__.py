@@ -1,22 +1,50 @@
 import io
 import os
-
 import pandas as pd
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, TransactionTestCase
-from django.urls import reverse
-from ..models import Ranking, Pilar, Continente, Pais, ApelidoDePais, TipoApelido, IES
+
 from django.apps import apps
 from django.db import connection
+from django.urls import reverse
+from django.test import TransactionTestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+from ..forms import InsertRankingForm
+from ..models import Ranking, Pilar, Continente, Pais, ApelidoDePais, TipoApelido, IES
 
 
-class RankingInsertViewTestCase(TransactionTestCase):
+class RankingsTransactionTestCase(TransactionTestCase):
+    @staticmethod
+    def get_form_data(filename):
+        df = pd.read_csv(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', filename)
+        )
+        csv_buffer = io.StringIO()
+        df.to_csv(csv_buffer, index=False)
+        csv_buffer.seek(0)
+
+        # Wrap it as an uploaded file
+        uploaded_file = SimpleUploadedFile(
+            filename,
+            csv_buffer.getvalue().encode('utf-8'),
+            content_type="text/csv"
+        )
+
+        ranking = Ranking.objects.get(nome='Test Ranking')
+
+        # prepara dados do formulário
+        data = {
+            'ranking': ranking.id_ranking,
+            'file': uploaded_file
+        }
+        return data
+
     @classmethod
     def setUpClass(cls):
         """
         Executa uma vez só para a classe.
         """
         super().setUpClass()
+
         # Force all unmanaged models to become managed in tests
         for model in apps.get_models():
             if not model._meta.managed:
@@ -30,6 +58,11 @@ class RankingInsertViewTestCase(TransactionTestCase):
                         # Ignore if table already exists
                         pass
 
+
+    def setUp(self):
+        """
+        Insere uma vez por método.
+        """
         # insere ranking fake
         ranking = Ranking.objects.create(nome='Test Ranking')
         ranking.save()
@@ -95,42 +128,50 @@ class RankingInsertViewTestCase(TransactionTestCase):
         )
         ies.save()
 
-    @staticmethod
-    def get_form_data(filename):
-        df = pd.read_csv(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', filename)
-        )
-        csv_buffer = io.StringIO()
-        df.to_csv(csv_buffer, index=False)
-        csv_buffer.seek(0)
+class MissingCountriesPreviewTestCase(RankingsTransactionTestCase):
+    def test_missing_province_form(self):
+        """
+        Testa o envio de um formulário com uma província não-mapeada no banco de dados.
+        """
 
-        # Wrap it as an uploaded file
-        uploaded_file = SimpleUploadedFile(
-            filename,
-            csv_buffer.getvalue().encode('utf-8'),
-            content_type="text/csv"
-        )
+        apelido_pais = ApelidoDePais.objects.get(apelido='Test Country')
+        pais = apelido_pais.pais
 
         ranking = Ranking.objects.get(nome='Test Ranking')
 
-        # prepara dados do formulário
+        df = pd.read_csv(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'test_ranking_02.csv')
+        )
+
+        df = InsertRankingForm.check_ranking_file_consistency(df, ranking)
+
+        session = self.client.session
+        session['df'] = df.to_json()
+        session['id_ranking'] = ranking.id_ranking
+        session.save()
+
         data = {
-            'ranking': ranking.pk,
-            'file': uploaded_file
+            'country-name-0': str(df.iloc[0]['País']),
+            'select-country-0': str(pais.id_pais),
+            'select-type-0': str(apelido_pais.tipo_apelido.id_tipo_apelido)
         }
-        return data
 
-    def setUp(self):
-        """
-        Executa uma vez antes de cada método.
-        """
-        pass
+        # faz uma requisição POST
+        response = self.client.post(reverse('missing-countries-preview'), data, follow=True)
 
+        # verifica resposta
+        self.assertEqual(response.status_code, 200)  # 302 para redirecionamento
+
+        # verifica se a mensagem de sucesso está na resposta
+        self.assertContains(response, 'Sucesso')
+
+
+class RankingsInsertViewTestCase(RankingsTransactionTestCase):
     def test_correct_form(self):
         """
         Testa o envio de um formulário com informações preenchidas corretamente.
         """
-        data = RankingInsertViewTestCase.get_form_data('test_ranking_01.csv')
+        data = RankingsInsertViewTestCase.get_form_data('test_ranking_01.csv')
 
         # faz uma requisição POST
         response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
@@ -145,7 +186,7 @@ class RankingInsertViewTestCase(TransactionTestCase):
         """
         Testa o envio de um formulário com uma província não-mapeada no banco de dados.
         """
-        data = RankingInsertViewTestCase.get_form_data('test_ranking_02.csv')
+        data = RankingsInsertViewTestCase.get_form_data('test_ranking_02.csv')
 
         # faz uma requisição POST
         response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
@@ -153,5 +194,5 @@ class RankingInsertViewTestCase(TransactionTestCase):
         # verifica resposta
         self.assertEqual(response.status_code, 200)  # 302 para redirecionamento
 
-        # verifica se a mensagem de sucesso está na resposta
-        self.assertContains(response.text, 'Verificar países faltantes')
+        # verifica se o texto está contido no HTML da página HTML carregada
+        self.assertContains(response, 'Verificar países faltantes')

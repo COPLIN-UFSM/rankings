@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import Continente, Pais, ApelidoDePais, GrupoGeopolitico, \
     PaisesParaGruposGeopoliticos, Universidade, ApelidoDeUniversidade, GrupoDeUniversidades, UniversidadesParaGrupos, \
-    Ranking, Pilar, GrupoDePilares, PilaresParaGrupos, PilarValor, Formulario
+    Ranking, Pilar, GrupoDePilares, PilaresParaGrupos, PilarValor
 
 
 # ------------------ #
@@ -217,23 +217,3 @@ class GrupoDePilaresAdmin(admin.ModelAdmin):
 
 admin.site.register(Ranking, RankingAdmin)
 admin.site.register(GrupoDePilares, GrupoDePilaresAdmin)
-
-# ----------------- #
-# --- Metadados --- #
-# ----------------- #
-
-
-class FormularioAdmin(admin.ModelAdmin):
-    model = Formulario
-
-    fieldsets = [
-        (None, {'fields': ['ranking', 'data', 'formulario']})
-    ]
-
-    ordering = ['ranking__nome', 'data']
-    list_display = ['ranking', 'data', 'formulario']
-    search_fields = ['ranking__nome', 'data', 'formulario']
-
-
-admin.site.register(Formulario, FormularioAdmin)
-

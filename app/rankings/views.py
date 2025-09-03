@@ -1,4 +1,5 @@
 import re
+from io import StringIO
 
 import numpy as np
 import pandas as pd
@@ -175,8 +176,14 @@ class SuccessInsertRankingView(TemplateView):
 
         joined = pd.merge(df, db, on=['Universidade_encoded', 'id_pais'], how='left', suffixes=('', '_db'))
 
-        joined.loc[joined.index, 'id_universidade'] = joined.loc[joined.index, 'id_universidade_db']
-        joined.loc[joined.index, 'id_apelido_universidade'] = joined.loc[joined.index, 'id_apelido_universidade_db']
+        joined.loc[joined.index, 'id_universidade_temp'] = joined.loc[joined.index, 'id_universidade_db']
+        joined.loc[joined.index, 'id_apelido_universidade_temp'] = joined.loc[joined.index, 'id_apelido_universidade_db']
+
+        # esse bloco evita um warning de incompatibilidade de tipos entre colunas
+        joined = joined.drop(columns=['id_universidade', 'id_apelido_universidade'])
+
+        joined.loc[joined.index, 'id_universidade'] = joined.loc[joined.index, 'id_universidade_temp']
+        joined.loc[joined.index, 'id_apelido_universidade'] = joined.loc[joined.index, 'id_apelido_universidade_temp']
 
         df = joined[df.columns]
 
@@ -259,7 +266,7 @@ def get_dataframe_from_session(request):
     if (df_json is None) or (id_ranking is None):
         raise PermissionDenied()
 
-    df = pd.read_json(df_json)
+    df = pd.read_json(StringIO(df_json))
     ranking = Ranking.objects.get(id_ranking=id_ranking)
     return ranking, df
 
@@ -303,6 +310,7 @@ class MissingCountriesPreview(TemplateView):
             db = pd.DataFrame(columns=mapping.values())
         else:
             db = db.rename(columns=mapping)
+
         db = __prepare__(db, set_pais=False, set_apelido=False)
 
         joined = pd.merge(df, db, on='País (canonical)', how='left', suffixes=('', '_db'))
@@ -337,6 +345,42 @@ class MissingCountriesPreview(TemplateView):
             ).to_dict(orient='records')
         }
 
+    @staticmethod
+    def correlate_missing_countries(form, df):
+        """
+        Dado um formulário preenchido pelo usuário, correlaciona os países faltantes no DataFrame com os países do banco
+        de dados.
+
+        :param form: Formulário de requisição POST.
+        :param df: O DataFrame preenchido até então.
+        :return:  O DataFrame, com o id_pais definido para todas as linhas.
+        """
+        _dict = form.dict()
+        keys = list(_dict.keys())
+
+        lines = [re.findall('select-country-([0-9]+)', x) for x in keys]
+        lines = [int(x[0]) for x in lines if len(x) > 0]
+
+        data = {
+            i: {
+                'País': form[f'country-name-{i}'],
+                'id_pais': int(form[f'select-country-{i}']),
+                'type': int(form[f'select-type-{i}'])
+            } for i in lines
+        }
+
+        for i, data in data.items():
+            apelido = ApelidoDePais(tipo_apelido_id=data['type'], apelido=data['País'], pais_id=data['id_pais'])
+            apelido.save()
+
+            # _index = df['País'] == data['País']
+            #
+            # df.loc[_index, 'id_pais'] = data['id_pais']
+            # df.loc[_index, 'id_apelido_pais'] = apelido.id_apelido
+
+        return df
+
+
     def get(self, request, *args, **kwargs):
         ranking, df = get_dataframe_from_session(request)
         df = MissingCountriesPreview.insert_id_pais(df)
@@ -355,37 +399,13 @@ class MissingCountriesPreview(TemplateView):
         return redirect(reverse('ranking-insert-success'))
 
     def post(self, request, *args, **kwargs):
-        form = request.POST
-        id_formulario = form['id_formulario']
-        id_ranking = form['id_ranking']
+        ranking, df = get_dataframe_from_session(request)
 
-        __missing_countries_preview__(request, df, id_formulario, id_ranking)
+        df = MissingCountriesPreview.correlate_missing_countries(request.POST, df)
+        df = MissingCountriesPreview.insert_id_pais(df)
 
-        df = insert_id_university(df)
-
-        _dict = form.dict()
-        keys = list(_dict.keys())
-        df = load_ranking_file(id_formulario)
-
-        lines = [re.findall('select-country-([0-9]+)', x) for x in keys]
-        lines = [int(x[0]) for x in lines if len(x) > 0]
-
-        data = {
-            i: {
-                'País': form[f'country-name-{i}'],
-                'id_pais': int(form[f'select-country-{i}']),
-                'type': int(form[f'select-type-{i}'])
-            } for i in lines
-        }
-
-        for i, data in data.items():
-            apelido = ApelidoDePais(tipo_apelido_id=data['type'], apelido=data['País'], pais_id=data['id_pais'])
-            apelido.save()
-
-            _index = df['País'] == data['País']
-
-            df.loc[_index, 'id_pais'] = data['id_pais']
-            df.loc[_index, 'id_apelido_pais'] = apelido.id_apelido
+        request.session['df'] = df.to_json()
+        request.session['id_ranking'] = ranking.id_ranking
 
         return redirect(reverse("ranking-insert-success"))
 

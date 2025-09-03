@@ -1,21 +1,14 @@
 import csv
-import itertools as it
 import os
 import string
 
-import numpy as np
 import pandas as pd
 import unicodedata
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.shortcuts import render
 from sentence_transformers import SentenceTransformer, util
-from tqdm import tqdm
 
-from ..models import (
-    ApelidoDeUniversidade, ApelidoDePais, Formulario, Universidade, PilarValor,
-    Pais, TipoApelido, Ranking, IES, Pilar
-)
+from ..models import ApelidoDeUniversidade, Ranking, IES, Pilar
 
 
 def get_canonical_name(name: str) -> str:
