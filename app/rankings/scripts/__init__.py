@@ -6,9 +6,23 @@ import pandas as pd
 import unicodedata
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from sentence_transformers import SentenceTransformer, util
 
-from ..models import ApelidoDeUniversidade, Ranking, IES, Pilar
+from ..models import ApelidoDeUniversidade, Ranking, IES, Pilar, UltimaCarga
+
+
+def update_ultima_carga(nome_tabela, nome_ajustado):
+    try:
+        uc_pv = UltimaCarga.objects.get(nome_tabela=nome_tabela)
+        uc_pv.dh_ultima_carga = timezone.now()
+        uc_pv.save()
+    except UltimaCarga.DoesNotExist:
+        uc_pv = UltimaCarga(
+            nome_tabela=nome_tabela,
+            nome_ajustado=nome_ajustado
+        )
+        uc_pv.save()
 
 
 def get_canonical_name(name: str) -> str:

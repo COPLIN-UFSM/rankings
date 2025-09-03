@@ -1,23 +1,23 @@
+import itertools as it
 import re
 from io import StringIO
 
 import numpy as np
 import pandas as pd
-from sentence_transformers import SentenceTransformer
-from tqdm import tqdm
-import itertools as it
-
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import Count
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic import TemplateView
+from sentence_transformers import SentenceTransformer
+from tqdm import tqdm
 
 from .forms import InsertRankingForm
 from .models import PilarValor, Pilar, Ranking, TipoApelido, Pais, ApelidoDeUniversidade
 from .models import Universidade, ApelidoDePais
-from .scripts import get_canonical_name, get_all_db_universities, get_closest_match, get_all_ies, get_document_pillars
+from .scripts import get_canonical_name, get_all_db_universities, get_closest_match, get_all_ies, get_document_pillars, \
+    update_ultima_carga
 
 
 class IndexView(TemplateView):
@@ -126,25 +126,14 @@ class SuccessInsertRankingView(TemplateView):
         ))
 
         # já tentei inserir com o coplin-db2, mas demora tanto tempo quanto... o gargalo é no banco de dados!
-        for pv in tqdm(filtered_pillars, desc='Inserindo valores dos pilares no banco de dados'):
-            pv.save()
+        PilarValor.objects.bulk_create(filtered_pillars)
+        # for pv in tqdm(filtered_pillars, desc='Inserindo valores dos pilares no banco de dados'):
+        #     pv.save()
 
-        # mas deixo aqui o código caso no futuro uma solução diferente seja implementada
-        # with DB2Connection(settings.DATABASE_CREDENTIALS_PATH) as conn:
-        #     for pv in tqdm(filtered_pillars, desc='Inserindo valores dos pilares no banco de dados'):
-        # conn.insert(
-        #     table_name='R_PILARES_VALORES',
-        #     row={
-        #         'ID_APELIDO_UNIVERSIDADE': pv.apelido_universidade_id,
-        #         'ID_PILAR': pv.pilar_id,
-        #         'ANO': pv.ano,
-        #         'VALOR_INICIAL': pv.valor_inicial,
-        #         'VALOR_FINAL': pv.valor_final
-        #     }
-        # )
-
-        # PilarValor.objects.bulk_create(filtered_pillars)
-        # MetricaValor.objects.bulk_create(to_add_metrics)
+        update_ultima_carga(
+            'R_PILARES_VALORES',
+            'Valores de pilares de rankings acadêmicos'
+        )
 
     @staticmethod
     def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
@@ -189,6 +178,9 @@ class SuccessInsertRankingView(TemplateView):
 
         df = joined[df.columns]
 
+        update_apelido_uni = False
+        update_uni = False
+
         # se alguma universidade do arquivo do ranking anda não tem o id_universidade setado
         if pd.isna(df['id_apelido_universidade']).sum() > 0:
             ies = get_all_ies()
@@ -224,6 +216,9 @@ class SuccessInsertRankingView(TemplateView):
                     )
                     apelido.save()
                     df.loc[i, 'id_apelido_universidade'] = apelido.id_apelido
+
+                    update_apelido_uni = True
+
                 except IndexError:  # nenhuma correspondência encontrada
                     # se for uma universidade brasileira, tenta achar uma correspondência na tabela IES
                     if id_pais == id_pais_brasil:
@@ -249,9 +244,24 @@ class SuccessInsertRankingView(TemplateView):
                     )
                     apelido.save()
 
+                    update_uni = True
+                    update_apelido_uni = True
+
                     index = (df['Universidade_encoded'] == uni_name_normalized) & (df['id_pais'] == id_pais)
                     df.loc[index, 'id_universidade'] = universidade.id_universidade
                     df.loc[index, 'id_apelido_universidade'] = apelido.id_apelido
+
+        if update_uni:
+            update_ultima_carga(
+                'R_UNIVERSIDADES',
+                'Tabela com relação de universidades de rankings acadêmicos'
+            )
+
+        if update_apelido_uni:
+            update_ultima_carga(
+                'R_UNIVERSIDADES_APELIDOS',
+                'Apelidos de universidades de rankings acadêmicos'
+            )
 
         return df
 
@@ -389,6 +399,11 @@ class MissingCountriesPreview(TemplateView):
             #
             # df.loc[_index, 'id_pais'] = data['id_pais']
             # df.loc[_index, 'id_apelido_pais'] = apelido.id_apelido
+
+        update_ultima_carga(
+            'R_PAISES_APELIDOS',
+            'Nomes alternativos para países nos rankings acadêmicos (e.g. \'Hong Kong\' -> \'China\')'
+        )
 
         return df
 

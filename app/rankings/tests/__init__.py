@@ -10,7 +10,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from ..forms import InsertRankingForm
 from ..models import Ranking, Pilar, Continente, Pais, ApelidoDePais, TipoApelido, IES, Universidade, \
-    ApelidoDeUniversidade, PilarValor
+    ApelidoDeUniversidade, PilarValor, UltimaCarga
 from ..scripts import get_document_pillars
 
 
@@ -177,6 +177,8 @@ class MissingCountriesPreviewTestCase(RankingsTransactionTestCase):
             pv = PilarValor.objects.get(pilar_id=p['id_pilar'])
             self.assertAlmostEqual(df.iloc[0][p['Pilar']][0], pv.valor_inicial)
 
+        self.assertEqual(UltimaCarga.objects.all().count(), 4)
+
 
 class RankingsInsertViewTestCase(RankingsTransactionTestCase):
     def check_inserted_pillar_values(self, df):
@@ -222,6 +224,8 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
 
         self.check_inserted_pillar_values(df)
 
+        self.assertEqual(UltimaCarga.objects.all().count(), 1)
+
     def test_missing_university(self):
         """
         Testa o envio de um formulário com informações preenchidas corretamente, porém sem a universidade inserida
@@ -244,6 +248,8 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
         # verifica se universidade foi inserida
         Universidade.objects.get(nome_ingles='Test University')  # lança uma exceção se não existir
         ApelidoDeUniversidade.objects.get(apelido='Test University')  # lança uma exceção se não existir
+
+        self.assertEqual(UltimaCarga.objects.all().count(), 3)
 
 
     def test_ies_correlation(self):
@@ -270,6 +276,8 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
 
         # verifica se a universidade está relacionada com a IES correta
         self.assertEqual(ApelidoDeUniversidade.objects.get(apelido='Test University').universidade.cod_ies, 1)
+
+        self.assertEqual(UltimaCarga.objects.all().count(), 3)
 
     def test_missing_province(self):
         """

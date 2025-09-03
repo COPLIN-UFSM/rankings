@@ -331,3 +331,20 @@ class PilarValor(models.Model):
 
     def __str__(self):
         return f'{self.apelido_universidade} - {self.pilar} - {self.ano} - {self.valor_inicial} - {self.valor_final}'
+
+
+class UltimaCarga(models.Model):
+    id_ultima_carga = models.AutoField(db_column='ID_ULTIMA_CARGA', primary_key=True, blank=True, null=False)
+
+    nome_tabela = models.CharField(db_column='NOME_TABELA', max_length=128, unique=True, blank=False, null=False)
+    dh_ultima_carga = models.DateTimeField(db_column='DH_ULTIMA_CARGA', default=timezone.now, blank=True, null=True)
+    nome_ajustado = models.CharField(db_column='NOME_AJUSTADO', max_length=200, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ULTIMA_CARGA'
+        verbose_name = "Última Carga"
+        verbose_name_plural = "Últimas Cargas"
+
+    def __str__(self):
+        return f'{self.nome_tabela} - ({self.dh_ultima_carga})'
