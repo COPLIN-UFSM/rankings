@@ -304,7 +304,7 @@ class PilaresParaGrupos(models.Model):
 
 
 class PilarValor(models.Model):
-    apelido_universidade = models.OneToOneField(
+    apelido_universidade = models.ForeignKey(
         ApelidoDeUniversidade, models.DO_NOTHING, db_column='ID_APELIDO_UNIVERSIDADE',
         blank=False, null=False
     )

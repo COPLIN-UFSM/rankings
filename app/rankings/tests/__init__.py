@@ -87,8 +87,6 @@ class RankingInsertViewTestCase(TransactionTestCase):
         )
         apelido_pais_portugues.save()
 
-
-
         # cria uma IES fake
         ies = IES.objects.create(
             cod_ies=1,
@@ -97,19 +95,8 @@ class RankingInsertViewTestCase(TransactionTestCase):
         )
         ies.save()
 
-    def setUp(self):
-        """
-        Executa uma vez antes de cada método.
-        """
-        pass
-
-    def test_correct_form(self):
-        """
-        Testa o envio de um formulário com informações preenchidas corretamente.
-        """
-        # Create a sample CSV in memory
-        filename = 'test_ranking_01.csv'
-
+    @staticmethod
+    def get_form_data(filename):
         df = pd.read_csv(
             os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', filename)
         )
@@ -131,6 +118,19 @@ class RankingInsertViewTestCase(TransactionTestCase):
             'ranking': ranking.pk,
             'file': uploaded_file
         }
+        return data
+
+    def setUp(self):
+        """
+        Executa uma vez antes de cada método.
+        """
+        pass
+
+    def test_correct_form(self):
+        """
+        Testa o envio de um formulário com informações preenchidas corretamente.
+        """
+        data = RankingInsertViewTestCase.get_form_data('test_ranking_01.csv')
 
         # faz uma requisição POST
         response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
@@ -138,6 +138,20 @@ class RankingInsertViewTestCase(TransactionTestCase):
         # verifica resposta
         self.assertEqual(response.status_code, 200)  # 302 para redirecionamento
 
-        # Optionally check if success message exists
-        # self.assertContains(response, "success")  # adjust based on your success_insert_ranking output
+        # verifica se a mensagem de sucesso está na resposta
+        self.assertContains(response, "Sucesso")
 
+    def test_missing_province_form(self):
+        """
+        Testa o envio de um formulário com uma província não-mapeada no banco de dados.
+        """
+        data = RankingInsertViewTestCase.get_form_data('test_ranking_02.csv')
+
+        # faz uma requisição POST
+        response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
+
+        # verifica resposta
+        self.assertEqual(response.status_code, 200)  # 302 para redirecionamento
+
+        # verifica se a mensagem de sucesso está na resposta
+        self.assertContains(response.text, 'Verificar países faltantes')
