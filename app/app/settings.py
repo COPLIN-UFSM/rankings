@@ -119,12 +119,17 @@ DATABASES = {
         "PASSWORD": get_secret('password'),
         "OPTIONS": {
             'dsn': f"DATABASE={get_secret('database')};HOSTNAME={get_secret('host')};"
-                   f"PORT={get_secret('port')};PROTOCOL=TCPIP;",
-            "charset": "latin1"
+                   f"PORT={get_secret('port')};PROTOCOL=TCPIP;"
         },
         'PCONNECT': True,
     },
+    'local_sqlite': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'local.sqlite3',
+    },
 }
+
+DATABASE_ROUTERS = ['app.db_routers.LocalAppsRouter']
 
 # DATABASE_CREDENTIALS_PATH = os.path.join(
 #     os.path.dirname(os.path.abspath(__file__)),
@@ -137,16 +142,13 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
+    }, {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
+    }, {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
+    }, {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    }
 ]
 
 

@@ -153,7 +153,7 @@ class GrupoGeopolitico(models.Model):
 
 
 class PaisesParaGruposGeopoliticos(models.Model):
-    grupo_geopolitico = models.OneToOneField(
+    grupo_geopolitico = models.ForeignKey(
         GrupoGeopolitico, models.DO_NOTHING, db_column='ID_GRUPO_GEOPOLITICO',
         blank=True, null=False, verbose_name='Nome (PT-BR)'
     )
@@ -263,7 +263,7 @@ class GrupoDeUniversidades(models.Model):
 
 
 class UniversidadesParaGrupos(models.Model):
-    universidade = models.OneToOneField(
+    universidade = models.ForeignKey(
         Universidade, models.DO_NOTHING, db_column='ID_UNIVERSIDADE', blank=False, null=False,
         verbose_name='Universidade'
     )
@@ -339,7 +339,7 @@ class GrupoDePilares(models.Model):
 
 
 class PilaresParaGrupos(models.Model):
-    pilar = models.OneToOneField(
+    pilar = models.ForeignKey(
         Pilar, models.DO_NOTHING, db_column='ID_PILAR', blank=False, null=False, verbose_name='Pilar'
     )
     grupo_pilares = models.ForeignKey(
