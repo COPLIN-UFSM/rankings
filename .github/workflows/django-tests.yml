@@ -32,4 +32,5 @@ jobs:
           DJANGO_SETTINGS_MODULE: app.test_settings
         shell: bash -l {0}
         run: |
+          cd app
           DJANGO_SETTINGS_MODULE=app.test_settings python manage.py test

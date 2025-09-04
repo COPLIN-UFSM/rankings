@@ -126,7 +126,10 @@ class SuccessInsertRankingView(TemplateView):
             (merged['_merge'] == 'left_only').values.tolist()
         ))
 
-        inserted_pillars = PilarValor.objects.bulk_create(filtered_pillars, batch_size=batch_size)
+        if len(filtered_pillars) > 0:
+            inserted_pillars = PilarValor.objects.bulk_create(filtered_pillars, batch_size=batch_size)
+        else:
+            inserted_pillars = []
 
         print(f'{len(inserted_pillars)} linhas foram inseridas no banco de dados', file=sys.stderr)
 
