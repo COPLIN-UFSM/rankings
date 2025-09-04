@@ -18,7 +18,10 @@ def update_ultima_carga(nome_tabela, nome_ajustado):
         uc_pv.dh_ultima_carga = timezone.now()
         uc_pv.save()
     except UltimaCarga.DoesNotExist:
+        last_id = UltimaCarga.objects.all().order_by('id_ultima_carga').last().id_ultima_carga
+
         uc_pv = UltimaCarga(
+            id_ultima_carga=last_id + 1,
             nome_tabela=nome_tabela,
             nome_ajustado=nome_ajustado
         )

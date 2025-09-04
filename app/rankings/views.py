@@ -1,5 +1,6 @@
 import itertools as it
 import re
+import sys
 from io import StringIO
 
 import numpy as np
@@ -125,10 +126,9 @@ class SuccessInsertRankingView(TemplateView):
             (merged['_merge'] == 'left_only').values.tolist()
         ))
 
-        # já tentei inserir com o coplin-db2, mas demora tanto tempo quanto... o gargalo é no banco de dados!
-        PilarValor.objects.bulk_create(filtered_pillars)
-        # for pv in tqdm(filtered_pillars, desc='Inserindo valores dos pilares no banco de dados'):
-        #     pv.save()
+        inserted_pillars = PilarValor.objects.bulk_create(filtered_pillars, batch_size=batch_size)
+
+        print(f'{len(inserted_pillars)} linhas foram inseridas no banco de dados', file=sys.stderr)
 
         update_ultima_carga(
             'R_PILARES_VALORES',

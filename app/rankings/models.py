@@ -390,8 +390,7 @@ class PilarValor(models.Model):
 
 
 class UltimaCarga(models.Model):
-    id_ultima_carga = models.AutoField(db_column='ID_ULTIMA_CARGA', primary_key=True, blank=True, null=False)
-
+    id_ultima_carga = models.IntegerField(db_column='ID_ULTIMA_CARGA', primary_key=True, blank=True, null=False)
     nome_tabela = UnicodeEscapedCharField(db_column='NOME_TABELA', max_length=128, unique=True, blank=False, null=False)
     dh_ultima_carga = models.DateTimeField(db_column='DH_ULTIMA_CARGA', default=timezone.now, blank=True, null=True)
     nome_ajustado = UnicodeEscapedCharField(db_column='NOME_AJUSTADO', max_length=200, blank=True, null=True)
