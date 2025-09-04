@@ -138,10 +138,6 @@ class SuccessInsertRankingView(TemplateView):
     @staticmethod
     def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
         def __prepare__(dfa, encode, decode, clear=False):
-            # dfa['Universidade_encoded'] = dfa['Universidade'].apply(
-            #     lambda x: x.upper().strip().encode(encode).decode(decode).upper()
-            # )
-
             if clear:
                 dfa['id_universidade'] = np.nan
                 dfa['id_apelido_universidade'] = np.nan
@@ -185,9 +181,6 @@ class SuccessInsertRankingView(TemplateView):
         # se alguma universidade do arquivo do ranking anda não tem o id_universidade setado
         if pd.isna(df['id_apelido_universidade']).sum() > 0:
             ies = get_all_ies()
-            # ies['nome_ies'] = ies['nome_ies'].apply(
-            #     lambda x: x.upper().strip().encode('latin-1').decode('latin-1').upper()
-            # )
             id_pais_brasil = Pais.objects.filter(nome_portugues__iexact='Brasil').first().id_pais
 
             missing = df.loc[
@@ -199,9 +192,8 @@ class SuccessInsertRankingView(TemplateView):
             model = SentenceTransformer('all-MiniLM-L6-v2')
 
             for i, row in tqdm(missing.iterrows(), total=len(missing), desc='Inserindo universidades no banco'):
-                uni_name = row['Universidade'].strip()
-                # uni_name_normalized = uni_name.upper().encode('unicode_escape').decode('latin-1').upper()
                 id_pais = row['id_pais']
+                uni_name = row['Universidade'].strip()
 
                 candidates = db.loc[db['id_pais'] == id_pais]
 
@@ -457,21 +449,10 @@ class RankingInsertView(TemplateView):
         df = form.cleaned_data['dataframe']
         ranking = form.cleaned_data['ranking']
         try:
-            # df, id_formulario = save_ranking_file(df, ranking)
             request.session['df'] = df.to_json()
             request.session['id_ranking'] = ranking.id_ranking
 
             return redirect(reverse('missing-countries-preview'))
-
-            # request.session['id_formulario'] = id_formulario
-
-
-            # request, df, ranking, id_formulario = __missing_countries_preview__(
-            #     request, df, id_formulario=id_formulario, id_ranking=ranking
-            # )
-            # df = insert_id_university(df)
-            # df, id_formulario = save_ranking_file(df, ranking=ranking, id_formulario=id_formulario)
-
 
 
         except ValidationError as e:

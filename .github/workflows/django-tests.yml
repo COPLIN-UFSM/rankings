@@ -1,0 +1,30 @@
+name: Django Tests
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: rankings
+          environment-file: environment.yml
+          auto-activate-base: false
+
+      - name: Run Django tests
+        env:
+          DJANGO_SETTINGS_MODULE: app.test_settings
+        shell: bash -l {0}
+        run: |
+          DJANGO_SETTINGS_MODULE=app.test_settings python manage.py test

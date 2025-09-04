@@ -1,12 +1,11 @@
-import csv
-import os
 import string
 
-import pandas as pd
 import unicodedata
-from django.conf import settings
-from django.core.exceptions import ValidationError
+import pandas as pd
+
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+
 from sentence_transformers import SentenceTransformer, util
 
 from ..models import ApelidoDeUniversidade, Ranking, IES, Pilar, UltimaCarga
@@ -87,61 +86,6 @@ def get_document_pillars(df: pd.DataFrame, ranking: Ranking) -> list:
 
     elected.columns = ['id_pilar', 'Pilar']
     return elected.to_dict(orient='records')
-
-
-def load_ranking_file(id_formulario: int) -> pd.DataFrame:
-    f = Formulario.objects.filter(id_formulario=id_formulario).first()
-    if f is None:
-        raise ValidationError(
-            'Um id_formulario foi fornecido, mas não existe um formulário correspondente salvo no banco de dados!'
-        )
-    df = pd.read_csv(
-        f.formulario.name, index_col=0, encoding='utf-8', sep=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC
-    )
-    df.index = df.index.astype(int)
-    columns = ['Ano', 'id_pais', 'id_apelido_pais', 'id_universidade', 'id_apelido_universidade']
-    for column in columns:
-        if column in df.columns:
-            df[column] = df[column].astype('Int64')
-
-    return df
-
-
-def save_ranking_file(df: pd.DataFrame, ranking: Ranking, id_formulario: int = None) -> tuple:
-    # se existe um id_formulario definido, quer dizer que este formulário está sendo atualizado
-    if id_formulario is not None:
-        f = Formulario.objects.get(id_formulario=id_formulario)
-        if f is None:
-            raise ValidationError(
-                'Um id_formulario foi fornecido, mas não existe um formulário correspondente salvo no banco de dados!'
-            )
-        elif int(f.ranking.id_ranking) != ranking.id_ranking:
-            raise ValidationError(
-                'O id_ranking fornecido para a função não é o mesmo definido no banco de dados!'
-            )
-        else:
-            upload_path = f.formulario.name
-    else:  # caso contrário, será a primeira vez que será salvo
-        if len(Formulario.objects.all()) > 0:
-            id_formulario = Formulario.objects.latest('id_formulario').id_formulario + 1
-        else:
-            id_formulario = 1
-
-        upload_path = os.path.join(
-            settings.BASE_DIR, Formulario.formulario.field.upload_to, f'formulario_{id_formulario}.csv'
-        )
-
-        formulario = Formulario(id_formulario=id_formulario, ranking=ranking, formulario=upload_path)
-        formulario.save()
-
-    columns = ['Ano', 'id_pais', 'id_apelido_pais', 'id_universidade', 'id_apelido_universidade']
-    for column in columns:
-        if column in df.columns:
-            df[column] = df[column].astype('Int64')
-
-    df.to_csv(upload_path, index=True, sep=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC, encoding='utf-8')
-
-    return df, id_formulario
 
 
 def get_closest_match(name: str, candidates: list, threshold: float = 0.8, model: SentenceTransformer = None) -> int:

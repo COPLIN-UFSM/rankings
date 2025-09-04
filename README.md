@@ -21,7 +21,7 @@ As configurações da máquina que o repositório foi desenvolvido encontram-se 
 ## Instalação
 
 ```bash
-conda env create -f env_windows.yml
+conda env create -f environment.yml
 ```
 
 ## Primeira execução
@@ -57,7 +57,7 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
    }
    ```
 
-2. Rode o script [ibmdb_create.sql](app/database_scripts/ibmdb_create.sql) para criar as tabelas no banco de dados;
+2. Rode o script [default_create.sql](app/database_scripts/default_create.sql) para criar as tabelas no banco de dados;
 3. Execute os seguintes comandos:
 
    ```bash
@@ -74,8 +74,8 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
 > Esta ação irá deletar **todas** as tabelas do banco de dados, referentes aos rankings. Pense bem se é exatamente isso
 > que você quer fazer!
 
-1. Rode o script [ibmdb_drop.sql](app/database_scripts/ibmdb_drop.sql) para deletar **todas** as tabelas do banco de dados de rankings;
-2. Rode o script [ibmdb_create.sql](app/database_scripts/ibmdb_create.sql) para recriar as tabelas do zero;
+1. Rode o script [default_drop.sql](app/database_scripts/default_drop.sql) para deletar **todas** as tabelas do banco de dados de rankings;
+2. Rode o script [default_create.sql](app/database_scripts/default_create.sql) para recriar as tabelas do zero;
 3. Execute os seguintes comandos:
 
    ```bash
@@ -117,10 +117,6 @@ Independente do nível de acesso ao banco de dados da UFSM:
    ```
 
 3. Acesse o site pelo link disponibilizado pelo console: http://localhost:8000/ranking/insert
-
-## Diagrama do banco de dados
-
-É possível consultar o diagrama do banco de dados no arquivo [SCHEMA](app/database_scripts/SCHEMA.md).
 
 ## Executando testes
 
