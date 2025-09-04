@@ -32,8 +32,7 @@ jobs:
           DJANGO_SETTINGS_MODULE: app.test_settings
         shell: bash -l {0}
         run: |
-          cd app
-          mkdir instance
+          mkdir app/instance
           json='{"user": "someuser", "password": "somepassword", "host": "some.host", "port": 50000, "database": "somedatabase"}'
-          echo "$json" > instance/database_credentials.json
-          DJANGO_SETTINGS_MODULE=app.test_settings python manage.py test
+          echo "$json" > app/instance/database_credentials.json
+          python app/manage.py test rankings.tests
