@@ -62,7 +62,7 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
 
    ```bash
    conda activate rankings
-   python manage.py makemigrations rankings
+   python manage.py makemigrations
    python manage.py migrate
    ```
 
@@ -80,8 +80,9 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
 
    ```bash
    conda activate rankings
-   python manage.py makemigrations rankings
-   python manage.py migrate
+   python manage.py makemigrations 
+   python manage.py migrate --database=local_sqlite
+   python manage.py migrate --database=default
    ```
 
 > [!NOTE]
@@ -94,13 +95,10 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
 
    ```bash
    conda activate rankings
-   python manage.py makemigrations rankings
-   python manage.py migrate
+   python manage.py makemigrations 
+   python manage.py migrate --database=local_sqlite
+   python manage.py migrate --database=default
    ```
-
-> [!NOTE]
-> Pode ser que ao executar o comando `python manage.py migrate` com o banco de dados IBM DB2, um erro ocorra 
-> na migração. Simplesmente ignore este erro.
 
 ## Execuções subsequentes
 
@@ -115,7 +113,7 @@ Independente do nível de acesso ao banco de dados da UFSM:
 
    ```bash
    conda activate rankings
-   python manage.py runserver
+   python manage.py runserver --no-reload
    ```
 
 3. Acesse o site pelo link disponibilizado pelo console: http://localhost:8000/ranking/insert
