@@ -1,3 +1,4 @@
+import csv
 import io
 import os
 import pandas as pd
@@ -18,7 +19,8 @@ class RankingsTransactionTestCase(TransactionTestCase):
     @staticmethod
     def get_form_data(filename):
         df = pd.read_csv(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', filename)
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', filename),
+            encoding='utf-8', sep=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC
         )
         csv_buffer = io.StringIO()
         df.to_csv(csv_buffer, index=False)
@@ -183,13 +185,15 @@ class MissingCountriesPreviewTestCase(RankingsTransactionTestCase):
 class RankingsInsertViewTestCase(RankingsTransactionTestCase):
     def check_inserted_pillar_values(self, df):
         # verifica se os dados foram inseridos no banco
-        self.assertEqual(PilarValor.objects.all().count(), 4)
+        self.assertEqual(PilarValor.objects.all().count(), len(set(df.columns) - {'Universidade', 'País', 'Ano'}) *len(df))
 
         pillars = get_document_pillars(df=df, ranking=Ranking.objects.get(nome='Test Ranking'))
 
-        for p in pillars:
-            pv = PilarValor.objects.get(pilar_id=p['id_pilar'])
-            self.assertAlmostEqual(df.iloc[0][p['Pilar']], pv.valor_inicial)
+        for i, row in df.iterrows():
+            for p in pillars:
+                pv = PilarValor.objects.get(pilar_id=p['id_pilar'], ano=row['Ano'], apelido_universidade__universidade__nome_ingles=row['Universidade'])
+                self.assertAlmostEqual(row[p['Pilar']], pv.valor_inicial)
+
 
     def test_present_country_and_university(self):
         """
@@ -277,6 +281,33 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
         # verifica se a universidade está relacionada com a IES correta
         self.assertEqual(ApelidoDeUniversidade.objects.get(apelido='Test University').universidade.cod_ies, 1)
 
+        self.assertEqual(UltimaCarga.objects.all().count(), 3)
+
+    def test_unicode_university_name(self):
+        """
+        Testa o envio de um formulário com informações preenchidas corretamente, porém sem uma universidade,
+        e esta universidade possui um nome escrito em caracteres UTF-8 que não estão presentes na codificação
+        ISO-8859-1.
+        """
+        data, df = RankingsInsertViewTestCase.get_form_data('test_ranking_04.csv')
+
+        # faz uma requisição POST
+        response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
+
+        # verifica resposta
+        self.assertEqual(response.status_code, 200)  # 302 para redirecionamento
+
+        # verifica se a mensagem de sucesso está na resposta
+        self.assertContains(response, "Sucesso")
+
+        self.check_inserted_pillar_values(df)
+
+        # verifica se universidade foi inserida
+        for i, row in df.iterrows():
+            Universidade.objects.get(nome_ingles=row['Universidade'])  # lança uma exceção se não existir
+            ApelidoDeUniversidade.objects.get(apelido=row['Universidade'])  # lança uma exceção se não existir
+
+        # verifica se atualizou o número correto de linhas na tabela ULTIMA_CARGA
         self.assertEqual(UltimaCarga.objects.all().count(), 3)
 
     def test_missing_province(self):

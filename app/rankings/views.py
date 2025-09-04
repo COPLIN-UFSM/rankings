@@ -138,9 +138,9 @@ class SuccessInsertRankingView(TemplateView):
     @staticmethod
     def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
         def __prepare__(dfa, encode, decode, clear=False):
-            dfa['Universidade_encoded'] = dfa['Universidade'].apply(
-                lambda x: x.upper().strip().encode(encode).decode(decode).upper()
-            )
+            # dfa['Universidade_encoded'] = dfa['Universidade'].apply(
+            #     lambda x: x.upper().strip().encode(encode).decode(decode).upper()
+            # )
 
             if clear:
                 dfa['id_universidade'] = np.nan
@@ -165,7 +165,8 @@ class SuccessInsertRankingView(TemplateView):
         df = __prepare__(df, 'unicode_escape', 'latin-1', clear=True)
         db = __prepare__(db, 'latin-1', 'latin-1', clear=False)
 
-        joined = pd.merge(df, db, on=['Universidade_encoded', 'id_pais'], how='left', suffixes=('', '_db'))
+        # joined = pd.merge(df, db, on=['Universidade_encoded', 'id_pais'], how='left', suffixes=('', '_db'))
+        joined = pd.merge(df, db, on=['Universidade', 'id_pais'], how='left', suffixes=('', '_db'))
 
         joined.loc[joined.index, 'id_universidade_temp'] = joined.loc[joined.index, 'id_universidade_db']
         joined.loc[joined.index, 'id_apelido_universidade_temp'] = joined.loc[joined.index, 'id_apelido_universidade_db']
@@ -184,28 +185,28 @@ class SuccessInsertRankingView(TemplateView):
         # se alguma universidade do arquivo do ranking anda não tem o id_universidade setado
         if pd.isna(df['id_apelido_universidade']).sum() > 0:
             ies = get_all_ies()
-            ies['nome_ies'] = ies['nome_ies'].apply(
-                lambda x: x.upper().strip().encode('latin-1').decode('latin-1').upper()
-            )
+            # ies['nome_ies'] = ies['nome_ies'].apply(
+            #     lambda x: x.upper().strip().encode('latin-1').decode('latin-1').upper()
+            # )
             id_pais_brasil = Pais.objects.filter(nome_portugues__iexact='Brasil').first().id_pais
 
             missing = df.loc[
                 pd.isna(df['id_apelido_universidade'])
             ].drop_duplicates(
-                subset=['Universidade_encoded', 'id_pais']
+                subset=['Universidade', 'id_pais']
             )
 
             model = SentenceTransformer('all-MiniLM-L6-v2')
 
             for i, row in tqdm(missing.iterrows(), total=len(missing), desc='Inserindo universidades no banco'):
                 uni_name = row['Universidade'].strip()
-                uni_name_normalized = uni_name.upper().encode('unicode_escape').decode('latin-1').upper()
+                # uni_name_normalized = uni_name.upper().encode('unicode_escape').decode('latin-1').upper()
                 id_pais = row['id_pais']
 
                 candidates = db.loc[db['id_pais'] == id_pais]
 
                 try:
-                    idx = get_closest_match(uni_name_normalized, candidates['Universidade_encoded'].tolist(), model=model)
+                    idx = get_closest_match(uni_name, candidates['Universidade'].tolist(), model=model)
                     id_universidade = candidates.iloc[idx]['id_universidade']
 
                     df.loc[i, 'id_universidade'] = id_universidade
@@ -223,7 +224,7 @@ class SuccessInsertRankingView(TemplateView):
                     # se for uma universidade brasileira, tenta achar uma correspondência na tabela IES
                     if id_pais == id_pais_brasil:
                         try:
-                            idx = get_closest_match(uni_name_normalized, ies['nome_ies'].tolist(), model=model)
+                            idx = get_closest_match(uni_name, ies['nome_ies'].tolist(), model=model)
                             cod_ies = ies.iloc[idx]['cod_ies']
                         except IndexError:
                             cod_ies = None
@@ -247,7 +248,7 @@ class SuccessInsertRankingView(TemplateView):
                     update_uni = True
                     update_apelido_uni = True
 
-                    index = (df['Universidade_encoded'] == uni_name_normalized) & (df['id_pais'] == id_pais)
+                    index = (df['Universidade'] == uni_name) & (df['id_pais'] == id_pais)
                     df.loc[index, 'id_universidade'] = universidade.id_universidade
                     df.loc[index, 'id_apelido_universidade'] = apelido.id_apelido
 
@@ -329,7 +330,7 @@ class MissingCountriesPreview(TemplateView):
         }
         db = pd.DataFrame(ApelidoDePais.objects.all().values(*mapping.keys()))
         if len(db) == 0:
-            db = pd.DataFrame(columns=mapping.values())
+            db = pd.DataFrame(columns=list(mapping.values()))
         else:
             db = db.rename(columns=mapping)
 

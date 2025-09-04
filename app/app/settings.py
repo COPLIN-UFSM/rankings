@@ -119,7 +119,8 @@ DATABASES = {
         "PASSWORD": get_secret('password'),
         "OPTIONS": {
             'dsn': f"DATABASE={get_secret('database')};HOSTNAME={get_secret('host')};"
-                   f"PORT={get_secret('port')};PROTOCOL=TCPIP;"
+                   f"PORT={get_secret('port')};PROTOCOL=TCPIP;",
+            "charset": "latin1"
         },
         'PCONNECT': True,
     },
