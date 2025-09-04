@@ -15,13 +15,12 @@ dependencies:
   - selenium
   - urllib3==1.26.*
   - pip:
-      - ibm_db==3.1.4
       - coplin-db2
-      - ibm-db-django
+      - git+https://github.com/COPLIN-UFSM/python-ibmdb-django.git
       - wakepy
       - django-nested-inline
-      - django==5.2
-      - django-bootstrap-v5
+      - django==5.2.*
+      - django-bootstrap5
       - django-crispy-forms
       - crispy-bootstrap5
       - django-contrib-comments

@@ -59,7 +59,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'nested_inline',  # inlines aninhados na tela de administrador
-    'bootstrap5',  # bootstrap nas páginas
+    # 'bootstrap5',  # bootstrap nas páginas -- versão antiga
+    'django_bootstrap5', # bootstrap nas páginas -- versão nova
     'crispy_forms',  # bootstrap nos formulários
     'crispy_bootstrap5',  # bootstrap nos formulários
     # 'django.contrib.flatpages',  # requisito do python_ibmdb_django
