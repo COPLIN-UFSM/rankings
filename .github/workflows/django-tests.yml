@@ -33,4 +33,7 @@ jobs:
         shell: bash -l {0}
         run: |
           cd app
+          mkdir instance
+          json='{"user": "someuser", "password": "somepassword", "host": "some.host", "port": 50000, "database": "somedatabase"}'
+          echo "$json" > instance/database_credentials.json
           DJANGO_SETTINGS_MODULE=app.test_settings python manage.py test
