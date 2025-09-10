@@ -72,7 +72,7 @@ class UnicodeEscapedCharField(models.CharField):
 class Continente(models.Model):
     list_display = ['nome_continente_portugues', 'nome_continente_ingles']
 
-    id_continente = models.AutoField(db_column='ID_CONTINENTE', primary_key=True, blank=True, null=False)
+    id_continente = models.AutoField(db_column='ID_CONTINENTE', primary_key=True)
     nome_portugues = UnicodeEscapedCharField('Nome (PT-BR)', max_length=512, db_column='NOME_CONTINENTE_PORTUGUES', blank=False, null=False)
     nome_ingles = UnicodeEscapedCharField('Nome (EN-US)', max_length=512, db_column='NOME_CONTINENTE_INGLES', blank=True, null=True)
 
@@ -85,7 +85,7 @@ class Continente(models.Model):
 
 
 class Pais(models.Model):
-    id_pais = models.AutoField(db_column='ID_PAIS', primary_key=True, verbose_name='País', blank=True, null=False)
+    id_pais = models.AutoField(db_column='ID_PAIS', primary_key=True, verbose_name='País')
     continente = models.ForeignKey(
         Continente, models.DO_NOTHING, db_column='ID_CONTINENTE', verbose_name='Continente', blank=False, null=False
     )
@@ -103,7 +103,7 @@ class Pais(models.Model):
 
 
 class TipoApelido(models.Model):
-    id_tipo_apelido = models.AutoField(db_column='ID_TIPO_APELIDO', primary_key=True, blank=True, null=False)
+    id_tipo_apelido = models.AutoField(db_column='ID_TIPO_APELIDO', primary_key=True)
     tipo_apelido = UnicodeEscapedCharField('Tipo Apelido', max_length=512, db_column='TIPO_APELIDO', blank=False, null=False)
 
     class Meta:
@@ -117,7 +117,7 @@ class TipoApelido(models.Model):
 
 
 class ApelidoDePais(models.Model):
-    id_apelido = models.AutoField(db_column='ID_APELIDO_PAIS', primary_key=True, blank=True, null=False)
+    id_apelido = models.AutoField(db_column='ID_APELIDO_PAIS', primary_key=True)
     tipo_apelido = models.ForeignKey(TipoApelido, models.DO_NOTHING, db_column='ID_TIPO_APELIDO', blank=False, null=False)
     apelido = UnicodeEscapedCharField('Apelido', db_column='APELIDO', max_length=512, blank=False, null=False)
     pais = models.ForeignKey(Pais, models.DO_NOTHING, db_column='ID_PAIS', blank=False, null=False)
@@ -133,7 +133,7 @@ class ApelidoDePais(models.Model):
 
 
 class GrupoGeopolitico(models.Model):
-    id_grupo_geopolitico = models.AutoField(db_column='ID_GRUPO_GEOPOLITICO', primary_key=True, blank=True, null=False)
+    id_grupo_geopolitico = models.AutoField(db_column='ID_GRUPO_GEOPOLITICO', primary_key=True)
     nome_portugues = UnicodeEscapedCharField('Nome (PT-BR)', db_column='NOME_GRUPO_PORTUGUES', max_length=512, blank=False, null=False)
     nome_ingles = UnicodeEscapedCharField('Nome (EN-US)', db_column='NOME_GRUPO_INGLES', max_length=512, blank=True, null=True)
     sigla = UnicodeEscapedCharField('Sigla', max_length=512, db_column='SIGLA', blank=True, null=True)
@@ -178,7 +178,7 @@ class PaisesParaGruposGeopoliticos(models.Model):
 # ------------------------- #
 
 class IES(models.Model):
-    cod_ies = models.AutoField('Código IES', db_column='COD_IES', primary_key=True, blank=False, null=False)
+    cod_ies = models.AutoField('Código IES', db_column='COD_IES', primary_key=True)
     sigla_ies = UnicodeEscapedCharField('Sigla', max_length=64, db_column='SIGLA_IES', blank=True, null=True)
     nome_ies = UnicodeEscapedCharField(
         'Nome (PT-BR)', max_length=512, db_column='NOME_IES', blank=False, null=False
@@ -195,7 +195,7 @@ class IES(models.Model):
 
 
 class Universidade(models.Model):
-    id_universidade = models.AutoField(db_column='ID_UNIVERSIDADE', primary_key=True, blank=True, null=False)
+    id_universidade = models.AutoField(db_column='ID_UNIVERSIDADE', primary_key=True)
 
     cod_ies = models.IntegerField('Código IES', db_column='COD_IES', primary_key=False, blank=True, null=True)
 
@@ -226,7 +226,7 @@ class Universidade(models.Model):
 
 
 class ApelidoDeUniversidade(models.Model):
-    id_apelido = models.AutoField(db_column='ID_APELIDO_UNIVERSIDADE', primary_key=True, blank=True, null=False)
+    id_apelido = models.AutoField(db_column='ID_APELIDO_UNIVERSIDADE', primary_key=True)
     universidade = models.ForeignKey(Universidade, models.DO_NOTHING, db_column='ID_UNIVERSIDADE', blank=False, null=False)
     apelido = UnicodeEscapedCharField('Apelido', max_length=512, db_column='APELIDO', blank=True, null=True)
 
@@ -242,7 +242,8 @@ class ApelidoDeUniversidade(models.Model):
 
 class GrupoDeUniversidades(models.Model):
     id_grupo_universidades = models.AutoField(
-        db_column='ID_GRUPO_UNIVERSIDADES', primary_key=True, blank=True, null=False
+        db_column='ID_GRUPO_UNIVERSIDADES',
+        primary_key=True
     )
     nome_portugues = UnicodeEscapedCharField('Nome (PT-BR)', max_length=512, db_column='NOME_GRUPO_PORTUGUES', blank=False, null=False)
     nome_ingles = UnicodeEscapedCharField('Nome (EN-US)', max_length=512, db_column='NOME_GRUPO_INGLES', blank=True, null=True)
@@ -288,8 +289,9 @@ class UniversidadesParaGrupos(models.Model):
 
 
 class Ranking(models.Model):
-    id_ranking = models.AutoField(db_column='ID_RANKING', primary_key=True, blank=True, null=False)
+    id_ranking = models.AutoField(db_column='ID_RANKING', primary_key=True)
     nome = UnicodeEscapedCharField('Nome', max_length=512, db_column='NOME_RANKING', unique=True, blank=False, null=False)
+    ultima_atualiacao = models.DateTimeField(db_column='ULTIMA_ATUALIZACAO', default=timezone.now, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -302,7 +304,7 @@ class Ranking(models.Model):
 
 
 class Pilar(models.Model):
-    id_pilar = models.AutoField(db_column='ID_PILAR', primary_key=True, blank=True, null=False)
+    id_pilar = models.AutoField(db_column='ID_PILAR', primary_key=True)
     ranking = models.ForeignKey(Ranking, models.DO_NOTHING, db_column='ID_RANKING', blank=False, null=False)
     nome_portugues = UnicodeEscapedCharField('Nome (PT-BR)', max_length=512, db_column='NOME_PILAR_PORTUGUES', blank=False, null=False)
     nome_ingles = UnicodeEscapedCharField('Nome (EN-US)', max_length=512, db_column='NOME_PILAR_INGLES', blank=True, null=True)
@@ -320,7 +322,7 @@ class Pilar(models.Model):
 
 
 class GrupoDePilares(models.Model):
-    id_grupo_pilares = models.AutoField(db_column='ID_GRUPO_PILARES', primary_key=True, blank=True, null=False)
+    id_grupo_pilares = models.AutoField(db_column='ID_GRUPO_PILARES', primary_key=True)
     nome_portugues = UnicodeEscapedCharField('Nome (PT-BR)', max_length=512, db_column='NOME_GRUPO_PORTUGUES', blank=False, null=False)
     nome_ingles = UnicodeEscapedCharField('Nome (EN-US)', max_length=512, db_column='NOME_GRUPO_INGLES', blank=True, null=True)
     pilares = models.ManyToManyField(

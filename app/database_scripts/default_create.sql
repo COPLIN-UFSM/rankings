@@ -62,14 +62,6 @@ CREATE TABLE R_UNIVERSIDADES (
 );
 COMMENT ON TABLE R_UNIVERSIDADES IS 'Parte do conjunto de tabelas da aplicação Rankings. Para mais informações, consulte https://github.com/COPLIN-UFSM/rankings';
 
-CREATE TABLE R_UNIVERSIDADES_PARA_IES (
-    ID_UNIVERSIDADE INTEGER NOT NULL,
-    COD_IES INTEGER NOT NULL,
-    PRIMARY KEY (ID_UNIVERSIDADE, COD_IES),
-    FOREIGN KEY (ID_UNIVERSIDADE) REFERENCES R_UNIVERSIDADES(ID_UNIVERSIDADE)
-);
-COMMENT ON TABLE R_UNIVERSIDADES_PARA_IES IS 'Parte do conjunto de tabelas da aplicação Rankings. Para mais informações, consulte https://github.com/COPLIN-UFSM/rankings';
-
 CREATE TABLE R_UNIVERSIDADES_APELIDOS (
   ID_APELIDO_UNIVERSIDADE INTEGER NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),
   ID_UNIVERSIDADE INTEGER NOT NULL,
@@ -97,8 +89,9 @@ COMMENT ON TABLE R_UNIVERSIDADES_PARA_GRUPOS IS 'Parte do conjunto de tabelas da
 -- rankings e métricas
 
 CREATE TABLE R_RANKINGS (
-  ID_RANKING INTEGER NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),
-  NOME_RANKING VARCHAR(255) UNIQUE NOT NULL
+    ID_RANKING INTEGER NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),
+    NOME_RANKING VARCHAR(255) UNIQUE NOT NULL,
+    ULTIMA_ATUALIZACAO TIMESTAMP(6) DEFAULT NULL
 );
 COMMENT ON TABLE R_RANKINGS IS 'Parte do conjunto de tabelas da aplicação Rankings. Para mais informações, consulte https://github.com/COPLIN-UFSM/rankings';
 
@@ -817,10 +810,10 @@ WHERE ID_PAIS IN (
 );
 
 INSERT INTO R_UNIVERSIDADES(
-    NOME_UNIVERSIDADE_PORTUGUES, NOME_UNIVERSIDADE_INGLES, SIGLA, ID_APELIDO_PAIS
+    cod_ies, NOME_UNIVERSIDADE_PORTUGUES, NOME_UNIVERSIDADE_INGLES, SIGLA, ID_APELIDO_PAIS
 ) VALUES
-    ('Universidade Federal de Santa Maria', 'Federal University of Santa Maria', 'UFSM', 26),
-    ('Universidade Federal do Pampa', 'Federal University of the Pampa', 'Unipampa', 26);
+    (582, 'Universidade Federal de Santa Maria', 'Federal University of Santa Maria', 'UFSM', 26),
+    (5322, 'Universidade Federal do Pampa', 'Federal University of the Pampa', 'Unipampa', 26);
 
 INSERT INTO R_UNIVERSIDADES_APELIDOS(ID_UNIVERSIDADE, APELIDO) VALUES
     (1, 'Universidade Federal de Santa Maria'),

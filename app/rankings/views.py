@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import Count
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.views.generic import TemplateView
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
@@ -127,6 +128,7 @@ class SuccessInsertRankingView(TemplateView):
         ))
 
         if len(filtered_pillars) > 0:
+            print('Inserindo valores de pilares no banco de dados (isto pode demorar!)', file=sys.stderr)
             inserted_pillars = PilarValor.objects.bulk_create(filtered_pillars, batch_size=batch_size)
         else:
             inserted_pillars = []
@@ -137,6 +139,9 @@ class SuccessInsertRankingView(TemplateView):
             'R_PILARES_VALORES',
             'Valores de pilares de rankings acadêmicos'
         )
+
+        ranking.dh_ultima_atualizacao = timezone.now()
+        ranking.save()
 
     @staticmethod
     def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
@@ -198,20 +203,33 @@ class SuccessInsertRankingView(TemplateView):
                 id_pais = row['id_pais']
                 uni_name = row['Universidade'].strip()
 
+                # linhas em df que possuem a mesma universidade e o mesmo país que a linha atual em missing
+                index_df = (df['Universidade'] == row['Universidade']) & (df['id_pais'] == id_pais)
+
+                if not df.loc[
+                    index_df,
+                    ['id_universidade', 'id_apelido_universidade']
+                ].isna().any(axis='index').any():
+                    # significa que uma universidade (e possivelmente um apelido) foi inserido em uma iteração anterior
+                    # deste laço, mas essa mudança ainda não foi refletida no objeto que armazena as universidades do
+                    # banco de dados usado por esse código
+                    continue
+
+                # TODO depois de inserir algumas universidades, salvar o banco de dados novamente!
                 candidates = db.loc[db['id_pais'] == id_pais]
 
                 try:
                     idx = get_closest_match(uni_name, candidates['Universidade'].tolist(), model=model)
                     id_universidade = candidates.iloc[idx]['id_universidade']
 
-                    df.loc[i, 'id_universidade'] = id_universidade
+                    df.loc[index_df, 'id_universidade'] = id_universidade
 
                     apelido = ApelidoDeUniversidade(
                         universidade=Universidade.objects.get(id_universidade=id_universidade),
                         apelido=uni_name
                     )
                     apelido.save()
-                    df.loc[i, 'id_apelido_universidade'] = apelido.id_apelido
+                    df.loc[index_df, 'id_apelido_universidade'] = apelido.id_apelido
 
                     update_apelido_uni = True
 
@@ -243,9 +261,8 @@ class SuccessInsertRankingView(TemplateView):
                     update_uni = True
                     update_apelido_uni = True
 
-                    index = (df['Universidade'] == uni_name) & (df['id_pais'] == id_pais)
-                    df.loc[index, 'id_universidade'] = universidade.id_universidade
-                    df.loc[index, 'id_apelido_universidade'] = apelido.id_apelido
+                    df.loc[index_df, 'id_universidade'] = universidade.id_universidade
+                    df.loc[index_df, 'id_apelido_universidade'] = apelido.id_apelido
 
         if update_uni:
             update_ultima_carga(
@@ -257,6 +274,11 @@ class SuccessInsertRankingView(TemplateView):
             update_ultima_carga(
                 'R_UNIVERSIDADES_APELIDOS',
                 'Apelidos de universidades de rankings acadêmicos'
+            )
+
+        if df[['id_apelido_universidade', 'id_universidade']].isna().any(axis='index').any():
+            raise ValidationError(
+                'Algumas universidades não tiveram seu id_universidade ou id_apelido_universidade definido!'
             )
 
         return df
