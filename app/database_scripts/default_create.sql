@@ -840,20 +840,20 @@ INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Shanghai');
 INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_PORTUGUES, NOME_PILAR_INGLES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
-    (1, 'Alumni', 'Alumni',  NULL, NULL),
-    (1, 'N&S', 'N&S', NULL, NULL),
-    (1, 'PUB', 'PUB', NULL, NULL),
-    (1, 'PCP', 'PCP', NULL, NULL),
-    (1, 'Award', 'Award', NULL, NULL),
-    (1, 'HiCi', 'HiCi', NULL, NULL),
-    (1, 'Geral', 'Total Score', NULL, NULL),
-    (1, 'Posição no Ranking Mundial', 'World Rank', NULL, NULL);
+    (1, 'Alumni (Score)', 'Alumni (Score)',  NULL, NULL),
+    (1, 'N&S (Score)', 'N&S (Score)', NULL, NULL),
+    (1, 'PUB (Score)', 'PUB (Score)', NULL, NULL),
+    (1, 'PCP (Score)', 'PCP (Score)', NULL, NULL),
+    (1, 'Award (Score)', 'Award (Score)', NULL, NULL),
+    (1, 'HiCi (Score)', 'HiCi (Score)', NULL, NULL),
+    (1, 'Geral (Score)', 'Overall (Score)', NULL, NULL),
+    (1, 'Posição no Ranking Mundial (Rank)', 'World (Rank)', NULL, NULL);
 
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - World Ranking');
 INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
-    (2, 'World Rank', 'Posição no Ranking Mundial', NULL, NULL),
+    (2, 'World (Rank)', 'Posição no Ranking Mundial', NULL, NULL),
     (2, 'Overall (Score)', 'Geral (Score)', NULL, NULL),
     (2, 'Overall (Rank)', 'Geral (Rank)', NULL, NULL),
     (2, 'Teaching (Score)', 'Ensino (Score)', NULL, NULL),
@@ -875,7 +875,7 @@ INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - Latin Ran
 INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
-    (3, 'World Rank', 'Posição no Ranking Mundial', NULL, NULL),
+    (3, 'World (Rank)', 'Posição no Ranking Mundial', NULL, NULL),
     (3, 'Overall (Score)', 'Geral (Score)', NULL, NULL),
     (3, 'Overall (Rank)', 'Geral (Rank)', NULL, NULL),
     (3, 'Teaching (Score)', 'Ensino (Score)', NULL, NULL),
@@ -893,7 +893,7 @@ INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - Impact Ra
 INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
-    (4, 'World Rank', 'Posição no Ranking Mundial', NULL, NULL),
+    (4, 'World (Rank)', 'Posição no Ranking Mundial', NULL, NULL),
     (4, 'Overall (Score)', 'Geral (Score)', NULL, NULL),
     (4, 'Overall (Rank)', 'Geral (Rank)', NULL, NULL),
     (4, 'no Poverty (Score)', 'no Poverty (Score)', NULL, NULL),
@@ -940,13 +940,13 @@ INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
     (5, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
-    (5, 'World Rank', 'World Rank', NULL, NULL),
+    (5, 'World (Rank)', 'World (Rank)', NULL, NULL),
     (5, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
     (5, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
     (5, 'Employer Reputation (Rank)', 'Employer Reputation (Rank)', NULL, NULL),
     (5, 'Employer Reputation (Score)', 'Employer Reputation (Score)', NULL, NULL),
-    (5, 'Faculty Student (Rank)', 'Faculty Student (Rank)', NULL, NULL),
-    (5, 'Faculty Student (Score)', 'Faculty Student (Score)', NULL, NULL),
+    (5, 'Faculty to Student Ratio (Rank)', 'Faculty to Student Ratio (Rank)', NULL, NULL),
+    (5, 'Faculty to Student Ratio (Score)', 'Faculty to Student Ratio (Score)', NULL, NULL),
     (5, 'International Faculty (Rank)', 'International Faculty (Rank)', NULL, NULL),
     (5, 'International Faculty (Score)', 'International Faculty (Score)', NULL, NULL),
     (5, 'International Students (Rank)', 'International Students (Rank)', NULL, NULL),
@@ -963,39 +963,26 @@ INSERT INTO R_PILARES(
     (5, 'Natural Sciences (Score)', 'Natural Sciences (Score)', NULL, NULL),
     (5, 'Social Sciences & Management (Rank)', 'Social Sciences & Management (Rank)', NULL, NULL),
     (5, 'Social Sciences & Management (Score)', 'Social Sciences & Management (Score)', NULL, NULL),
-    (5, 'International Students Ratio (Rank)', 'International Students Ratio (Rank)', NULL, NULL),
-    (5, 'International Students Ratio (Score)', 'International Students Ratio (Score)', NULL, NULL),
-    (5, 'International Faculty Ratio (Rank)', 'International Faculty Ratio (Rank)', NULL, NULL),
-    (5, 'International Faculty Ratio (Score)', 'International Faculty Ratio (Score)', NULL, NULL),
-    (5, 'Faculty Student Ratio (Rank)', 'Faculty Student Ratio (Rank)', NULL, NULL),
-    (5, 'Faculty Student Ratio (Score)', 'Faculty Student Ratio (Score)', NULL, NULL),
-    (5, 'Social Sciences and Management (Rank)', 'Social Sciences and Management (Rank)', NULL, NULL),
-    (5, 'Social Sciences and Management (Score)', 'Social Sciences and Management (Score)', NULL, NULL),
-    (5, 'Life Sciences and Medicine (Rank)', 'Life Sciences and Medicine (Rank)', NULL, NULL),
-    (5, 'Life Sciences and Medicine (Score)', 'Life Sciences and Medicine (Score)', NULL, NULL),
-    (5, 'Engineering and Technology (Rank)', 'Engineering and Technology (Rank)', NULL, NULL),
-    (5, 'Engineering and Technology (Score)', 'Engineering and Technology (Score)', NULL, NULL),
-    (5, 'Arts and Humanities (Rank)', 'Arts and Humanities (Rank)', NULL, NULL),
-    (5, 'Arts and Humanities (Score)', 'Arts and Humanities (Score)', NULL, NULL),
     (5, 'International Research Network (Rank)', 'International Research Network (Rank)', NULL, NULL),
     (5, 'International Research Network (Score)', 'International Research Network (Score)', NULL, NULL),
     (5, 'Employment Outcomes (Rank)', 'Employment Outcomes (Rank)', NULL, NULL),
     (5, 'Employment Outcomes (Score)', 'Employment Outcomes (Score)', NULL, NULL),
     (5, 'Sustainability (Rank)', 'Sustainability (Rank)', NULL, NULL),
-    (5, 'Sustainability (Score)', 'Sustainability (Score)', NULL, NULL);
+    (5, 'Sustainability (Score)', 'Sustainability (Score)', NULL, NULL),
+    (5, 'International Student Diversity (Rank)', 'International Student Diversity (Rank)', NULL, NULL),
+    (5, 'International Student Diversity (Score)', 'International Student Diversity (Score)', NULL, NULL);
+
 
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS Latin America Ranking');
 INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
     (6, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
-    (6, 'World Rank', 'World Rank', NULL, NULL),
+    (6, 'World (Rank)', 'World (Rank)', NULL, NULL),
     (6, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
     (6, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
     (6, 'Employer Reputation (Rank)', 'Employer Reputation (Rank)', NULL, NULL),
     (6, 'Employer Reputation (Score)', 'Employer Reputation (Score)', NULL, NULL),
-    (6, 'Faculty Student (Rank)', 'Faculty Student (Rank)', NULL, NULL),
-    (6, 'Faculty Student (Score)', 'Faculty Student (Score)', NULL, NULL),
     (6, 'Faculty Staff with PhD (Rank)', 'Faculty Staff with PhD (Rank)', NULL, NULL),
     (6, 'Faculty Staff with PhD (Score)', 'Faculty Staff with PhD (Score)', NULL, NULL),
     (6, 'Web Impact (Rank)', 'Web Impact (Rank)', NULL, NULL),
@@ -1006,15 +993,15 @@ INSERT INTO R_PILARES(
     (6, 'Citations per Paper (Score)', 'Citations per Paper (Score)', NULL, NULL),
     (6, 'International Research Network (Rank)', 'International Research Network (Rank)', NULL, NULL),
     (6, 'International Research Network (Score)', 'International Research Network (Score)', NULL, NULL),
-    (6, 'Faculty Student Ratio (Rank)', 'Faculty Student Ratio (Rank)', NULL, NULL),
-    (6, 'Faculty Student Ratio (Score)', 'Faculty Student Ratio (Score)', NULL, NULL);
+    (6, 'Faculty to Student Ratio (Rank)', 'Faculty Student Ratio (Rank)', NULL, NULL),
+    (6, 'Faculty to Student Ratio (Score)', 'Faculty Student Ratio (Score)', NULL, NULL);
 
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS World University Rankings by Subject - Arts & Humanities');
 INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
     (7, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
-    (7, 'World Rank', 'World Rank', NULL, NULL),
+    (7, 'World (Rank)', 'World (Rank)', NULL, NULL),
     (7, 'Stars', 'Stars', NULL, NULL),
     (7, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
     (7, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
@@ -1032,7 +1019,7 @@ INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
     (8, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
-    (8, 'World Rank', 'World Rank', NULL, NULL),
+    (8, 'World (Rank)', 'World (Rank)', NULL, NULL),
     (8, 'Stars', 'Stars', NULL, NULL),
     (8, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
     (8, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
@@ -1050,7 +1037,7 @@ INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
     (9, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
-    (9, 'World Rank', 'World Rank', NULL, NULL),
+    (9, 'World (Rank)', 'World (Rank)', NULL, NULL),
     (9, 'Stars', 'Stars', NULL, NULL),
     (9, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
     (9, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
@@ -1068,7 +1055,7 @@ INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
     (10, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
-    (10, 'World Rank', 'World Rank', NULL, NULL),
+    (10, 'World (Rank)', 'World (Rank)', NULL, NULL),
     (10, 'Stars', 'Stars', NULL, NULL),
     (10, 'Academic Reputation (Rank)', 'Academic Reputation (Rank)', NULL, NULL),
     (10, 'Academic Reputation (Score)', 'Academic Reputation (Score)', NULL, NULL),
@@ -1085,15 +1072,14 @@ INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Green Metric');
 INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
-    (11, 'World Rank', 'World Rank', NULL, NULL),
-    (11, 'Score (Overall)', 'Score (Overall)', NULL, NULL),
-    (11, 'Setting & Infrastructure', 'Setting & Infrastructure', NULL, NULL),
-    (11, 'Energy & Climate Change', 'Energy & Climate Change', NULL, NULL),
-    (11, 'Waste', 'Waste', NULL, NULL),
-    (11, 'Water', 'Water', NULL, NULL),
-    (11, 'Transportation', 'Transportation', NULL, NULL),
-    (11, 'Education & Research', 'Education & Research', NULL, NULL),
-    (11, 'Education', 'Education', NULL, NULL);
+    (11, 'World (Rank)', 'World (Rank)', NULL, NULL),
+    (11, 'Overall (Score)', 'Overall (Score)', NULL, NULL),
+    (11, 'Setting & Infrastructure (Score)', 'Setting & Infrastructure (Score)', NULL, NULL),
+    (11, 'Energy & Climate Change (Score)', 'Energy & Climate Change (Score)', NULL, NULL),
+    (11, 'Waste (Score)', 'Waste (Score)', NULL, NULL),
+    (11, 'Water (Score)', 'Water (Score)', NULL, NULL),
+    (11, 'Transportation (Score)', 'Transportation (Score)', NULL, NULL),
+    (11, 'Education & Research (Score)', 'Education & Research (Score)', NULL, NULL);
 
 INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Ranking Universitário Folha de São Paulo');
 INSERT INTO R_PILARES(
@@ -1161,7 +1147,7 @@ INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - Interdisc
 INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
-    (41, 'World Rank', 'Posição no Ranking Mundial', NULL, NULL),
+    (41, 'World (Rank)', 'Posição no Ranking Mundial', NULL, NULL),
     (41, 'Overall (Score)', 'Geral (Score)', NULL, NULL),
     (41, 'Overall (Rank)', 'Geral (Rank)', NULL, NULL),
     (41, 'Inputs (Score)', 'Entradas (Score)', NULL, NULL),
@@ -1176,7 +1162,7 @@ INSERT INTO R_PILARES(
     ID_RANKING, NOME_PILAR_INGLES, NOME_PILAR_PORTUGUES, DESCRICAO_PILAR_PORTUGUES, DESCRICAO_PILAR_INGLES
 ) VALUES
     (61, 'Overall (Score)', 'Geral (Score)', NULL, NULL),
-    (61, 'World Rank', 'Posição no Ranking Mundial', NULL, NULL),
+    (61, 'World (Rank)', 'Posição no Ranking Mundial', NULL, NULL),
     (61, 'Environmental Impact (Rank)','Impacto Ambiental (Rank)',NULL, NULL),
     (61, 'Environmental Impact (Score)','Impacto Ambiental (Score)',NULL, NULL),
     (61, 'Environmental Sustainability (Rank)','Sustentabilidade Ambiental (Rank)',NULL, NULL),
