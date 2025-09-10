@@ -106,7 +106,7 @@ class SuccessInsertRankingView(TemplateView):
         )
 
         to_add_pillars = []
-        for i, row in df.iterrows():
+        for i, row in tqdm(df.iterrows(), total=len(df), desc='Preparando dados para inserção'):
             to_add_pillars = SuccessInsertRankingView.__append_row__(i, row, pillars, to_add_pillars)
 
         df_pillar_values = pd.DataFrame(
@@ -140,7 +140,7 @@ class SuccessInsertRankingView(TemplateView):
             'Valores de pilares de rankings acadêmicos'
         )
 
-        ranking.dh_ultima_atualizacao = timezone.now()
+        ranking.ultima_atualizacao = timezone.now()
         ranking.save()
 
     @staticmethod
@@ -215,7 +215,6 @@ class SuccessInsertRankingView(TemplateView):
                     # banco de dados usado por esse código
                     continue
 
-                # TODO depois de inserir algumas universidades, salvar o banco de dados novamente!
                 candidates = db.loc[db['id_pais'] == id_pais]
 
                 try:
