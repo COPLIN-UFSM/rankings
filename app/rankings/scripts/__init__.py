@@ -93,13 +93,14 @@ def get_document_pillars(df: pd.DataFrame, ranking: Ranking) -> list:
     return elected.to_dict(orient='records')
 
 
-def get_closest_match(name: str, candidates: list, threshold: float = 0.95, model: SentenceTransformer = None) -> int:
+def get_closest_match(name: str, candidates: list, threshold: float = 0.92, model: SentenceTransformer = None) -> int:
     """
     Encontra a melhor correspondência para um nome em uma lista de candidatos com base na similaridade de strings.
 
     :param name: O nome de referência.
     :param candidates: Lista de nomes candidatos.
     :param threshold: Limite de similaridade para considerar uma correspondência válida.
+    :param model: O modelo a ser usado para gerar embeddings. Se None, o modelo 'all-MiniLM-L6-v2' será usado.
     :return: O nome mais próximo encontrado na lista de candidatos.
     """
     if model is None:
