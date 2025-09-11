@@ -27,28 +27,38 @@ class IndexView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         n_universidades = Universidade.objects.count()
-        unis_by_pais_apelido = Universidade.objects.all().values('pais_apelido').annotate(total=Count('pais_apelido'))
-        count_values_by_pillar = PilarValor.objects.all().values('pilar_id').annotate(total=Count('pilar_id'))
-        ranking_ids = set()
 
-        set_countries = set()
-        for x in unis_by_pais_apelido:
-            set_countries = set_countries.union(
-                {ApelidoDePais.objects.filter(id_apelido=x['pais_apelido']).first().pais})
+        n_distinct_countries = (
+            PilarValor.objects
+            .values('apelido_universidade__universidade__pais_apelido__pais__id_pais')
+            .distinct()
+            .count()
+        )
 
-        for x in count_values_by_pillar:
-            id_pilar = x['pilar_id']
-            ranking_ids = ranking_ids.union({Pilar.objects.filter(id_pilar=id_pilar).first().ranking_id})
+        n_pillars = (
+            PilarValor.objects
+            .values('pilar__id_pilar')
+            .distinct()
+            .count()
+        )
 
-        n_pillars = len(count_values_by_pillar)
+        n_rankings = (
+            PilarValor.objects
+            .values('pilar__ranking__id_ranking')
+            .distinct()
+            .count()
+        )
+
+        n_pillar_values = PilarValor.objects.count()
 
         context = {
             'display_greetings': True,
             'information_list': [
                 {'name': 'universidade' + ('s' if n_universidades != 1 else ''), 'value': n_universidades},
-                {'name': 'país' + ('es' if len(set_countries) != 1 else ''), 'value': len(set_countries)},
-                {'name': 'ranking' + ('s' if len(ranking_ids) != 1 else ''), 'value': len(ranking_ids)},
-                {'name': 'pilar' + ('es' if n_pillars != 1 else ''), 'value': n_pillars}
+                {'name': 'país' + ('es' if n_distinct_countries != 1 else ''), 'value': n_distinct_countries},
+                {'name': 'ranking' + ('s' if n_rankings != 1 else ''), 'value': n_rankings},
+                {'name': 'pilar' + ('es' if n_pillars != 1 else ''), 'value': n_pillars},
+                {'name': 'valores de pilar' + ('es' if n_pillar_values != 1 else ''), 'value': n_pillar_values},
             ]
         }
         return render(request, 'rankings/index.html', context)

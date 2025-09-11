@@ -5,6 +5,7 @@ import pandas as pd
 
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.utils.safestring import mark_safe
 
 from sentence_transformers import SentenceTransformer, util
 
@@ -78,7 +79,7 @@ def get_document_pillars(df: pd.DataFrame, ranking: Ranking) -> list:
 
         missing_html = ''.join([f'<li>{x}</li>' for x in missing])
 
-        raise ValidationError(
+        raise ValidationError(mark_safe(
             f'<p>Erro: Os pilares informados na planilha devem ser exatamente os que são informados no banco de dados! '
             f'Se novos pilares foram adicionados ao Ranking, você terá que adicioná-los manualmente na tela de '
             f'administrador deste site. Se os nomes dos pilares forem semelhantes, mas não exatamente iguais, você pode'
@@ -86,7 +87,7 @@ def get_document_pillars(df: pd.DataFrame, ranking: Ranking) -> list:
             f'devem ser consistentes: ou todos escritos em inglês, ou todos escritos em português. Verifique a grafia '
             f'correta na tela de administrador.</p>'
             f'<p>Pilares que faltam na planilha:</p><ul>{missing_html}</ul>'
-        )
+        ))
 
     elected.columns = ['id_pilar', 'Pilar']
     return elected.to_dict(orient='records')

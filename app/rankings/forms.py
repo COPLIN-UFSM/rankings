@@ -18,13 +18,9 @@ def check_dataframe_consistency(file: InMemoryUploadedFile):
 
 
 class InsertRankingForm(forms.Form):
-    # ranking = forms.CharField(
-    #     label='Nome do Ranking',
-    #     widget=forms.Select(choices=[(x.id_ranking, x.nome) for x in Ranking.objects.all()])
-    # )
     ranking = forms.ModelChoiceField(
         label='Nome do Ranking',
-        queryset=Ranking.objects.all(),
+        queryset=Ranking.objects.order_by('nome'),
         widget=forms.Select
     )
     file = forms.FileField(label='Planilha (tipo csv)', validators=[check_dataframe_consistency])
