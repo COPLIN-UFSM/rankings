@@ -151,4 +151,7 @@ def get_all_db_universities() -> pd.DataFrame:
     else:
         df = df.rename(columns=mapping)
 
+    df['Universidade'] = df['Universidade'].str.strip()
+    df['País'] = df['País'].str.strip()
+
     return df

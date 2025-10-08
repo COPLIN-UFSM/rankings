@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
-from django.db.models import Count
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -16,7 +15,7 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 from .forms import InsertRankingForm
-from .models import PilarValor, Pilar, Ranking, TipoApelido, Pais, ApelidoDeUniversidade
+from .models import PilarValor, Ranking, TipoApelido, Pais, ApelidoDeUniversidade
 from .models import Universidade, ApelidoDePais
 from .scripts import get_canonical_name, get_all_db_universities, get_closest_match, get_all_ies, get_document_pillars, \
     update_ultima_carga
@@ -105,11 +104,14 @@ class SuccessInsertRankingView(TemplateView):
         if 'Ano' not in df.columns:
             raise ValidationError(f'A planilha deve conter uma coluna de nome \'Ano\'!')
 
+        df['id_universidade'] = df['id_universidade'].astype(int)
+        df['id_apelido_universidade'] = df['id_apelido_universidade'].astype(int)
+
         pillars = get_document_pillars(df, ranking=ranking)
 
         ano = df['Ano'].iloc[0]
         db_pillar_values = pd.DataFrame(
-            PilarValor.objects.filter(pilar__ranking=ranking, ano=ano).values_list(
+            PilarValor.objects.filter(pilar__ranking=ranking).values_list(
                 'apelido_universidade_id', 'pilar_id', 'ano'
             ),
             columns=['id_apelido_universidade', 'id_pilar', 'ano']
@@ -124,6 +126,7 @@ class SuccessInsertRankingView(TemplateView):
             columns=['id_apelido_universidade', 'id_pilar', 'ano']
         )
 
+        # TODO talvez esteja duplicando as coisas!
         merged = pd.merge(
             df_pillar_values,
             db_pillar_values,
@@ -139,18 +142,25 @@ class SuccessInsertRankingView(TemplateView):
 
         if len(filtered_pillars) > 0:
             print('Inserindo valores de pilares no banco de dados (isto pode demorar!)', file=sys.stderr)
-            inserted_pillars = PilarValor.objects.bulk_create(filtered_pillars, batch_size=batch_size)
+            # inserted_pillars = PilarValor.objects.bulk_create(filtered_pillars, batch_size=batch_size)
+
+            inserted_pillars = 0
+            for pillar in tqdm(filtered_pillars, total=len(filtered_pillars), desc='Inserindo valores de pilares'):
+                pillar.save()
+                inserted_pillars += 1
+
         else:
             inserted_pillars = []
 
-        print(f'{len(inserted_pillars)} linhas foram inseridas no banco de dados', file=sys.stderr)
+        # print(f'{len(inserted_pillars)} linhas foram inseridas no banco de dados', file=sys.stderr)
+        print(f'{inserted_pillars} linhas foram inseridas no banco de dados', file=sys.stderr)
 
         update_ultima_carga(
             'R_PILARES_VALORES',
             'Valores de pilares de rankings acadêmicos'
         )
 
-        ranking.ultima_atualizacao = timezone.now()
+        ranking.ultima_atualizacao = timezone.now()  # TODo verificar, não funcionando!
         ranking.save()
 
     @staticmethod
@@ -211,7 +221,8 @@ class SuccessInsertRankingView(TemplateView):
 
             for i, row in tqdm(missing.iterrows(), total=len(missing), desc='Inserindo universidades no banco'):
                 id_pais = row['id_pais']
-                uni_name = row['Universidade'].strip()
+                uni_name_original = row['Universidade'].strip()
+                uni_name_processed = uni_name_original.lower()
 
                 # linhas em df que possuem a mesma universidade e o mesmo país que a linha atual em missing
                 index_df = (df['Universidade'] == row['Universidade']) & (df['id_pais'] == id_pais)
@@ -228,14 +239,14 @@ class SuccessInsertRankingView(TemplateView):
                 candidates = db.loc[db['id_pais'] == id_pais]
 
                 try:
-                    idx = get_closest_match(uni_name, candidates['Universidade'].tolist(), model=model)
+                    idx = get_closest_match(uni_name_processed, candidates['Universidade'].tolist(), model=model)
                     id_universidade = candidates.iloc[idx]['id_universidade']
 
                     df.loc[index_df, 'id_universidade'] = id_universidade
 
                     apelido = ApelidoDeUniversidade(
                         universidade=Universidade.objects.get(id_universidade=id_universidade),
-                        apelido=uni_name
+                        apelido=uni_name_original
                     )
                     apelido.save()
                     df.loc[index_df, 'id_apelido_universidade'] = apelido.id_apelido
@@ -246,7 +257,7 @@ class SuccessInsertRankingView(TemplateView):
                     # se for uma universidade brasileira, tenta achar uma correspondência na tabela IES
                     if id_pais == id_pais_brasil:
                         try:
-                            idx = get_closest_match(uni_name, ies['nome_ies'].tolist(), model=model)
+                            idx = get_closest_match(uni_name_processed, ies['nome_ies'].tolist(), model=model)
                             cod_ies = ies.iloc[idx]['cod_ies']
                         except IndexError:
                             cod_ies = None
@@ -254,8 +265,8 @@ class SuccessInsertRankingView(TemplateView):
                         cod_ies = None
 
                     universidade = Universidade(
-                        nome_portugues=uni_name,
-                        nome_ingles=uni_name,
+                        nome_portugues=uni_name_original,
+                        nome_ingles=uni_name_original,
                         cod_ies=cod_ies,
                         pais_apelido_id=int(row['id_apelido_pais'])
                     )
@@ -263,7 +274,7 @@ class SuccessInsertRankingView(TemplateView):
 
                     apelido = ApelidoDeUniversidade(
                         universidade=universidade,
-                        apelido=uni_name
+                        apelido=uni_name_original
                     )
                     apelido.save()
 
