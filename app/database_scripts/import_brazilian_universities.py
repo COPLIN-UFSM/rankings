@@ -31,26 +31,27 @@ def main(read_path):
 
     gb = df.groupby(by=['COD_IES'], as_index=False)
 
-    for i, row in tqdm(gb.iterrows(), total=len(df), desc='Inserindo universidades brasileiras no banco de dados'):
-        z = 0
+    for cod_ies, index in tqdm(
+        gb.groups.items(),
+        total=len(gb.groups.items()),
+        desc='Inserindo universidades brasileiras no banco de dados'
+    ):
+        rows = gb.get_group(cod_ies)
 
-        # universidade = Universidade(
-        #     nome_portugues=uni_name,
-        #     nome_ingles=uni_name,
-        #     cod_ies=cod_ies,
-        #     pais_apelido_id=int(row['id_apelido_pais'])
-        # )
-        # universidade.save()
-        #
-        # apelido = ApelidoDeUniversidade(
-        #     universidade=universidade,
-        #     apelido=uni_name
-        # )
-        # apelido.save()
+        universidade = Universidade(
+            nome_portugues=rows.iloc[0]['Universidade'],
+            nome_ingles=rows.iloc[0]['Universidade'],
+            cod_ies=cod_ies,
+            pais_apelido_id=id_apelido_pais
+        )
+        universidade.save()
 
-    # for i, row in df.iterrows():
-    #     pass
-
+        for i, row in rows.iterrows():
+            apelido = ApelidoDeUniversidade(
+                universidade=universidade,
+                apelido=row['Universidade']
+            )
+            apelido.save()
 
 if __name__ == '__main__':
     _path = os.path.join(os.path.dirname(__file__), '..', 'rankings', 'tests', 'data', 'test_ies.csv')
