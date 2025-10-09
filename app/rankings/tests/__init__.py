@@ -17,29 +17,43 @@ from ..scripts import get_document_pillars
 
 class RankingsTransactionTestCase(TransactionTestCase):
     @staticmethod
-    def get_form_data(filename):
-        df = pd.read_csv(
+    def get_dataframe(filename: str) -> pd.DataFrame:
+        return pd.read_csv(
             os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', filename),
             encoding='utf-8', sep=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC
         )
+
+    @staticmethod
+    def prepare_dataframe_for_upload(df) -> SimpleUploadedFile:
         csv_buffer = io.StringIO()
         df.to_csv(csv_buffer, index=False)
         csv_buffer.seek(0)
 
         # Wrap it as an uploaded file
         uploaded_file = SimpleUploadedFile(
-            filename,
+            'foobar.csv',
             csv_buffer.getvalue().encode('utf-8'),
             content_type="text/csv"
         )
+        return uploaded_file
 
-        ranking = Ranking.objects.get(nome='Test Ranking')
+    @staticmethod
+    def prepare_form_data(ranking_name: str, uploaded_file: SimpleUploadedFile) -> dict:
+        ranking = Ranking.objects.get(nome=ranking_name)
 
         # prepara dados do formulário
         data = {
             'ranking': ranking.id_ranking,
             'file': uploaded_file
         }
+        return data
+
+    @staticmethod
+    def get_form_data(filename):
+        df = RankingsTransactionTestCase.get_dataframe(filename)
+
+        uploaded_file = RankingsTransactionTestCase.prepare_dataframe_for_upload(df)
+        data = RankingsTransactionTestCase.prepare_form_data('Test Ranking', uploaded_file)
         return data, df
 
     @classmethod
@@ -325,22 +339,49 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
         # verifica se o texto está contido no HTML da página HTML carregada
         self.assertContains(response, 'Verificar países faltantes')
 
-    # def test_similar_universities(self):
-    #     """
-    #     Testa o envio de um formulário com nomes muito semelhantes de universidades.
-    #     """
-    #     data, df = RankingsInsertViewTestCase.get_form_data('test_ies.csv')
-    #
-    #     # faz uma requisição POST
-    #     response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
-    #
-    #     # verifica resposta
-    #     self.assertEqual(response.status_code, 200)  # 302 para redirecionamento
-    #
-    #     # verifica se a mensagem de sucesso está na resposta
-    #     self.assertContains(response, "Sucesso")
-    #
-    #     n_unique = df['COD_IES'].nunique()
-    #     n_rows = len(df)
-    #
-    #     self.assertEqual(Universidade.objects.all().count(), n_rows)
+    def test_similar_universities(self):
+        """
+        Testa o envio de um formulário com nomes muito semelhantes de universidades.
+        No comportamento atual da aplicação, deve inserir uma linha para cada universidade.
+        """
+
+        df = RankingsInsertViewTestCase.get_dataframe('test_ies.csv')
+
+        df['Universidade_ls'] = df['Universidade'].str.strip()
+        df['Universidade_ls'] = df['Universidade_ls'].str.lower()
+
+        df['País_ls'] = df['País'].str.strip()
+        df['País_ls'] = df['País_ls'].str.lower()
+
+        df = df.loc[df['COD_IES'] == 582]  # pega UFSM apenas
+
+        # cria a IES da UFSM no banco
+        ies = IES.objects.create(
+            cod_ies=582,
+            sigla_ies='UFSM',
+            nome_ies='Universidade Federal de Santa Maria'
+        )
+        ies.save()
+
+        n_unique = len(df.drop_duplicates(subset=['Universidade_ls', 'País_ls']))
+
+        for year in [2025, 2026]:
+            df['Ano'] = year
+
+            data = RankingsTransactionTestCase.prepare_form_data(
+                'Test Ranking',
+                RankingsTransactionTestCase.prepare_dataframe_for_upload(df)
+            )
+
+            # faz uma requisição POST
+            response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
+
+            # verifica resposta
+            self.assertEqual(response.status_code, 200)  # 302 para redirecionamento
+
+            # verifica se a mensagem de sucesso está na resposta
+            self.assertContains(response, "Sucesso")
+
+            self.assertEqual(Universidade.objects.all().count(), n_unique)
+
+        ies.delete()

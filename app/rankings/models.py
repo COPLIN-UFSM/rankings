@@ -291,7 +291,7 @@ class UniversidadesParaGrupos(models.Model):
 class Ranking(models.Model):
     id_ranking = models.AutoField(db_column='ID_RANKING', primary_key=True)
     nome = UnicodeEscapedCharField('Nome', max_length=512, db_column='NOME_RANKING', unique=True, blank=False, null=False)
-    ultima_atualiacao = models.DateTimeField(db_column='ULTIMA_ATUALIZACAO', default=timezone.now, blank=True, null=True)
+    ultima_atualizacao = models.DateTimeField(db_column='ULTIMA_ATUALIZACAO', default=timezone.now, blank=True, null=True)
 
     class Meta:
         managed = False

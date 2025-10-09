@@ -15,7 +15,7 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 from .forms import InsertRankingForm
-from .models import PilarValor, Ranking, TipoApelido, Pais, ApelidoDeUniversidade
+from .models import PilarValor, Ranking, TipoApelido, Pais, ApelidoDeUniversidade, IES
 from .models import Universidade, ApelidoDePais
 from .scripts import get_canonical_name, get_all_db_universities, get_closest_match, get_all_ies, get_document_pillars, \
     update_ultima_carga
@@ -162,8 +162,16 @@ class SuccessInsertRankingView(TemplateView):
             'Valores de pilares de rankings acadêmicos'
         )
 
-        ranking.ultima_atualizacao = timezone.now()  # TODo verificar, não funcionando!
+        ranking.ultima_atualizacao = timezone.now()
         ranking.save()
+
+    @staticmethod
+    def fetch_cod_ies(uni_name):
+        try:
+            ies = IES.objects.get(nome_ies__iexact=uni_name)
+            return ies.cod_ies
+        except IES.DoesNotExist:
+            return None
 
     @staticmethod
     def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
@@ -175,6 +183,9 @@ class SuccessInsertRankingView(TemplateView):
             dfa.loc[:, 'id_universidade'] = dfa['id_universidade'].astype(float)
             dfa.loc[:, 'id_pais'] = dfa['id_pais'].astype(float)
             dfa.loc[:, 'id_apelido_universidade'] = dfa['id_apelido_universidade'].astype(float)
+
+            dfa['Universidade'] = dfa['Universidade'].str.strip()
+            dfa['Universidade_ls'] = dfa['Universidade'].str.lower()
 
             return dfa
 
@@ -210,7 +221,6 @@ class SuccessInsertRankingView(TemplateView):
 
         # se alguma universidade do arquivo do ranking anda não tem o id_universidade setado
         if pd.isna(df['id_apelido_universidade']).sum() > 0:
-            ies = get_all_ies()
             id_pais_brasil = Pais.objects.filter(nome_portugues__iexact='Brasil').first().id_pais
 
             missing = df.loc[
@@ -219,72 +229,43 @@ class SuccessInsertRankingView(TemplateView):
                 subset=['Universidade', 'id_pais']
             )
 
-            model = SentenceTransformer('all-MiniLM-L6-v2')
+            gb = missing.groupby(['Universidade_ls', 'id_pais'])
 
-            for i, row in tqdm(missing.iterrows(), total=len(missing), desc='Inserindo universidades no banco'):
-                id_pais = row['id_pais']
-                uni_name_original = row['Universidade'].strip()
-                uni_name_processed = uni_name_original.lower()
+            for uni_name_lowercase, index in tqdm(gb.groups.items(), total=len(gb.groups.items()), desc='Inserindo universidades no banco'):
+                rows = gb.get_group(uni_name_lowercase)
+                id_pais = rows.iloc[0]['id_pais']
+                id_apelido_pais = int(rows.iloc[0]['id_apelido_pais'])
 
-                # linhas em df que possuem a mesma universidade e o mesmo país que a linha atual em missing
-                index_df = (df['Universidade'] == row['Universidade']) & (df['id_pais'] == id_pais)
-
-                if not df.loc[
-                    index_df,
-                    ['id_universidade', 'id_apelido_universidade']
-                ].isna().any(axis='index').any():
-                    # significa que uma universidade (e possivelmente um apelido) foi inserido em uma iteração anterior
-                    # deste laço, mas essa mudança ainda não foi refletida no objeto que armazena as universidades do
-                    # banco de dados usado por esse código
-                    continue
-
-                candidates = db.loc[db['id_pais'] == id_pais]
-
-                try:
-                    idx = get_closest_match(uni_name_processed, candidates['Universidade'].tolist(), model=model)
-                    id_universidade = candidates.iloc[idx]['id_universidade']
-
-                    df.loc[index_df, 'id_universidade'] = id_universidade
-
-                    apelido = ApelidoDeUniversidade(
-                        universidade=Universidade.objects.get(id_universidade=id_universidade),
-                        apelido=uni_name_original
-                    )
-                    apelido.save()
-                    df.loc[index_df, 'id_apelido_universidade'] = apelido.id_apelido
-
-                    update_apelido_uni = True
-
-                except IndexError:  # nenhuma correspondência encontrada
-                    # se for uma universidade brasileira, tenta achar uma correspondência na tabela IES
-                    if id_pais == id_pais_brasil:
-                        try:
-                            idx = get_closest_match(uni_name_processed, ies['nome_ies'].tolist(), model=model)
-                            cod_ies = ies.iloc[idx]['cod_ies']
-                        except IndexError:
-                            cod_ies = None
+                # se for uma universidade brasileira, tenta achar uma correspondência na tabela IES
+                if id_pais == id_pais_brasil:
+                    cod_ies = rows['Universidade'].apply(SuccessInsertRankingView.fetch_cod_ies)
+                    if (~pd.isna(cod_ies)).any():
+                        cod_ies = cod_ies.loc[~pd.isna(cod_ies)].iloc[0]
                     else:
                         cod_ies = None
+                else:
+                    cod_ies = None
 
-                    universidade = Universidade(
-                        nome_portugues=uni_name_original,
-                        nome_ingles=uni_name_original,
-                        cod_ies=cod_ies,
-                        pais_apelido_id=int(row['id_apelido_pais'])
-                    )
-                    universidade.save()
+                universidade = Universidade(
+                    nome_portugues=rows.iloc[0]['Universidade'],
+                    nome_ingles=rows.iloc[0]['Universidade'],
+                    cod_ies=cod_ies,
+                    pais_apelido_id=id_apelido_pais
+                )
+                universidade.save()
 
+                for i, row in rows.iterrows():
                     apelido = ApelidoDeUniversidade(
                         universidade=universidade,
-                        apelido=uni_name_original
+                        apelido=row['Universidade']
                     )
                     apelido.save()
 
-                    update_uni = True
-                    update_apelido_uni = True
+                    df.loc[i, 'id_universidade'] = universidade.id_universidade
+                    df.loc[i, 'id_apelido_universidade'] = apelido.id_apelido
 
-                    df.loc[index_df, 'id_universidade'] = universidade.id_universidade
-                    df.loc[index_df, 'id_apelido_universidade'] = apelido.id_apelido
+                update_uni = True
+                update_apelido_uni = True
 
         if update_uni:
             update_ultima_carga(
