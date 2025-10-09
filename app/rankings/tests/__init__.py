@@ -324,3 +324,23 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
 
         # verifica se o texto está contido no HTML da página HTML carregada
         self.assertContains(response, 'Verificar países faltantes')
+
+    # def test_similar_universities(self):
+    #     """
+    #     Testa o envio de um formulário com nomes muito semelhantes de universidades.
+    #     """
+    #     data, df = RankingsInsertViewTestCase.get_form_data('test_ies.csv')
+    #
+    #     # faz uma requisição POST
+    #     response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
+    #
+    #     # verifica resposta
+    #     self.assertEqual(response.status_code, 200)  # 302 para redirecionamento
+    #
+    #     # verifica se a mensagem de sucesso está na resposta
+    #     self.assertContains(response, "Sucesso")
+    #
+    #     n_unique = df['COD_IES'].nunique()
+    #     n_rows = len(df)
+    #
+    #     self.assertEqual(Universidade.objects.all().count(), n_rows)

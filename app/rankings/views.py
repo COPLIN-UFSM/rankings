@@ -67,7 +67,9 @@ class SuccessInsertRankingView(TemplateView):
     template_name = 'rankings/ranking/insert/success.html'
 
     @staticmethod
-    def __append_row__(i, row, pillars, to_add_pillars):
+    def __append_row__(i, row, pillars):
+        to_add_pillars = []
+
         for pillar in pillars:
             nome_pilar = pillar['Pilar']
             id_pilar = pillar['id_pilar']
@@ -109,7 +111,6 @@ class SuccessInsertRankingView(TemplateView):
 
         pillars = get_document_pillars(df, ranking=ranking)
 
-        ano = df['Ano'].iloc[0]
         db_pillar_values = pd.DataFrame(
             PilarValor.objects.filter(pilar__ranking=ranking).values_list(
                 'apelido_universidade_id', 'pilar_id', 'ano'
@@ -119,14 +120,13 @@ class SuccessInsertRankingView(TemplateView):
 
         to_add_pillars = []
         for i, row in tqdm(df.iterrows(), total=len(df), desc='Preparando dados para inserção'):
-            to_add_pillars = SuccessInsertRankingView.__append_row__(i, row, pillars, to_add_pillars)
+            to_add_pillars.extend(SuccessInsertRankingView.__append_row__(i, row, pillars))
 
         df_pillar_values = pd.DataFrame(
             [(x.apelido_universidade_id, x.pilar_id, x.ano) for x in to_add_pillars],
             columns=['id_apelido_universidade', 'id_pilar', 'ano']
         )
 
-        # TODO talvez esteja duplicando as coisas!
         merged = pd.merge(
             df_pillar_values,
             db_pillar_values,
@@ -135,13 +135,15 @@ class SuccessInsertRankingView(TemplateView):
             indicator=True
         )
 
+        assert len(merged) == len(to_add_pillars), 'O tamanho das variáveis não é igual!'
+
         filtered_pillars = list(it.compress(
             to_add_pillars,
             (merged['_merge'] == 'left_only').values.tolist()
         ))
 
         if len(filtered_pillars) > 0:
-            print('Inserindo valores de pilares no banco de dados (isto pode demorar!)', file=sys.stderr)
+            # print('Inserindo valores de pilares no banco de dados (isto pode demorar!)', file=sys.stderr)
             # inserted_pillars = PilarValor.objects.bulk_create(filtered_pillars, batch_size=batch_size)
 
             inserted_pillars = 0
