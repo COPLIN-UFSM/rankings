@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 
 from django.core.management.base import BaseCommand
@@ -12,7 +13,7 @@ except ImportError:
 class Command(BaseCommand):
     help = (
         "Soft reset: remove apenas dados das tabelas "
-        "R_PILARES_VALORES, R_UNIVERSIDADES_APELIDOS, R_UNIVERSIDADES, e R_UNIVERSIDADES_PARA_GRUPOS. Insere "
+        "R_PILARES_VALORES, R_UNIVERSIDADES_APELIDOS, R_UNIVERSIDADES_PARA_GRUPOS, e R_UNIVERSIDADES. Insere "
         "universidades brasileiras primeiro com variações de nome (e.g. 'Universidade Federal de Santa Maria',"
         "'Universidade Federal de Santa Maria (UFSM)'"
     )
@@ -20,14 +21,16 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         _common = os.path.join(os.path.dirname(__file__), '..', '..', 'database', 'sql')
 
-        sql_scripts = [
-            os.path.join(_common, x) for x in [
-                os.path.join('drop', 'soft_drop.sql'),
-                os.path.join('create', 'soft_create.sql')
-            ]
+        files = [
+            'pilares_valores.sql', 'universidades_para_grupos.sql',
+            'universidades_apelidos.sql', 'universidades.sql'
         ]
 
-        run_several(connection, sql_scripts)
+        for mode in ['drop', 'create']:
+            folder_files = os.listdir(os.path.join(_common, mode))
+            selected = sorted([os.path.join(_common, mode, x) for x in folder_files if any([y in x for y in files])])
+            run_several(connection, selected)
+
         soft_populate(connection)
 
-        self.stdout.write(self.style.SUCCESS('Soft reset completado com sucesso!'))
+        print('Soft reset completado com sucesso!')

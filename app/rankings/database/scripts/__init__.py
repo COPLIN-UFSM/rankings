@@ -82,10 +82,10 @@ def read_contents_and_run(connection, path: str):
                     'AUTOINCREMENT'
                 )
                 if 'COMMENT ON' not in command:
-                    print(command)
                     cursor.execute(command + ';')
 
-def hard_populate(connection) -> None:
+def populate_all_tables(connection) -> None:
+    print('Repopulando todas as tabelas')
     if connection.vendor == 'sqlite':
         if not IES.objects.filter(cod_ies=582).exists():
             IES(cod_ies=582, nome_ies='Universidade Federal de Santa Maria', sigla_ies='UFSM').save()
@@ -96,17 +96,18 @@ def hard_populate(connection) -> None:
     for sql_script in sorted(os.listdir(_common)):
         read_contents_and_run(connection, os.path.join(_common, sql_script))
 
+def drop_all_tables(connection):
+    print('Removendo todas as tabelas')
+    _common = os.path.join(os.path.dirname(__file__), '..', 'sql', 'drop')
+    for sql_script in sorted(os.listdir(_common)):
+        read_contents_and_run(connection, os.path.join(_common, sql_script))
 
 
-def hard_reset(connection):
-    hard_drop_script = os.path.join(os.path.dirname(__file__), '..', 'sql', 'drop', 'hard_drop.sql')
-    hard_create_script = os.path.join(os.path.dirname(__file__), '..', 'sql', 'create', 'hard_create.sql')
-    print('Removendo tabelas')
-    read_contents_and_run(connection, hard_drop_script)
-    print('Recriando tabelas')
-    read_contents_and_run(connection, hard_create_script)
-    print('Repopulando tabelas')
-    hard_populate(connection)
+def create_all_tables(connection):
+    print('Recriando todas as tabelas')
+    _common = os.path.join(os.path.dirname(__file__), '..', 'sql', 'create')
+    for sql_script in sorted(os.listdir(_common)):
+        read_contents_and_run(connection, os.path.join(_common, sql_script))
 
 
 def soft_populate(connection) -> None:
@@ -116,7 +117,9 @@ def soft_populate(connection) -> None:
     print('Repopulando tabelas')
 
     if connection.vendor == 'sqlite':
-        hard_reset(connection)
+        drop_all_tables(connection)
+        create_all_tables(connection)
+        populate_all_tables(connection)
 
     sql_scripts = [
         os.path.join(os.path.join(os.path.dirname(__file__), '..', 'sql'), x) for x in [

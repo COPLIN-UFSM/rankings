@@ -5,9 +5,9 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 
 try:
-    from app.rankings.database.scripts import hard_reset
+    from app.rankings.database.scripts import drop_all_tables, create_all_tables, populate_all_tables
 except ImportError:
-    from rankings.database.scripts import hard_reset
+    from rankings.database.scripts import drop_all_tables, create_all_tables, populate_all_tables
 
 class Command(BaseCommand):
     help = (
@@ -15,6 +15,8 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        hard_reset(connection)
+        drop_all_tables(connection)
+        create_all_tables(connection)
+        repopulate_all_tables(connection)
 
         self.stdout.write(self.style.SUCCESS('Hard reset completado com sucesso!'))
