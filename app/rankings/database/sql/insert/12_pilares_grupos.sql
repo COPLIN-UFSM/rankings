@@ -1,0 +1,3 @@
+-- INSERT INTO R_PILARES_GRUPOS(NOME_GRUPO_PORTUGUES, NOME_GRUPO_INGLES)
+-- VALUES ('Pilares ranqueáveis', 'Rankable Pillars');
+--
