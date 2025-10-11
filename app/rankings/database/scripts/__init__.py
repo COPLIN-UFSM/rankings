@@ -74,7 +74,7 @@ def read_contents_and_run(connection, path: str):
         script_contents = read_file.read()
 
     with connection.cursor() as cursor:
-        print(f'Executando script {os.path.basename(path)}')
+        print(f'    Executando script {os.path.basename(os.path.dirname(path))}/{os.path.basename(path)}')
         for command in script_contents.split(';'):
             if connection.vendor == 'sqlite':
                 command = command.replace(

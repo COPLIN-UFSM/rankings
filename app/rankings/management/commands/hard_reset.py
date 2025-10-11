@@ -17,6 +17,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         drop_all_tables(connection)
         create_all_tables(connection)
-        repopulate_all_tables(connection)
+        populate_all_tables(connection)
 
         self.stdout.write(self.style.SUCCESS('Hard reset completado com sucesso!'))
