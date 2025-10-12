@@ -300,6 +300,8 @@ class SuccessInsertRankingView(TemplateView):
         df = SuccessInsertRankingView.insert_id_university(df)
         n_inserted_rows = SuccessInsertRankingView.insert_ranking_data(df, ranking=ranking)
 
+        remove_dataframe_and_ranking_from_session(request)
+
         return render(
             request,
             'rankings/ranking/insert/success.html',
@@ -328,6 +330,9 @@ def get_dataframe_from_session(request):
     ranking = Ranking.objects.get(id_ranking=id_ranking)
     return ranking, df
 
+def remove_dataframe_and_ranking_from_session(request):
+    request.session.pop('df', None)
+    request.session.pop('id_ranking', None)
 
 class MissingCountriesPreview(TemplateView):
     template_name = "rankings/countries/missing/preview.html"
@@ -497,7 +502,6 @@ class RankingInsertView(TemplateView):
             request.session['id_ranking'] = ranking.id_ranking
 
             return redirect(reverse('missing-countries-preview'))
-
 
         except ValidationError as e:
             messages.error(request, e.message)

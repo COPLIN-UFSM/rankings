@@ -119,12 +119,6 @@
 
 {% block scripts %}
 <script type="application/javascript">
-    function showSpinner() {
-        document.getElementById('spinner-block').style.display = "block";
-    }
-    function hideSpinner() {
-        document.getElementById('spinner-block').style.display = "none";
-    }
     function validate(event) {
         let table = document.getElementById("table-missing-countries");
         let selects = table.getElementsByTagName("select");
@@ -138,14 +132,9 @@
         form.action = "/countries/missing/preview/";
         form.method = "POST";
         console.log('enviando dados para o servidor...');
-        showSpinner();
         form.submit();
         return true;
     }
-    hideSpinner();  // começa com o spinner oculto
-    {#document.getElementById('button-submit').addEventListener("click", showSpinner);#}
-    {#document.getElementById('id_file').addEventListener('focus', hideSpinner);#}
-
 </script>
 {% endblock %}
 
