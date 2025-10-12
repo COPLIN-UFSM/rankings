@@ -160,4 +160,4 @@ cython_debug/
 .idea/
 .vs/
 app/dev.sqlite3
-app/local.sqlite3
+app/prod.sqlite3

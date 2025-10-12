@@ -90,12 +90,6 @@ WSGI_APPLICATION = 'app.wsgi.application'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    # para usar o banco de dados local, use esta opção
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'database_sqlite.db',
-    # },
-    # para usar o banco de dados remoto, use esta opção
     'default': {
         "NAME": 'BEE',
         "ENGINE": 'ibm_db_django',
@@ -112,7 +106,7 @@ DATABASES = {
     },
     'local_sqlite': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'local.sqlite3',
+        'NAME': BASE_DIR / 'prod.sqlite3',
     },
 }
 
