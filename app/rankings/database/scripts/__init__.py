@@ -96,6 +96,8 @@ def populate_all_tables(connection) -> None:
     for sql_script in sorted(os.listdir(_common)):
         read_contents_and_run(connection, os.path.join(_common, sql_script))
 
+    populate_brazilian_universities()
+
 def drop_all_tables(connection):
     print('Removendo todas as tabelas')
     _common = os.path.join(os.path.dirname(__file__), '..', 'sql', 'drop')
@@ -116,17 +118,11 @@ def soft_populate(connection) -> None:
     """
     print('Repopulando tabelas')
 
-    if connection.vendor == 'sqlite':
-        drop_all_tables(connection)
-        create_all_tables(connection)
-        populate_all_tables(connection)
-
     sql_scripts = [
         os.path.join(os.path.join(os.path.dirname(__file__), '..', 'sql'), x) for x in [
             os.path.join('insert', '07_universidades.sql'),
             os.path.join('insert', '08_universidades_apelidos.sql')
         ]
     ]
-
     run_several(connection, sql_scripts)
     populate_brazilian_universities()

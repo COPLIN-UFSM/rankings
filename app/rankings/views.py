@@ -220,14 +220,15 @@ class SuccessInsertRankingView(TemplateView):
         update_uni = False
 
         # se alguma universidade do arquivo do ranking anda não tem o id_universidade setado
-        if pd.isna(df['id_apelido_universidade']).sum() > 0:
+        if pd.isna(df['id_apelido_universidade']).any():
             id_pais_brasil = Pais.objects.filter(nome_portugues__iexact='Brasil').first().id_pais
 
             missing = df.loc[
                 pd.isna(df['id_apelido_universidade'])
-            ].drop_duplicates(
-                subset=['Universidade', 'id_pais']
-            )
+            ]
+            # .drop_duplicates(
+            #     subset=['Universidade', 'id_pais']
+            # ))
 
             gb = missing.groupby(['Universidade_ls', 'id_pais'])
 
@@ -320,8 +321,8 @@ class MissingCountriesPreview(TemplateView):
     @staticmethod
     def insert_id_pais(df: pd.DataFrame) -> pd.DataFrame:
         """
-        Dado um dataframe que é a coleta de um ranking feita pela internet, insere o id_pais e o id_apelido_pais para cada
-        linha.
+        Dado um dataframe que é a coleta de um ranking feita pela internet,
+        insere o id_pais e o id_apelido_pais para cada linha.
         """
 
         def __prepare__(_df, set_pais=True, set_apelido=True):
@@ -363,6 +364,7 @@ class MissingCountriesPreview(TemplateView):
 
         joined = joined[original_columns + ['id_pais', 'id_apelido_pais']]
         joined = joined.drop_duplicates(subset=['Ano', 'Universidade', 'id_pais'], keep='first')
+
         return joined
 
     def get_context_data(self, **kwargs):

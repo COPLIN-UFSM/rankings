@@ -30,7 +30,8 @@ conda env create -f environment.yml
 cd app
 python manage.py makemigrations --settings=app.dev_sqlite_settings
 python manage.py migrate --settings=app.dev_sqlite_settings
-python manage.py soft_reset --settings=app.dev_sqlite_settings
+python manage.py hard_reset --settings=app.dev_sqlite_settings
+python manage.py runserver --settings=app.dev_sqlite_settings
 ```
 
 ## Primeira execução
