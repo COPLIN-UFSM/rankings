@@ -262,10 +262,12 @@ class SuccessInsertRankingView(TemplateView):
                 )
                 universidade.save()
 
-                for i, row in rows.iterrows():
+                gba = rows.groupby(by='Universidade')
+
+                for alias, i in gba.groups.items():
                     apelido = ApelidoDeUniversidade(
                         universidade=universidade,
-                        apelido=row['Universidade']
+                        apelido=alias
                     )
                     apelido.save()
 
