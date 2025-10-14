@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/67ef6b4d-2b8f-42ae-80b2-453ceb4ea1f2/console.sql" value="67ef6b4d-2b8f-42ae-80b2-453ceb4ea1f2" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/67ef6b4d-2b8f-42ae-80b2-453ceb4ea1f2/console_1.sql" value="67ef6b4d-2b8f-42ae-80b2-453ceb4ea1f2" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/b796f086-5d13-44a4-a92b-39963d5b761b/console.sql" value="b796f086-5d13-44a4-a92b-39963d5b761b" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/b796f086-5d13-44a4-a92b-39963d5b761b/console_31.sql" value="b796f086-5d13-44a4-a92b-39963d5b761b" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/b796f086-5d13-44a4-a92b-39963d5b761b/console_32.sql" value="b796f086-5d13-44a4-a92b-39963d5b761b" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/b796f086-5d13-44a4-a92b-39963d5b761b/console_34.sql" value="b796f086-5d13-44a4-a92b-39963d5b761b" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/b796f086-5d13-44a4-a92b-39963d5b761b/console_35.sql" value="b796f086-5d13-44a4-a92b-39963d5b761b" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/b796f086-5d13-44a4-a92b-39963d5b761b/console_36.sql" value="b796f086-5d13-44a4-a92b-39963d5b761b" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/b796f086-5d13-44a4-a92b-39963d5b761b/console_37.sql" value="b796f086-5d13-44a4-a92b-39963d5b761b" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/b796f086-5d13-44a4-a92b-39963d5b761b/console_38.sql" value="b796f086-5d13-44a4-a92b-39963d5b761b" />
+    <file url="file://$PROJECT_DIR$/app/rankings/management/commands/soft_reset.py" value="b796f086-5d13-44a4-a92b-39963d5b761b" />
+  </component>
+</project>
