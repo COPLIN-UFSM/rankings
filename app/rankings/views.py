@@ -179,6 +179,8 @@ class SuccessInsertRankingView(TemplateView):
             return ies.cod_ies
         except IES.DoesNotExist:
             return None
+        except IES.MultipleObjectsReturned:
+            return None
 
     @staticmethod
     def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
@@ -246,7 +248,7 @@ class SuccessInsertRankingView(TemplateView):
 
                 # se for uma universidade brasileira, tenta achar uma correspondência na tabela IES
                 if id_pais == id_pais_brasil:
-                    cod_ies = rows['Universidade'].apply(SuccessInsertRankingView.fetch_cod_ies)
+                    cod_ies = rows['Universidade_ls'].apply(SuccessInsertRankingView.fetch_cod_ies)
                     if (~pd.isna(cod_ies)).any():
                         cod_ies = cod_ies.loc[~pd.isna(cod_ies)].iloc[0]
                     else:

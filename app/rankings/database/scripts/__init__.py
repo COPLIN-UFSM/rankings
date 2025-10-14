@@ -5,8 +5,10 @@ from tqdm import tqdm
 
 try:
     from ..rankings.models import Universidade, ApelidoDeUniversidade, ApelidoDePais, IES, UltimaCarga
+    from ..rankings.scripts import update_ultima_carga
 except ImportError:
     from rankings.models import Universidade, ApelidoDeUniversidade, ApelidoDePais, IES, UltimaCarga
+    from rankings.scripts import update_ultima_carga
 
 def populate_brazilian_universities() -> dict:
     """
@@ -81,6 +83,8 @@ def read_contents_and_run(connection, path: str):
                 )
                 if 'COMMENT ON' not in command:
                     cursor.execute(command + ';')
+            else:
+                cursor.execute(command + ';')
 
 def populate_all_tables(connection) -> None:
     print('Repopulando todas as tabelas')
@@ -126,5 +130,5 @@ def soft_populate(connection) -> None:
     run_several(connection, sql_scripts)
     populate_brazilian_universities()
 
-    UltimaCarga(nome_tabela='R_UNIVERSIDADES').save()
-    UltimaCarga(nome_tabela='R_UNIVERSIDADES_APELIDOS').save()
+    update_ultima_carga('R_UNIVERSIDADES', None)
+    update_ultima_carga('R_UNIVERSIDADES_APELIDOS', None)
