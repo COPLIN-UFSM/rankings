@@ -121,6 +121,8 @@ class SuccessInsertRankingView(TemplateView):
         for i, row in tqdm(df.iterrows(), total=len(df), desc='Preparando dados para inserção'):
             to_add_pillars.extend(SuccessInsertRankingView.__append_row__(i, row, pillars))
 
+        to_add_pillars = list(set(to_add_pillars))
+
         df_pillar_values = pd.DataFrame(
             [(x.apelido_universidade_id, x.pilar_id, x.ano) for x in to_add_pillars],
             columns=['id_apelido_universidade', 'id_pilar', 'ano']
@@ -154,7 +156,6 @@ class SuccessInsertRankingView(TemplateView):
             # for pillar in tqdm(filtered_pillars, total=len(filtered_pillars), desc='Inserindo valores de pilares'):
             #     pillar.save()
             #     inserted_pillars += 1
-
         else:
             inserted_pillars = 0
 
