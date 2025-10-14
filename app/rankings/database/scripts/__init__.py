@@ -3,12 +3,10 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-from ...models import IES
-
 try:
-    from ..rankings.models import Universidade, ApelidoDeUniversidade, ApelidoDePais
+    from ..rankings.models import Universidade, ApelidoDeUniversidade, ApelidoDePais, IES, UltimaCarga
 except ImportError:
-    from rankings.models import Universidade, ApelidoDeUniversidade, ApelidoDePais
+    from rankings.models import Universidade, ApelidoDeUniversidade, ApelidoDePais, IES, UltimaCarga
 
 def populate_brazilian_universities() -> dict:
     """
@@ -124,5 +122,9 @@ def soft_populate(connection) -> None:
             os.path.join('insert', '08_universidades_apelidos.sql')
         ]
     ]
+
     run_several(connection, sql_scripts)
     populate_brazilian_universities()
+
+    UltimaCarga(nome_tabela='R_UNIVERSIDADES').save()
+    UltimaCarga(nome_tabela='R_UNIVERSIDADES_APELIDOS').save()

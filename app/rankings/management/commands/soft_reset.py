@@ -5,6 +5,8 @@ import sys
 from django.core.management.base import BaseCommand
 from django.db import connection
 
+from rankings.models import Ranking, UltimaCarga
+
 try:
     from app.rankings.database.scripts import soft_populate, run_several
 except ImportError:
@@ -22,14 +24,28 @@ class Command(BaseCommand):
         _common = os.path.join(os.path.dirname(__file__), '..', '..', 'database', 'sql')
 
         files = [
-            'pilares_valores.sql', 'universidades_para_grupos.sql',
-            'universidades_apelidos.sql', 'universidades.sql'
+            'pilares_valores.sql',
+            'universidades_para_grupos.sql',
+            'universidades_apelidos.sql',
+            'universidades.sql'
         ]
 
         for mode in ['drop', 'create']:
             folder_files = os.listdir(os.path.join(_common, mode))
             selected = sorted([os.path.join(_common, mode, x) for x in folder_files if any([y in x for y in files])])
             run_several(connection, selected)
+
+        # atualiza data da última atualização de todos os rankings para nulo
+        Ranking.objects.update(ultima_atualizacao=None)
+        # remove entradas de ultima carga das tabelas recarregadas
+        UltimaCarga.objects.filter(
+            nome_tabela__in=[
+                'R_UNIVERSIDADES',
+                'R_UNIVERSIDADES_APELIDOS',
+                'R_UNIVERSIDADES_PARA_GRUPOS',
+                'R_PILARES_VALORES'
+            ]
+        ).delete()
 
         soft_populate(connection)
 
