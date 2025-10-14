@@ -19,28 +19,33 @@
                 {% csrf_token %}
                 {% load crispy_forms_tags %}
                 {{ form | crispy }}
-                <button id="button-submit" type="submit" class="btn btn-dark">Enviar</button>
+                <button
+                    id="button-submit" type="submit" class="btn btn-dark"
+                    data-bs-toggle="modal" data-bs-target="#modal-loading"
+                >
+                    Enviar
+                </button>
             </form>
             {% autoescape off %}
             {{ error_message }}
             {% endautoescape %}
-            <div id="spinner-block" class="spinner-border" role="status">
-                <span class="visually-hidden">Carregando...</span>
+
+            <div
+                class="modal fade"
+                id="modal-loading" tabindex="-1"
+                data-bs-backdrop="static"
+                data-bs-keyboard="false"
+                aria-hidden="true"
+            >
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content text-center">
+                        <div class="modal-body d-flex align-items-center justify-content-center py-4">
+                            <div class="spinner-border text-primary me-3" role="status" aria-hidden="true"></div>
+                            <span class="fs-5">Carregando dados...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-{% endblock %}
-
-{% block scripts %}
-    <script type="application/javascript">
-    function showSpinner() {
-        document.getElementById('spinner-block').style.display = "block";
-    }
-    function hideSpinner() {
-        document.getElementById('spinner-block').style.display = "none";
-    }
-    hideSpinner();  // começa com o spinner oculto
-    document.getElementById('button-submit').addEventListener("click", showSpinner);
-    document.getElementById('id_file').addEventListener('focus', hideSpinner);
-    </script>
 {% endblock %}

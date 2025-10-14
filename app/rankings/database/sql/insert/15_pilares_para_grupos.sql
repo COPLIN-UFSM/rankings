@@ -1,0 +1,106 @@
+-- -- insere pilares ranqueáveis do shanghai
+-- INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+-- select ID_PILAR, (
+--     select ID_GRUPO_PILARES
+--     from R_PILARES_GRUPOS
+--     where NOME_GRUPO_INGLES = 'Rankable Pillars'
+--     )
+-- from R_PILARES
+-- WHERE ID_RANKING in (
+--     select ID_RANKING
+--     FROM R_RANKINGS
+--     WHERE UPPER(NOME_RANKING) LIKE 'SHANGHAI%'
+-- ) and NOME_PILAR_INGLES <> 'Total Score';
+--
+-- -- insere pilares ranqueáveis do THE (todos os rankings)
+-- INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+-- select ID_PILAR, (
+--     select ID_GRUPO_PILARES
+--     from R_PILARES_GRUPOS
+--     where NOME_GRUPO_INGLES = 'Rankable Pillars'
+--     )
+-- from R_PILARES
+-- WHERE ID_RANKING in (
+--     select ID_RANKING
+--     FROM R_RANKINGS
+--     WHERE UPPER(NOME_RANKING) LIKE '%TIMES HIGHER EDUCATION%'
+-- ) and UPPER(NOME_PILAR_INGLES) like '%(SCORE)';
+--
+-- -- ranking da folha
+-- INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+-- select ID_PILAR, (
+--     select ID_GRUPO_PILARES
+--     from R_PILARES_GRUPOS
+--     where NOME_GRUPO_INGLES = 'Rankable Pillars'
+--     )
+-- from R_PILARES
+-- WHERE ID_RANKING in (
+--     select ID_RANKING
+--     FROM R_RANKINGS
+--     WHERE NOME_RANKING = 'Ranking Universitário Folha de São Paulo'
+-- ) and UPPER(NOME_PILAR_INGLES) like '%(SCORE)';
+--
+-- -- insere pilares ranqueáveis do QS (todos os rankings)
+-- INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+-- select ID_PILAR, (
+--     select ID_GRUPO_PILARES
+--     from R_PILARES_GRUPOS
+--     where NOME_GRUPO_INGLES = 'Rankable Pillars'
+--     )
+-- from R_PILARES
+-- WHERE ID_RANKING in (
+--     select ID_RANKING
+--     FROM R_RANKINGS
+--     WHERE UPPER(NOME_RANKING) LIKE 'QS%'
+-- ) and UPPER(NOME_PILAR_INGLES) like '%(SCORE)';
+--
+-- -- insere pilares ranqueáveis do Green metric (todos menos world rank)
+-- INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+-- select ID_PILAR, (
+--     select ID_GRUPO_PILARES
+--     from R_PILARES_GRUPOS
+--     where NOME_GRUPO_INGLES = 'Rankable Pillars'
+--     )
+-- from R_PILARES
+-- WHERE ID_RANKING in (
+--     select ID_RANKING
+--     FROM R_RANKINGS
+--     WHERE NOME_RANKING LIKE 'Green Metric'
+-- ) and UPPER(NOME_PILAR_INGLES) <> 'World Rank';
+--
+-- -- insere pilares ranqueáveis do Unirank (o único que tem)
+-- INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+-- select ID_PILAR, (
+--     select ID_GRUPO_PILARES
+--     from R_PILARES_GRUPOS
+--     where NOME_GRUPO_INGLES = 'Rankable Pillars'
+--     )
+-- from R_PILARES
+-- WHERE ID_RANKING in (
+--     select ID_RANKING
+--     FROM R_RANKINGS
+--     WHERE NOME_RANKING LIKE 'Unirank Latin America'
+-- );
+--
+-- INSERT INTO R_PILARES_PARA_GRUPOS(ID_PILAR, ID_GRUPO_PILARES)
+-- select ID_PILAR, (
+--     select ID_GRUPO_PILARES
+--     from R_PILARES_GRUPOS
+--     where NOME_GRUPO_INGLES = 'Rankable Pillars'
+--     )
+-- from R_PILARES
+-- WHERE ID_RANKING in (
+--     select ID_RANKING
+--     FROM R_RANKINGS
+--     WHERE NOME_RANKING LIKE 'Webometrics World Ranking'
+-- );
+-- INSERT INTO R_CONTINENTES(NOME_CONTINENTE_PORTUGUES, NOME_CONTINENTE_INGLES) VALUES
+--     ('África', 'Africa'),
+--     ('América Central e Caribe', 'Central America and the Caribbean'),
+--     ('Ásia', 'Asia'),
+--     ('Europa', 'Europe'),
+--     ('Oceania', 'Oceania'),
+--     ('América do Sul', 'South America'),
+--     ('América do Norte', 'North America'),
+--     ('Antártica', 'Antarctica');
+--

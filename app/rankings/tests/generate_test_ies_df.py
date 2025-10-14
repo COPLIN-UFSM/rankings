@@ -22,21 +22,19 @@ def main(path):
         ''')
 
         variations = {
-            "uppercase": lambda d: d["Universidade"].str.upper(),
-            "lowercase": lambda d: d["Universidade"].str.lower(),
-            "title": lambda d: d["Universidade"].str.title(),
-            "uppercase_acronym": lambda d: d["Universidade"].str.upper() + " " + d["SIGLA_IES"],
-            "lowercase_acronym": lambda d: d["Universidade"].str.lower() + " " + d["SIGLA_IES"],
             "title_acronym": lambda d: d["Universidade"].str.title() + " " + d["SIGLA_IES"],
-            "uppercase_parenthesis": lambda d: d["Universidade"].str.upper() + " (" + d["SIGLA_IES"] + ")",
             "title_parenthesis": lambda d: d["Universidade"].str.title() + " (" + d["SIGLA_IES"] + ")",
-            "lowercase_parenthesis": lambda d: d["Universidade"].str.lower() + " (" + d["SIGLA_IES"] + ")",
+            "title_hyphen": lambda d: d["Universidade"].str.title() + " - " + d["SIGLA_IES"],
         }
 
-        dfs = []
+        initial = df.copy(deep=True)
+        initial['Universidade'] = initial['Universidade'].str.title()
+        dfs = [initial]
+
         for name, func in variations.items():
             temp = df.copy(deep=True)
             temp["Universidade"] = func(temp)
+            temp = temp.loc[(~pd.isna(temp['SIGLA_IES'])) & (~temp['SIGLA_IES'].str.strip().eq(''))]
             dfs.append(temp)
 
         final_df = pd.concat(dfs, ignore_index=True)

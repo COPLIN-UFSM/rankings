@@ -24,6 +24,16 @@ As configurações da máquina que o repositório foi desenvolvido encontram-se 
 conda env create -f environment.yml
 ```
 
+## Desenvolvimento
+
+```bash
+cd app
+python manage.py makemigrations --settings=app.dev_settings
+python manage.py migrate --settings=app.dev_settings
+python manage.py hard_reset --settings=app.dev_settings
+python manage.py runserver --settings=app.dev_settings
+```
+
 ## Primeira execução
 
 Siga uma das duas opções abaixo, dependendo do seu caso de uso.
@@ -57,7 +67,7 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
    }
    ```
 
-2. Rode o script [default_create.sql](app/database_scripts/default_create.sql) para criar as tabelas no banco de dados;
+2. Rode o script [default_create.sql](app/rankings/database_scripts/default_create.sql) para criar as tabelas no banco de dados;
 3. Execute os seguintes comandos:
 
    ```bash
@@ -74,8 +84,8 @@ Siga uma das duas opções abaixo, dependendo do seu caso de uso.
 > Esta ação irá deletar **todas** as tabelas do banco de dados, referentes aos rankings. Pense bem se é exatamente isso
 > que você quer fazer!
 
-1. Rode o script [default_drop.sql](app/database_scripts/default_drop.sql) para deletar **todas** as tabelas do banco de dados de rankings;
-2. Rode o script [default_create.sql](app/database_scripts/default_create.sql) para recriar as tabelas do zero;
+1. Rode o script [default_drop.sql](app/rankings/database_scripts/default_drop.sql) para deletar **todas** as tabelas do banco de dados de rankings;
+2. Rode o script [default_create.sql](app/rankings/database_scripts/default_create.sql) para recriar as tabelas do zero;
 3. Execute os seguintes comandos:
 
    ```bash

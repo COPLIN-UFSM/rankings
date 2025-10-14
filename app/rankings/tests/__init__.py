@@ -5,6 +5,7 @@ import pandas as pd
 
 from django.apps import apps
 from django.db import connection
+from django.db.models import Count
 from django.urls import reverse
 from django.test import TransactionTestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -79,7 +80,7 @@ class RankingsTransactionTestCase(TransactionTestCase):
 
     def setUp(self):
         """
-        Insere uma vez por método.
+        Executa uma vez por método de teste.
         """
         # insere ranking fake
         ranking = Ranking.objects.create(nome='Test Ranking')
@@ -339,6 +340,34 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
         # verifica se o texto está contido no HTML da página HTML carregada
         self.assertContains(response, 'Verificar países faltantes')
 
+    def _check_duplicated_entries(self):
+        """
+        Testa se existem duplicatas na tabela R_PILARES_VALORES.
+
+        É executado dentro de test_similar_universities.
+        """
+        # teste soft
+        duplicados = (
+            PilarValor.objects
+            .values('apelido_universidade_id', 'pilar_id', 'ano')
+            .annotate(quantidade=Count('*'))
+            .filter(quantidade__gt=1)
+        )
+        self.assertEqual(len(duplicados), 0)
+
+        # teste hard
+        duplicados = (
+            PilarValor.objects
+            .values(
+                'apelido_universidade__universidade_id',  # acessa via relação
+                'id_pilar',
+                'ano'
+            )
+            .annotate(quantidade=Count('*'))
+            .filter(quantidade__gt=1)
+        )
+        self.assertEqual(len(duplicados), 0)
+
     def test_similar_universities(self):
         """
         Testa o envio de um formulário com nomes muito semelhantes de universidades.
@@ -383,5 +412,3 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
             self.assertContains(response, "Sucesso")
 
             self.assertEqual(Universidade.objects.all().count(), n_unique)
-
-        ies.delete()

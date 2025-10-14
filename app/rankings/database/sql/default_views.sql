@@ -1,5 +1,3 @@
--- TODO colocar grupos geopolíticos, grupos de universidades, grupos de pilares, etc, nas dimensões!
-
 -- dimensão de rankings
 CREATE VIEW R_V_RANKINGS_DIMENSAO (
     ID_RANKING, NOME_RANKING,

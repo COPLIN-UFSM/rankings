@@ -90,10 +90,28 @@
                     {% endfor %}
                 </tbody>
                 </table>
-                <button id="button-send" type="submit" class="btn btn-dark">Enviar</button>
+                <button
+                    id="button-send" type="submit" class="btn btn-dark"
+                    data-bs-toggle="modal" data-bs-target="#modal-loading"
+                >
+                    Enviar
+                </button>
             </form>
-            <div id="spinner-block" class="spinner-border" role="status" style="margin-top: 8px;">
-                <span class="visually-hidden">Carregando...</span>
+            <div
+                class="modal fade"
+                id="modal-loading" tabindex="-1"
+                data-bs-backdrop="static"
+                data-bs-keyboard="false"
+                aria-hidden="true"
+            >
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content text-center">
+                        <div class="modal-body d-flex align-items-center justify-content-center py-4">
+                            <div class="spinner-border text-primary me-3" role="status" aria-hidden="true"></div>
+                            <span class="fs-5">Carregando dados...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -101,12 +119,6 @@
 
 {% block scripts %}
 <script type="application/javascript">
-    function showSpinner() {
-        document.getElementById('spinner-block').style.display = "block";
-    }
-    function hideSpinner() {
-        document.getElementById('spinner-block').style.display = "none";
-    }
     function validate(event) {
         let table = document.getElementById("table-missing-countries");
         let selects = table.getElementsByTagName("select");
@@ -117,17 +129,12 @@
         }
         let form = document.getElementById("form-rows-countries");
         form.enctype = "multipart/form-data";
-        form.action = "/countries/missing/insert/";
+        form.action = "/countries/missing/preview/";
         form.method = "POST";
         console.log('enviando dados para o servidor...');
-        showSpinner();
         form.submit();
         return true;
     }
-    hideSpinner();  // começa com o spinner oculto
-    {#document.getElementById('button-submit').addEventListener("click", showSpinner);#}
-    {#document.getElementById('id_file').addEventListener('focus', hideSpinner);#}
-
 </script>
 {% endblock %}
 

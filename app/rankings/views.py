@@ -91,7 +91,7 @@ class SuccessInsertRankingView(TemplateView):
         return to_add_pillars
 
     @staticmethod
-    def insert_ranking_data(df: pd.DataFrame, ranking: Ranking, batch_size: int = 999):
+    def insert_ranking_data(df: pd.DataFrame, ranking: Ranking, batch_size: int = 500):
         """
         Insere os dados do formulário nas tabelas pertinentes.
 
@@ -143,16 +143,21 @@ class SuccessInsertRankingView(TemplateView):
         ))
 
         if len(filtered_pillars) > 0:
-            # print('Inserindo valores de pilares no banco de dados (isto pode demorar!)', file=sys.stderr)
-            # inserted_pillars = PilarValor.objects.bulk_create(filtered_pillars, batch_size=batch_size)
+            print('Inserindo valores de pilares no banco de dados (isto pode demorar!)', file=sys.stderr)
+            inserted_pillars = PilarValor.objects.bulk_create(
+                filtered_pillars,
+                batch_size=batch_size,
+                ignore_conflicts=True
+            )
+            inserted_pillars = len(inserted_pillars)
 
-            inserted_pillars = 0
-            for pillar in tqdm(filtered_pillars, total=len(filtered_pillars), desc='Inserindo valores de pilares'):
-                pillar.save()
-                inserted_pillars += 1
+            # inserted_pillars = 0
+            # for pillar in tqdm(filtered_pillars, total=len(filtered_pillars), desc='Inserindo valores de pilares'):
+            #     pillar.save()
+            #     inserted_pillars += 1
 
         else:
-            inserted_pillars = []
+            inserted_pillars = 0
 
         # print(f'{len(inserted_pillars)} linhas foram inseridas no banco de dados', file=sys.stderr)
         print(f'{inserted_pillars} linhas foram inseridas no banco de dados', file=sys.stderr)
@@ -164,6 +169,8 @@ class SuccessInsertRankingView(TemplateView):
 
         ranking.ultima_atualizacao = timezone.now()
         ranking.save()
+
+        return inserted_pillars
 
     @staticmethod
     def fetch_cod_ies(uni_name):
@@ -220,14 +227,15 @@ class SuccessInsertRankingView(TemplateView):
         update_uni = False
 
         # se alguma universidade do arquivo do ranking anda não tem o id_universidade setado
-        if pd.isna(df['id_apelido_universidade']).sum() > 0:
+        if pd.isna(df['id_apelido_universidade']).any():
             id_pais_brasil = Pais.objects.filter(nome_portugues__iexact='Brasil').first().id_pais
 
             missing = df.loc[
                 pd.isna(df['id_apelido_universidade'])
-            ].drop_duplicates(
-                subset=['Universidade', 'id_pais']
-            )
+            ]
+            # .drop_duplicates(
+            #     subset=['Universidade', 'id_pais']
+            # ))
 
             gb = missing.groupby(['Universidade_ls', 'id_pais'])
 
@@ -254,10 +262,12 @@ class SuccessInsertRankingView(TemplateView):
                 )
                 universidade.save()
 
-                for i, row in rows.iterrows():
+                gba = rows.groupby(by='Universidade')
+
+                for alias, i in gba.groups.items():
                     apelido = ApelidoDeUniversidade(
                         universidade=universidade,
-                        apelido=row['Universidade']
+                        apelido=alias
                     )
                     apelido.save()
 
@@ -290,9 +300,18 @@ class SuccessInsertRankingView(TemplateView):
         ranking, df = get_dataframe_from_session(request)
 
         df = SuccessInsertRankingView.insert_id_university(df)
-        SuccessInsertRankingView.insert_ranking_data(df, ranking=ranking)
+        n_inserted_rows = SuccessInsertRankingView.insert_ranking_data(df, ranking=ranking)
 
-        return render(request, 'rankings/ranking/insert/success.html')
+        remove_dataframe_and_ranking_from_session(request)
+
+        return render(
+            request,
+            'rankings/ranking/insert/success.html',
+            context={
+                'n_inserted_rows': n_inserted_rows,
+                'ranking_name': ranking.nome,
+            }
+        )
 
     def post(self, request, *args, **kwargs):
         raise PermissionDenied()  # TODO debugging purposes
@@ -313,6 +332,9 @@ def get_dataframe_from_session(request):
     ranking = Ranking.objects.get(id_ranking=id_ranking)
     return ranking, df
 
+def remove_dataframe_and_ranking_from_session(request):
+    request.session.pop('df', None)
+    request.session.pop('id_ranking', None)
 
 class MissingCountriesPreview(TemplateView):
     template_name = "rankings/countries/missing/preview.html"
@@ -320,8 +342,8 @@ class MissingCountriesPreview(TemplateView):
     @staticmethod
     def insert_id_pais(df: pd.DataFrame) -> pd.DataFrame:
         """
-        Dado um dataframe que é a coleta de um ranking feita pela internet, insere o id_pais e o id_apelido_pais para cada
-        linha.
+        Dado um dataframe que é a coleta de um ranking feita pela internet,
+        insere o id_pais e o id_apelido_pais para cada linha.
         """
 
         def __prepare__(_df, set_pais=True, set_apelido=True):
@@ -363,6 +385,7 @@ class MissingCountriesPreview(TemplateView):
 
         joined = joined[original_columns + ['id_pais', 'id_apelido_pais']]
         joined = joined.drop_duplicates(subset=['Ano', 'Universidade', 'id_pais'], keep='first')
+
         return joined
 
     def get_context_data(self, **kwargs):
@@ -481,7 +504,6 @@ class RankingInsertView(TemplateView):
             request.session['id_ranking'] = ranking.id_ranking
 
             return redirect(reverse('missing-countries-preview'))
-
 
         except ValidationError as e:
             messages.error(request, e.message)
