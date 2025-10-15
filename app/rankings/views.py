@@ -11,14 +11,13 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import TemplateView
-from sentence_transformers import SentenceTransformer
+from django.db import transaction
 from tqdm import tqdm
 
 from .forms import InsertRankingForm
 from .models import PilarValor, Ranking, TipoApelido, Pais, ApelidoDeUniversidade, IES
 from .models import Universidade, ApelidoDePais
-from .scripts import get_canonical_name, get_all_db_universities, get_closest_match, get_all_ies, get_document_pillars, \
-    update_ultima_carga
+from .scripts import get_canonical_name, get_all_db_universities, get_document_pillars, update_ultima_carga
 
 
 class IndexView(TemplateView):
@@ -122,6 +121,8 @@ class SuccessInsertRankingView(TemplateView):
         for i, row in tqdm(df.iterrows(), total=len(df), desc='Preparando dados para inserção'):
             to_add_pillars.extend(SuccessInsertRankingView.__append_row__(i, row, pillars))
 
+        to_add_pillars = list(set(to_add_pillars))
+
         df_pillar_values = pd.DataFrame(
             [(x.apelido_universidade_id, x.pilar_id, x.ano) for x in to_add_pillars],
             columns=['id_apelido_universidade', 'id_pilar', 'ano']
@@ -144,18 +145,17 @@ class SuccessInsertRankingView(TemplateView):
 
         if len(filtered_pillars) > 0:
             print('Inserindo valores de pilares no banco de dados (isto pode demorar!)', file=sys.stderr)
-            inserted_pillars = PilarValor.objects.bulk_create(
-                filtered_pillars,
-                batch_size=batch_size,
-                ignore_conflicts=True
-            )
-            inserted_pillars = len(inserted_pillars)
+            with transaction.atomic():
+                inserted_pillars = PilarValor.objects.bulk_create(
+                    filtered_pillars,
+                    batch_size=batch_size
+                )
+                inserted_pillars = len(inserted_pillars)
 
             # inserted_pillars = 0
             # for pillar in tqdm(filtered_pillars, total=len(filtered_pillars), desc='Inserindo valores de pilares'):
             #     pillar.save()
             #     inserted_pillars += 1
-
         else:
             inserted_pillars = 0
 

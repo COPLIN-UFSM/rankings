@@ -1,7 +1,9 @@
 import os
 
 import pandas as pd
+from django.db.models import Min, Subquery
 from tqdm import tqdm
+from django.db.models.functions import Lower
 
 try:
     from ..rankings.models import Universidade, ApelidoDeUniversidade, ApelidoDePais, IES, UltimaCarga
@@ -41,24 +43,33 @@ def populate_brazilian_universities() -> dict:
     ):
         rows = gb.get_group((cod_ies, ))
 
-        universidade = Universidade(
-            nome_portugues=rows.iloc[0]['Universidade'],
-            nome_ingles=rows.iloc[0]['Universidade'],
-            cod_ies=cod_ies,
-            pais_apelido_id=id_apelido_pais
-        )
-        universidade.save()
-
-        count_unis += 1
+        try:
+            universidade = Universidade.objects.get(cod_ies=cod_ies)
+        except Universidade.DoesNotExist:
+            universidade = Universidade(
+                nome_portugues=rows.iloc[0]['Universidade'],
+                nome_ingles=rows.iloc[0]['Universidade'],
+                cod_ies=cod_ies,
+                pais_apelido_id=id_apelido_pais
+            )
+            universidade.save()
+            count_unis += 1
 
         apelidos = []
         for i, row in rows.iterrows():
-            apelidos += [
-                ApelidoDeUniversidade(
-                    universidade=universidade,
-                    apelido=row['Universidade']
+            try:
+                # tenta achar no banco; se achar, não insere!
+                ApelidoDeUniversidade.objects.get(
+                    apelido__iexact=row['Universidade'].lower(),
+                    universidade__pais_apelido__pais__nome_portugues__iexact='Brasil'
                 )
-            ]
+            except ApelidoDeUniversidade.DoesNotExist:
+                apelidos += [
+                    ApelidoDeUniversidade(
+                        universidade=universidade,
+                        apelido=row['Universidade']
+                    )
+                ]
 
         ApelidoDeUniversidade.objects.bulk_create(apelidos)
         count_apelidos += len(apelidos)
@@ -132,3 +143,4 @@ def soft_populate(connection) -> None:
 
     update_ultima_carga('R_UNIVERSIDADES', None)
     update_ultima_carga('R_UNIVERSIDADES_APELIDOS', None)
+

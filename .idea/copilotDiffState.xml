@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/app/app/database_scripts/insert/r_pilares.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/app/database_scripts/insert/r_pilares.sql" />
+              <option name="updatedContent" value="-- Todos os inserts de pilares, agrupados por ranking, conforme no insert.sql&#10;-- ...&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/app/database_scripts/insert/r_pilares_grupos.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/app/database_scripts/insert/r_pilares_grupos.sql" />
+              <option name="updatedContent" value="INSERT INTO R_PILARES_GRUPOS(NOME_GRUPO_PORTUGUES, NOME_GRUPO_INGLES)&#10;VALUES ('Pilares ranqueáveis', 'Rankable Pillars');&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/app/database_scripts/insert/r_rankings.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/app/database_scripts/insert/r_rankings.sql" />
+              <option name="updatedContent" value="INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Shanghai');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - World Ranking');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - Latin Ranking');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - Impact Ranking');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS World Ranking');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS Latin America Ranking');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS World University Rankings by Subject - Arts &amp; Humanities');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS World University Rankings by Subject - Engineering and Technology');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS World University Rankings by Subject - Life Sciences &amp; Medicine');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS World University Rankings by Subject - Natural Sciences');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Green Metric');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Ranking Universitário Folha de São Paulo');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Times Higher Education - Interdisciplinary Sciences Ranking');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('QS Sustainability Ranking');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Unirank Latin America');&#10;INSERT INTO R_RANKINGS(NOME_RANKING) VALUES ('Webometrics World Ranking');&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/rankings/database/sql/drop/05_paises.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/rankings/database/sql/drop/05_paises.sql" />
+              <option name="originalContent" value="DROP TABLE IF EXISTS R_PAISES;" />
+              <option name="updatedContent" value="DROP TABLE IF EXISTS R_PAISES;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/rankings/database/sql/drop/06_continentes.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/rankings/database/sql/drop/06_continentes.sql" />
+              <option name="originalContent" value="DROP TABLE IF EXISTS R_CONTINENTES;" />
+              <option name="updatedContent" value="DROP TABLE IF EXISTS R_CONTINENTES;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/rankings/database/sql/drop/07_pilares_valores.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/rankings/database/sql/drop/07_pilares_valores.sql" />
+              <option name="originalContent" value="DROP TABLE IF EXISTS R_PILARES_VALORES;" />
+              <option name="updatedContent" value="DROP TABLE IF EXISTS R_PILARES_VALORES;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/rankings/database/sql/drop/08_pilares.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/rankings/database/sql/drop/08_pilares.sql" />
+              <option name="originalContent" value="DROP TABLE IF EXISTS R_PILARES;" />
+              <option name="updatedContent" value="DROP TABLE IF EXISTS R_PILARES;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/rankings/database/sql/drop/09_pilares_detalhes.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/rankings/database/sql/drop/09_pilares_detalhes.sql" />
+              <option name="originalContent" value="DROP TABLE IF EXISTS R_PILARES_DETALHES;" />
+              <option name="updatedContent" value="DROP TABLE IF EXISTS R_PILARES_DETALHES;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/rankings/database/sql/drop/10_pilares_para_grupos.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/rankings/database/sql/drop/10_pilares_para_grupos.sql" />
+              <option name="originalContent" value="DROP TABLE IF EXISTS R_PILARES_PARA_GRUPOS;" />
+              <option name="updatedContent" value="DROP TABLE IF EXISTS R_PILARES_PARA_GRUPOS;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/rankings/database/sql/drop/11_pilares_grupos.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/rankings/database/sql/drop/11_pilares_grupos.sql" />
+              <option name="originalContent" value="DROP TABLE IF EXISTS R_PILARES_GRUPOS;" />
+              <option name="updatedContent" value="DROP TABLE IF EXISTS R_PILARES_GRUPOS;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/rankings/database/sql/drop/12_rankings.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/rankings/database/sql/drop/12_rankings.sql" />
+              <option name="originalContent" value="DROP TABLE IF EXISTS R_RANKINGS;" />
+              <option name="updatedContent" value="DROP TABLE IF EXISTS R_RANKINGS;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/rankings/database/sql/drop/13_universidades_para_grupos.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/rankings/database/sql/drop/13_universidades_para_grupos.sql" />
+              <option name="originalContent" value="DROP TABLE IF EXISTS R_UNIVERSIDADES_PARA_GRUPOS;" />
+              <option name="updatedContent" value="DROP TABLE IF EXISTS R_UNIVERSIDADES_PARA_GRUPOS;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/rankings/database/sql/drop/14_universidades_grupos.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/rankings/database/sql/drop/14_universidades_grupos.sql" />
+              <option name="originalContent" value="DROP TABLE IF EXISTS R_UNIVERSIDADES_GRUPOS;" />
+              <option name="updatedContent" value="DROP TABLE IF EXISTS R_UNIVERSIDADES_GRUPOS;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/rankings/database/sql/drop/15_universidades_apelidos.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/rankings/database/sql/drop/15_universidades_apelidos.sql" />
+              <option name="originalContent" value="DROP TABLE IF EXISTS R_UNIVERSIDADES_APELIDOS;" />
+              <option name="updatedContent" value="DROP TABLE IF EXISTS R_UNIVERSIDADES_APELIDOS;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
