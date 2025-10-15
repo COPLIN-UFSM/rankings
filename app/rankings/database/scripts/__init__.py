@@ -7,8 +7,10 @@ from django.db.models.functions import Lower
 
 try:
     from ..rankings.models import Universidade, ApelidoDeUniversidade, ApelidoDePais, IES, UltimaCarga
+    from ..rankings.scripts import update_ultima_carga
 except ImportError:
     from rankings.models import Universidade, ApelidoDeUniversidade, ApelidoDePais, IES, UltimaCarga
+    from rankings.scripts import update_ultima_carga
 
 def populate_brazilian_universities() -> dict:
     """
@@ -57,7 +59,10 @@ def populate_brazilian_universities() -> dict:
         for i, row in rows.iterrows():
             try:
                 # tenta achar no banco; se achar, não insere!
-                apelido = ApelidoDeUniversidade.objects.get(apelido__iexact=row['Universidade'].lower())
+                ApelidoDeUniversidade.objects.get(
+                    apelido__iexact=row['Universidade'].lower(),
+                    universidade__pais_apelido__pais__nome_portugues__iexact='Brasil'
+                )
             except ApelidoDeUniversidade.DoesNotExist:
                 apelidos += [
                     ApelidoDeUniversidade(
@@ -89,6 +94,8 @@ def read_contents_and_run(connection, path: str):
                 )
                 if 'COMMENT ON' not in command:
                     cursor.execute(command + ';')
+            else:
+                cursor.execute(command + ';')
 
 def populate_all_tables(connection) -> None:
     print('Repopulando todas as tabelas')
@@ -134,5 +141,6 @@ def soft_populate(connection) -> None:
     run_several(connection, sql_scripts)
     populate_brazilian_universities()
 
-    UltimaCarga(nome_tabela='R_UNIVERSIDADES').save()
-    UltimaCarga(nome_tabela='R_UNIVERSIDADES_APELIDOS').save()
+    update_ultima_carga('R_UNIVERSIDADES', None)
+    update_ultima_carga('R_UNIVERSIDADES_APELIDOS', None)
+

@@ -5,6 +5,25 @@ import pandas as pd
 from db2 import DB2Connection
 
 
+def title_except(s):
+    exceptions = [
+        'a', 'à', 'ao', 'aos', 'as', 'às', 'com', 'da', 'das', 'de', 'do',
+        'dos', 'e', 'em', 'na', 'nas', 'no', 'o', 'os', 'para', 'por', 'di', 'del', 'della', 'le', 'la', 'las', 'los',
+        'y', 'u', 'o'
+    ]
+
+    words = s.lower().split()
+    titled = [words[0].capitalize()]
+
+    for word in words[1:]:
+        if word in exceptions:
+            titled.append(word)
+        else:
+            titled.append(word.capitalize())
+
+    return " ".join(titled)
+
+
 def main(path):
     with DB2Connection(path) as conn:
         df = conn.query_to_dataframe('''
@@ -21,15 +40,15 @@ def main(path):
             from IES;
         ''')
 
+        df['Universidade'] = df['Universidade'].apply(title_except)
+
         variations = {
-            "title_acronym": lambda d: d["Universidade"].str.title() + " " + d["SIGLA_IES"],
-            "title_parenthesis": lambda d: d["Universidade"].str.title() + " (" + d["SIGLA_IES"] + ")",
-            "title_hyphen": lambda d: d["Universidade"].str.title() + " - " + d["SIGLA_IES"],
+            "title_acronym": lambda d: d["Universidade"] + " " + d["SIGLA_IES"],
+            "title_parenthesis": lambda d: d["Universidade"] + " (" + d["SIGLA_IES"] + ")",
+            "title_hyphen": lambda d: d["Universidade"] + " - " + d["SIGLA_IES"],
         }
 
-        initial = df.copy(deep=True)
-        initial['Universidade'] = initial['Universidade'].str.title()
-        dfs = [initial]
+        dfs = [df]
 
         for name, func in variations.items():
             temp = df.copy(deep=True)
