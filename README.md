@@ -24,109 +24,43 @@ As configurações da máquina que o repositório foi desenvolvido encontram-se 
 conda env create -f environment.yml
 ```
 
-## Desenvolvimento
+### Desenvolvimento
+
+#### Configuração
+
+1. Delete os arquivos de migração em [migrations](app/rankings/migrations)
+2. Execute os seguintes comandos (a partir da pasta [app](app)):
+   ```bash
+   python manage.py makemigrations --settings=app.dev_settings
+   python manage.py migrate --settings=app.dev_settings
+   python manage.py hard_reset --settings=app.dev_settings
+   ```
+
+#### Subsequentes
+
+Para executar a aplicação:
 
 ```bash
-cd app
-python manage.py makemigrations --settings=app.dev_settings
-python manage.py migrate --settings=app.dev_settings
-python manage.py hard_reset --settings=app.dev_settings
 python manage.py runserver --settings=app.dev_settings
 ```
 
-## Primeira execução
+### Produção
 
-Siga uma das duas opções abaixo, dependendo do seu caso de uso.
+#### Configuração
 
-### ❌ Não tenho acesso ao banco bee da UFSM
+```bash
+python manage.py makemigrations rankings 
+python manage.py migrate --database=local_sqlite
+python manage.py soft_reset
+```
 
-1. Será necessário trocar as configurações no [settings.py](app/app/settings.py) para usar um banco de dados local:
+#### Subsequentes
 
-   ```python
-   DATABASES = {
-       # para usar o banco de dados local, use esta opção
-       'default': {
-           'ENGINE': 'django.db.backends.sqlite3',
-           'NAME': BASE_DIR / 'database_sqlite.db',
-       },
-       # para usar o banco de dados remoto, use esta opção
-       # 'default': {
-       #     "NAME": 'BEE',
-       #     "ENGINE": 'ibm_db_django',
-       #     "DATABASE": get_secret('database'),
-       #     "HOST": get_secret('host'),
-       #     "PORT": get_secret('port'),
-       #     "USER": get_secret('user'),
-       #     "PASSWORD": get_secret('password'),
-       #     "OPTIONS": {
-       #         'dsn': f"DATABASE={get_secret('database')};HOSTNAME={get_secret('host')};"
-       #                f"PORT={get_secret('port')};PROTOCOL=TCPIP;"
-       #     },
-       #     'PCONNECT': True,  
-       # },
-   }
+Para executar a aplicação:
+
+```bash
+   python manage.py runserver
    ```
-
-2. Rode o script [default_create.sql](app/rankings/database_scripts/default_create.sql) para criar as tabelas no banco de dados;
-3. Execute os seguintes comandos:
-
-   ```bash
-   conda activate rankings
-   python manage.py makemigrations
-   python manage.py migrate
-   ```
-
-### ✅ Tenho acesso ao banco bee
-
-#### Opção 1: Quero recriar o banco de dados
-
-> [!CAUTION]
-> Esta ação irá deletar **todas** as tabelas do banco de dados, referentes aos rankings. Pense bem se é exatamente isso
-> que você quer fazer!
-
-1. Rode o script [default_drop.sql](app/rankings/database_scripts/default_drop.sql) para deletar **todas** as tabelas do banco de dados de rankings;
-2. Rode o script [default_create.sql](app/rankings/database_scripts/default_create.sql) para recriar as tabelas do zero;
-3. Execute os seguintes comandos:
-
-   ```bash
-   conda activate rankings
-   python manage.py makemigrations 
-   python manage.py migrate --database=local_sqlite
-   python manage.py migrate --database=default
-   ```
-
-> [!NOTE]
-> Pode ser que ao executar o comando `python manage.py migrate` com o banco de dados IBM DB2, um erro ocorra 
-> na migração. Simplesmente ignore este erro.
-
-#### Opção 2: Quero refletir alterações feitas na estrutura das tabelas do banco de dados
-
-1. Execute os seguintes comandos:
-
-   ```bash
-   conda activate rankings
-   python manage.py makemigrations 
-   python manage.py migrate --database=local_sqlite
-   python manage.py migrate --database=default
-   ```
-
-## Execuções subsequentes
-
-> [!NOTE]
-> Caso esteja rodando a aplicação com conexão ao banco da UFSM, é necessário estar na mesma rede do banco de dados 
-> (rede interna), ou usar a VPN da universidade.
-
-Independente do nível de acesso ao banco de dados da UFSM:
-
-1. Entre na pasta `app`
-2. Execute os seguintes comandos:
-
-   ```bash
-   conda activate rankings
-   python manage.py runserver --no-reload
-   ```
-
-3. Acesse o site pelo link disponibilizado pelo console: http://localhost:8000/ranking/insert
 
 ## Executando testes
 
@@ -137,10 +71,8 @@ Os testes automatizados usando um banco de dados SQLite (ao invés do IBM DB2) p
 desse banco de dados estão no arquivo [test_settings.py](app/app/test_settings.py) (enquanto o arquivo usado para
 produção é o [settings.py](app/app/settings.py)).
 
-Adicione uma variável de ambiente ao executar os testes na linha de comando:
-
 ```bash
-DJANGO_SETTINGS_MODULE=app.test_setings python manage.py test 
+python manage.py test --settings=app.test_setings 
 ```
 
 Ou, se estiver executando pelo PyCharm, crie uma configuração como na tela abaixo:
@@ -149,9 +81,8 @@ Ou, se estiver executando pelo PyCharm, crie uma configuração como na tela aba
 
 ## Contato
 
-Repositório originalmente desenvolvido por Henry Cagnini: [henry.cagnini@ufsm.br]()
-
-Contribuições de Douglas Pasqualin: [douglas@ufsm.br]()
+* Repositório originalmente desenvolvido por Henry Cagnini: [henry.cagnini@ufsm.br]()
+* Contribuições de Douglas Pasqualin: [douglas@ufsm.br]()
 
 ## Bibliografia
 

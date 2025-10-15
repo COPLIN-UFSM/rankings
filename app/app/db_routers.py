@@ -1,5 +1,3 @@
-# app/app/db_routers.py
-
 class LocalAppsRouter:
     """
     Routes specific apps to the local SQLite database.

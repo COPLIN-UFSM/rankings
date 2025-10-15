@@ -1,4 +1,5 @@
 import os
+from sqlite3 import ProgrammingError
 
 import pandas as pd
 from django.db.models import Min, Subquery
