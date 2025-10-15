@@ -405,3 +405,28 @@ class UltimaCarga(models.Model):
 
     def __str__(self):
         return f'{self.nome_tabela} - ({self.dh_ultima_carga})'
+
+
+class PilaresDetalhes(models.Model):
+    id_pilar_detalhe = models.AutoField(db_column='ID_PILAR_DETALHE', primary_key=True)
+    id_pilar = models.ForeignKey(Pilar, db_column='ID_PILAR', on_delete=models.DO_NOTHING)
+
+    ano_referencia = models.SmallIntegerField(db_column='ANO_REFERENCIA', null=True, blank=True)
+    identificador = models.CharField(db_column='IDENTIFICADOR', max_length=64)
+
+    descricao_criterio_ingles = models.CharField(db_column='DESCRICAO_CRITERIO_INGLES', max_length=255)
+    descricao_criterio_portugues = models.CharField(
+        db_column='DESCRICAO_CRITERIO_PORTUGUES', max_length=255, null=True, blank=True
+    )
+
+    pontuacao = models.SmallIntegerField(db_column='PONTUACAO')
+    pontuacao_maxima = models.SmallIntegerField(db_column='PONTUACAO_MAXIMA', null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'R_PILARES_DETALHES'
+        verbose_name = 'Detalhes de um Pilar'
+        verbose_name_plural = 'Detalhes de Pilares'
+
+    def __str__(self):
+        return f"{self.identificador} ({self.ano_referencia})"
