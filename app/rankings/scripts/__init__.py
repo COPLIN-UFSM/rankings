@@ -1,5 +1,8 @@
+import re
 import string
 
+import numpy
+import numpy as np
 import unicodedata
 import pandas as pd
 
@@ -155,3 +158,46 @@ def get_all_db_universities() -> pd.DataFrame:
     df['País'] = df['País'].str.strip()
 
     return df
+
+
+def normalize_university_string(dfa, clear=False):
+    """
+    Normaliza a string de universidade um pandas.DataFrame inserido por formulário.
+    """
+
+    if clear:
+        dfa['id_universidade'] = np.nan
+        dfa['id_apelido_universidade'] = np.nan
+
+    dfa.loc[:, 'id_universidade'] = dfa['id_universidade'].astype(float)
+    dfa.loc[:, 'id_pais'] = dfa['id_pais'].astype(float)
+    dfa.loc[:, 'id_apelido_universidade'] = dfa['id_apelido_universidade'].astype(float)
+
+    dfa['Universidade'] = dfa['Universidade'].str.strip()
+    dfa['Universidade_ls'] = dfa['Universidade'].str.lower()
+    dfa['Universidade_count_accents'] = dfa['Universidade'].apply(accent_count)
+
+    dfa['Universidade_ls'] = dfa['Universidade_ls'].apply(
+        lambda x: re.sub(
+            r"[\u0300-\u036f]",
+            "",
+            unicodedata.normalize('NFD', x)
+        )
+    )
+    return dfa
+
+def accent_count(s: str) -> int:
+    """
+    Conta quantos acentos uma string tem.
+
+    :param s: A string.
+    :return: O número de acentos.
+    """
+    decomposed = unicodedata.normalize("NFD", s)
+    return sum(1 for c in decomposed if unicodedata.combining(c))
+
+# def prefer_accented(a: str, b: str) -> str:
+#     """Return the string with more accentuation; fallback to first if equal."""
+#     count_a = accent_count(a)
+#     count_b = accent_count(b)
+#     return a if count_a >= count_b else b

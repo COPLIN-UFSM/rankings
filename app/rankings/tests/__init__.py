@@ -198,17 +198,57 @@ class MissingCountriesPreviewTestCase(RankingsTransactionTestCase):
 
 
 class RankingsInsertViewTestCase(RankingsTransactionTestCase):
-    def check_inserted_pillar_values(self, df):
-        # verifica se os dados foram inseridos no banco
-        self.assertEqual(PilarValor.objects.all().count(), len(set(df.columns) - {'Universidade', 'País', 'Ano'}) *len(df))
+    def __check_inserted_pillar_values__(self, df):
+        """
+        Verifica se os dados foram inseridos no banco
+        """
+
+        self.assertEqual(
+            PilarValor.objects.all().count(),
+            len(set(df.columns) - {'Universidade', 'País', 'Ano'}) * len(df)
+        )
 
         pillars = get_document_pillars(df=df, ranking=Ranking.objects.get(nome='Test Ranking'))
 
         for i, row in df.iterrows():
             for p in pillars:
-                pv = PilarValor.objects.get(pilar_id=p['id_pilar'], ano=row['Ano'], apelido_universidade__universidade__nome_ingles=row['Universidade'])
+                print(row['Universidade'], row['Ano'], p['id_pilar'])
+
+                pv = PilarValor.objects.get(
+                    pilar_id=p['id_pilar'],
+                    ano=row['Ano'],
+                    apelido_universidade__universidade__nome_ingles__iexact=row['Universidade']
+                )
                 self.assertAlmostEqual(row[p['Pilar']], pv.valor_inicial)
 
+    def __check_duplicated_entries__(self):
+        """
+        Testa se existem duplicatas na tabela R_PILARES_VALORES.
+
+        É executado dentro de test_similar_universities.
+        """
+
+        # teste soft
+        duplicados = (
+            PilarValor.objects
+            .values('apelido_universidade_id', 'pilar_id', 'ano')
+            .annotate(quantidade=Count('*'))
+            .filter(quantidade__gt=1)
+        )
+        self.assertEqual(len(duplicados), 0)
+
+        # teste hard
+        duplicados = (
+            PilarValor.objects
+            .values(
+                'apelido_universidade__universidade_id',  # acessa via relação
+                'id_pilar',
+                'ano'
+            )
+            .annotate(quantidade=Count('*'))
+            .filter(quantidade__gt=1)
+        )
+        self.assertEqual(len(duplicados), 0)
 
     def test_present_country_and_university(self):
         """
@@ -241,7 +281,7 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
         # verifica se a mensagem de sucesso está na resposta
         self.assertContains(response, "Sucesso")
 
-        self.check_inserted_pillar_values(df)
+        self.__check_inserted_pillar_values__(df)
 
         self.assertEqual(UltimaCarga.objects.all().count(), 1)
 
@@ -262,7 +302,7 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
         self.assertContains(response, "Sucesso")
 
         # verifica se os dados foram inseridos no banco
-        self.check_inserted_pillar_values(df)
+        self.__check_inserted_pillar_values__(df)
 
         # verifica se universidade foi inserida
         Universidade.objects.get(nome_ingles='Test University')  # lança uma exceção se não existir
@@ -287,7 +327,7 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
         # verifica se a mensagem de sucesso está na resposta
         self.assertContains(response, "Sucesso")
 
-        self.check_inserted_pillar_values(df)
+        self.__check_inserted_pillar_values__(df)
 
         # verifica se universidade foi inserida
         Universidade.objects.get(nome_ingles='Test University')  # lança uma exceção se não existir
@@ -315,7 +355,7 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
         # verifica se a mensagem de sucesso está na resposta
         self.assertContains(response, "Sucesso")
 
-        self.check_inserted_pillar_values(df)
+        self.__check_inserted_pillar_values__(df)
 
         # verifica se universidade foi inserida
         for i, row in df.iterrows():
@@ -339,34 +379,6 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
 
         # verifica se o texto está contido no HTML da página HTML carregada
         self.assertContains(response, 'Verificar países faltantes')
-
-    def _check_duplicated_entries(self):
-        """
-        Testa se existem duplicatas na tabela R_PILARES_VALORES.
-
-        É executado dentro de test_similar_universities.
-        """
-        # teste soft
-        duplicados = (
-            PilarValor.objects
-            .values('apelido_universidade_id', 'pilar_id', 'ano')
-            .annotate(quantidade=Count('*'))
-            .filter(quantidade__gt=1)
-        )
-        self.assertEqual(len(duplicados), 0)
-
-        # teste hard
-        duplicados = (
-            PilarValor.objects
-            .values(
-                'apelido_universidade__universidade_id',  # acessa via relação
-                'id_pilar',
-                'ano'
-            )
-            .annotate(quantidade=Count('*'))
-            .filter(quantidade__gt=1)
-        )
-        self.assertEqual(len(duplicados), 0)
 
     def test_similar_universities(self):
         """
@@ -412,3 +424,26 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
             self.assertContains(response, "Sucesso")
 
             self.assertEqual(Universidade.objects.all().count(), n_unique)
+
+    def test_unicode_conversion(self):
+        """
+        Testa o envio de universidades com caracteres unicode que devem ser tratados como iguais
+        (e.g. São José -> Sao Jose).
+        """
+        data, df = RankingsInsertViewTestCase.get_form_data('test_ranking_06.csv')
+
+        # faz uma requisição POST
+        response = self.client.post(reverse('ranking-insert'), data, format='multipart', follow=True)
+
+        # verifica resposta
+        self.assertEqual(response.status_code, 200)  # 302 para redirecionamento
+
+        # verifica se a mensagem de sucesso está na resposta
+        self.assertContains(response, "Sucesso")
+
+
+        # só deve retornar um registro para estas duas universidades
+        Universidade.objects.get(nome_ingles__iexact='Universidade Federal de São José')
+        ApelidoDeUniversidade.objects.get(apelido__iexact='Universidade Federal de Arragañuz')
+
+        self.assertEqual(Universidade.objects.count(), 2)
