@@ -7,23 +7,22 @@ import numpy as np
 import pandas as pd
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
-from django.db import transaction
 from tqdm import tqdm
 
 from .forms import InsertRankingForm
 from .models import PilarValor, Ranking, TipoApelido, Pais, ApelidoDeUniversidade, IES
 from .models import Universidade, ApelidoDePais
-from .scripts import get_canonical_name, get_all_db_universities, get_document_pillars, update_ultima_carga, \
-    get_similarities
 
 from django.shortcuts import get_object_or_404
 
+from .scripts import get_similarities, get_canonical_name, get_all_db_universities, get_document_pillars, update_ultima_carga, normalize_university_string
 
 class IndexView(TemplateView):
     template_name = 'rankings/index.html'
@@ -189,20 +188,6 @@ class ResultInsertRankingView(TemplateView):
 
     @staticmethod
     def insert_id_university(df: pd.DataFrame) -> pd.DataFrame:
-        def __prepare__(dfa, encode, decode, clear=False):
-            if clear:
-                dfa['id_universidade'] = np.nan
-                dfa['id_apelido_universidade'] = np.nan
-
-            dfa.loc[:, 'id_universidade'] = dfa['id_universidade'].astype(float)
-            dfa.loc[:, 'id_pais'] = dfa['id_pais'].astype(float)
-            dfa.loc[:, 'id_apelido_universidade'] = dfa['id_apelido_universidade'].astype(float)
-
-            dfa['Universidade'] = dfa['Universidade'].str.strip()
-            dfa['Universidade_ls'] = dfa['Universidade'].str.lower()
-
-            return dfa
-
         if 'Universidade' not in df.columns:
             raise ValidationError('A coluna \'Universidade\' precisa estar no DataFrame!')
         if 'id_pais' not in df.columns:
@@ -213,8 +198,8 @@ class ResultInsertRankingView(TemplateView):
         # bd_unis possui as universidades do banco de dados
         db = get_all_db_universities()
 
-        df = __prepare__(df, 'unicode_escape', 'latin-1', clear=True)
-        db = __prepare__(db, 'latin-1', 'latin-1', clear=False)
+        df = normalize_university_string(df, clear=True)
+        db = normalize_university_string(db, clear=False)
 
         # joined = pd.merge(df, db, on=['Universidade_encoded', 'id_pais'], how='left', suffixes=('', '_db'))
         joined = pd.merge(df, db, on=['Universidade', 'id_pais'], how='left', suffixes=('', '_db'))
@@ -261,9 +246,11 @@ class ResultInsertRankingView(TemplateView):
                 else:
                     cod_ies = None
 
+                uni_name = rows.iloc[rows['Universidade_count_accents'].argmax()]['Universidade']
+
                 universidade = Universidade(
-                    nome_portugues=rows.iloc[0]['Universidade'],
-                    nome_ingles=rows.iloc[0]['Universidade'],
+                    nome_portugues=uni_name,
+                    nome_ingles=uni_name,
                     cod_ies=cod_ies,
                     pais_apelido_id=id_apelido_pais
                 )
