@@ -7,9 +7,11 @@ import numpy as np
 import pandas as pd
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.views import View
 from django.views.generic import TemplateView
 from django.db import transaction
 from tqdm import tqdm
@@ -17,7 +19,10 @@ from tqdm import tqdm
 from .forms import InsertRankingForm
 from .models import PilarValor, Ranking, TipoApelido, Pais, ApelidoDeUniversidade, IES
 from .models import Universidade, ApelidoDePais
-from .scripts import get_canonical_name, get_all_db_universities, get_document_pillars, update_ultima_carga
+from .scripts import get_canonical_name, get_all_db_universities, get_document_pillars, update_ultima_carga, \
+    get_similarities
+
+from django.shortcuts import get_object_or_404
 
 
 class IndexView(TemplateView):
@@ -62,8 +67,8 @@ class IndexView(TemplateView):
         return render(request, 'rankings/index.html', context)
 
 
-class SuccessInsertRankingView(TemplateView):
-    template_name = 'rankings/ranking/insert/success.html'
+class ResultInsertRankingView(TemplateView):
+    template_name = 'rankings/ranking/insert/index.html'
 
     @staticmethod
     def __append_row__(i, row, pillars):
@@ -119,7 +124,7 @@ class SuccessInsertRankingView(TemplateView):
 
         to_add_pillars = []
         for i, row in tqdm(df.iterrows(), total=len(df), desc='Preparando dados para inserção'):
-            to_add_pillars.extend(SuccessInsertRankingView.__append_row__(i, row, pillars))
+            to_add_pillars.extend(ResultInsertRankingView.__append_row__(i, row, pillars))
 
         to_add_pillars = list(set(to_add_pillars))
 
@@ -248,7 +253,7 @@ class SuccessInsertRankingView(TemplateView):
 
                 # se for uma universidade brasileira, tenta achar uma correspondência na tabela IES
                 if id_pais == id_pais_brasil:
-                    cod_ies = rows['Universidade_ls'].apply(SuccessInsertRankingView.fetch_cod_ies)
+                    cod_ies = rows['Universidade_ls'].apply(ResultInsertRankingView.fetch_cod_ies)
                     if (~pd.isna(cod_ies)).any():
                         cod_ies = cod_ies.loc[~pd.isna(cod_ies)].iloc[0]
                     else:
@@ -301,8 +306,8 @@ class SuccessInsertRankingView(TemplateView):
     def get(self, request, *args, **kwargs):
         ranking, df = get_dataframe_from_session(request)
 
-        df = SuccessInsertRankingView.insert_id_university(df)
-        n_inserted_rows = SuccessInsertRankingView.insert_ranking_data(df, ranking=ranking)
+        df = ResultInsertRankingView.insert_id_university(df)
+        n_inserted_rows = ResultInsertRankingView.insert_ranking_data(df, ranking=ranking)
 
         remove_dataframe_and_ranking_from_session(request)
 
@@ -316,12 +321,7 @@ class SuccessInsertRankingView(TemplateView):
         )
 
     def post(self, request, *args, **kwargs):
-        raise PermissionDenied()  # TODO debugging purposes
-        # ranking, df = get_dataframe_from_session(request)
-        #
-        # SuccessInsertRankingView.insert_ranking_data(df, ranking=ranking)
-        #
-        # return render(request, 'rankings/ranking/insert/success.html')
+        raise PermissionDenied()
 
 
 def get_dataframe_from_session(request):
@@ -339,7 +339,7 @@ def remove_dataframe_and_ranking_from_session(request):
     request.session.pop('id_ranking', None)
 
 class MissingCountriesPreview(TemplateView):
-    template_name = "rankings/countries/missing/preview.html"
+    template_name = "rankings/countries/missing/index.html"
 
     @staticmethod
     def insert_id_pais(df: pd.DataFrame) -> pd.DataFrame:
@@ -462,14 +462,14 @@ class MissingCountriesPreview(TemplateView):
         if df['id_pais'].isna().sum() > 0:
             return render(
                 request,
-                'rankings/countries/missing/preview.html',
+                'rankings/countries/missing/index.html',
                 context=self.get_context_data(df=df, request=request, id_ranking=ranking.id_ranking)
             )
 
         request.session['df'] = df.to_json()
         request.session['id_ranking'] = ranking.id_ranking
 
-        return redirect(reverse('ranking-insert-success'))
+        return redirect(reverse('ranking-insert-result'))
 
     def post(self, request, *args, **kwargs):
         ranking, df = get_dataframe_from_session(request)
@@ -480,7 +480,7 @@ class MissingCountriesPreview(TemplateView):
         request.session['df'] = df.to_json()
         request.session['id_ranking'] = ranking.id_ranking
 
-        return redirect(reverse("ranking-insert-success"))
+        return redirect(reverse("ranking-insert-result"))
 
 
 class RankingInsertView(TemplateView):
@@ -505,7 +505,7 @@ class RankingInsertView(TemplateView):
             request.session['df'] = df.to_json()
             request.session['id_ranking'] = ranking.id_ranking
 
-            return redirect(reverse('missing-countries-preview'))
+            return redirect(reverse('missing-countries'))
 
         except ValidationError as e:
             messages.error(request, e.message)
@@ -514,3 +514,68 @@ class RankingInsertView(TemplateView):
                 'rankings/ranking/insert/index.html',
                 {'form': form, 'error_message': e.message}
             )
+
+class MergeUniversitiesView(TemplateView):
+    template_name = 'rankings/universities/merge/index.html'
+
+    def get(self, request, *args, **kwargs):
+        countries_list = [
+            {'id_pais': x[0], 'nome_portugues': x[1]}
+            for x in Pais.objects.values_list('id_pais', 'nome_portugues').order_by('nome_portugues')
+        ]
+
+        return render(request, self.template_name, context={'countries_list': countries_list})
+
+    def post(self, request, *args, **kwargs):
+        # Implement merging logic here
+        pass
+
+class CountriesListView(View):
+    def get(self, request):
+        countries = [
+            {'id_pais': x[0], 'nome_portugues': x[1]} for x in
+            Pais.objects.values_list('id_pais', 'nome_portugues')
+            .distinct()
+            .order_by('nome_portugues')
+        ]
+        return JsonResponse(countries, safe=False)
+
+class UniversitiesListView(View):
+    def get(self, request, id_pais):
+        pais = get_object_or_404(Pais, id_pais=id_pais)
+
+        universities = [
+            {'id_universidade': x[0], 'nome_portugues': x[1], 'nome_ingles': x[2]} for x in
+            Universidade.objects
+            .filter(pais_apelido__pais=pais)
+            .values_list('id_universidade', 'nome_portugues', 'nome_ingles')
+            .order_by('nome_portugues')
+        ]
+
+        return JsonResponse(universities, safe=False)
+
+
+class UniversitiesSimilarView(View):
+    def get(self, request, id_universidade):
+        uni = get_object_or_404(Universidade, id_universidade=id_universidade)
+
+        universities = pd.DataFrame(
+            ApelidoDeUniversidade.objects.filter(
+                universidade__pais_apelido__pais=uni.pais_apelido.pais
+            ).exclude(universidade=uni).values_list(
+            'apelido', 'universidade__id_universidade'
+            ),
+            columns=['apelido', 'id_universidade']
+        )
+
+        # TODO muito lento! vai ter que usar outra estratégia
+        universities['similarities_pt'] = universities['apelido'].apply(lambda x: get_similarities(uni.nome_portugues, universities['apelido']))
+        universities['similarities_en'] = universities['apelido'].apply(lambda x: get_similarities(uni.nome_ingles, universities['apelido']))
+
+        universities['similarity'] = universities[['similarities_pt', 'similarities_en']].max(axis=1)
+        del universities[['similarities_pt', 'similarities_en']]
+        #
+        universities = universities.sort_values(by='similarity', ascending=False)
+        print(universities)
+
+        # TODo calcula similaridade e ordena!

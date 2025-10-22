@@ -6,27 +6,34 @@
 
 {% block additional-stylesheet %}
     {% load static %}
-    <link rel="stylesheet" href="{% static 'rankings/universities/duplicate/style.css' %}">
+{#    <link rel="stylesheet" href="{% static 'rankings/universities/duplicate/style.css' %}">#}
 {% endblock %}
 
 {% block content %}
     <div class="row">
         <div class="col">
-
             <h1>Verificar universidades duplicadas</h1>
 
             <p class="lead">
-                As seguintes universidades podem estar duplicadas no banco de dados. Coloque o mesmo número nas linhas
-                das universidades que são, na verdade, a mesma. Caso uma universidade não esteja duplicada, marque
-                <b>NA</b>.
+                Esse formulário permite unir universidades que estão duplicadas no banco de dados. Primeiro, selecione
+                um país. Depois, digite o nome de uma universidade. As universidades que possuem nomes similares à
+                universidade selecionada serão mostradas. Para uni-las, marque o checkbox do lado de cada nome.
             </p>
             <p class="lead">
-                O número atribuído a cada linha não importa; basta que seja o mesmo número para as linhas potencialmente
-                duplicadas.
+                Também é possível determinar o nome a ser escolhido em Português e Inglês.
             </p>
 
             <form id="form-rows-universities" onsubmit="return validate(event)">
                 {% csrf_token %}
+                <select class="form-select" aria-label="country select" id="select-country" name="select-country">
+                    <option selected>Selecione um país</option>
+                    {% for country in countries_list %}
+                        <option value="{{ country.id_pais }}">
+                            {{ country.nome_portugues }}
+                        </option>
+                    {% endfor %}
+
+                </select>
                 <table id="table-duplicate-universities" class="standard-table">
                     <thead>
                         <tr>
@@ -79,38 +86,6 @@
                 </table>
                 <button id="button-send" type="submit" class="btn btn-dark">Enviar</button>
             </form>
-            <div id="spinner-block" class="spinner-border" role="status" style="margin-top: 8px;">
-                <span class="visually-hidden">Carregando...</span>
-            </div>
         </div>
     </div>
-{% endblock %}
-
-{% block scripts %}
-    <script type="application/javascript">
-        function showSpinner() {
-            document.getElementById('spinner-block').style.display = "block";
-        }
-        function hideSpinner() {
-            document.getElementById('spinner-block').style.display = "none";
-        }
-        function validate(event) {
-            let assigned = null;
-            let table = document.getElementById("table-duplicate-universities");
-            let selects = table.getElementsByTagName("select");
-            for(let i = 0; i < selects.length; i++) {
-                if(selects[i].value.length === 0) {
-                    return false;
-                }
-            }
-            let form = document.getElementById("form-rows-universities");
-            form.enctype = "multipart/form-data";
-            form.action = "/universities/duplicate/insert/";
-            form.method = "POST";
-            showSpinner();
-            form.submit();
-            return true;
-        }
-        hideSpinner();
-    </script>
 {% endblock %}

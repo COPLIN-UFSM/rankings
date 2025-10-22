@@ -1,7 +1,7 @@
 # Rankings
 
-Uma aplicação Web para gerenciamento de Rankings Acadêmicos, criada pela Coordenadoria de Planejamento Informacional 
-da UFSM - COPLIN/PROPLAN.
+Uma aplicação Web escrita em Django (Python) para gerenciamento de Rankings Acadêmicos, criada pela Coordenadoria de 
+Planejamento Informacional da UFSM.
 
 ## Pré-requisitos
 
@@ -20,13 +20,18 @@ As configurações da máquina que o repositório foi desenvolvido encontram-se 
 
 ## Instalação
 
+Será necessário criar um ambiente virtual do Anaconda para executar a aplicação:
+
 ```bash
 conda env create -f environment.yml
 ```
 
+Após isso, existem duas maneiras de utilizar a aplicação: usando um banco de dados de desenvolvimento, e o banco de 
+dados de produção.
+
 ### Desenvolvimento
 
-#### Configuração
+O banco de dados de desenvolvimento é usado para fazer testes locais em um banco de dados SQLite persistente.
 
 1. Delete os arquivos de migração em [migrations](app/rankings/migrations)
 2. Execute os seguintes comandos (a partir da pasta [app](app)):
@@ -35,32 +40,32 @@ conda env create -f environment.yml
    python manage.py migrate --settings=app.dev_settings
    python manage.py hard_reset --settings=app.dev_settings
    ```
-
-#### Subsequentes
-
-Para executar a aplicação:
-
-```bash
-python manage.py runserver --settings=app.dev_settings
-```
+3. Para executar a aplicação:
+  ```bash
+  python manage.py runserver --settings=app.dev_settings
+  ```
 
 ### Produção
 
-#### Configuração
+O banco de dados de produção é o banco bee da UFSM; os dados dele são usados em painéis acadêmicos.
 
-```bash
-python manage.py makemigrations rankings 
-python manage.py migrate --database=local_sqlite
-python manage.py soft_reset
-```
-
-#### Subsequentes
-
-Para executar a aplicação:
-
-```bash
+1. Delete os arquivos de migração em [migrations](app/rankings/migrations)
+2. Execute os seguintes comandos (a partir da pasta [app](app)):
+   ```bash
+   python manage.py makemigrations rankings 
+   python manage.py migrate --database=local_sqlite
+   python manage.py soft_reset
+   ```
+3. Para executar a aplicação:
+   ```bash
    python manage.py runserver
    ```
+
+### Ordem de inserção de rankings
+
+A ordem de inserção de rankings importa! Comece inserindo rankings nos quais o nome das universidades está bem 
+formatado: Times Higher Education e QS. Depois, siga para os rankings onde os nomes das universidades são 
+inconsistentes: Unirank, Webometrics, Green Metric.
 
 ## Executando testes
 

@@ -177,7 +177,7 @@ class MissingCountriesPreviewTestCase(RankingsTransactionTestCase):
         }
 
         # faz uma requisição POST
-        response = self.client.post(reverse('missing-countries-preview'), data, follow=True)
+        response = self.client.post(reverse('missing-countries'), data, follow=True)
 
         # verifica resposta
         self.assertEqual(response.status_code, 200)  # 302 para redirecionamento

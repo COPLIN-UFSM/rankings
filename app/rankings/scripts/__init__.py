@@ -1,5 +1,6 @@
 import string
 
+import numpy as np
 import unicodedata
 import pandas as pd
 
@@ -93,15 +94,14 @@ def get_document_pillars(df: pd.DataFrame, ranking: Ranking) -> list:
     return elected.to_dict(orient='records')
 
 
-def get_closest_match(name: str, candidates: list, threshold: float = 0.92, model: SentenceTransformer = None) -> int:
+def get_similarities(name: str, candidates: list, model: SentenceTransformer = None) -> np.ndarray:
     """
-    Encontra a melhor correspondência para um nome em uma lista de candidatos com base na similaridade de strings.
+    Retorna a similaridade cosseno entre uma frase e uma sequência de frases.
 
     :param name: O nome de referência.
     :param candidates: Lista de nomes candidatos.
-    :param threshold: Limite de similaridade para considerar uma correspondência válida.
     :param model: O modelo a ser usado para gerar embeddings. Se None, o modelo 'all-MiniLM-L6-v2' será usado.
-    :return: O nome mais próximo encontrado na lista de candidatos.
+    :return: Um numpy array de valores float, cada um representando uma similaridade cosseno.
     """
     if model is None:
         model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -115,7 +115,20 @@ def get_closest_match(name: str, candidates: list, threshold: float = 0.92, mode
 
     # Compute cosine similarity
     similarities = util.cos_sim(ref_emb, candidate_embeddings)[0].cpu().numpy()
-    argmax = similarities.argmax()
+    return similarities
+
+def get_closest_match(name: str, candidates: list, threshold: float = 0.92, model: SentenceTransformer = None) -> int:
+    """
+    Encontra a melhor correspondência para um nome em uma lista de candidatos com base na similaridade de strings.
+
+    :param name: O nome de referência.
+    :param candidates: Lista de nomes candidatos.
+    :param threshold: Limite de similaridade para considerar uma correspondência válida.
+    :param model: O modelo a ser usado para gerar embeddings. Se None, o modelo 'all-MiniLM-L6-v2' será usado.
+    :return: O nome mais próximo encontrado na lista de candidatos.
+    """
+    similarities = get_similarities(name, candidates, model)
+    argmax = int(similarities.argmax())
     if similarities[argmax] > threshold:
         return argmax
 
