@@ -23,7 +23,7 @@
                 Também é possível determinar o nome a ser escolhido em Português e Inglês.
             </p>
 
-            <form id="form-rows-universities" onsubmit="return validate(event)">
+            <div class="input-group mb-3">
                 {% csrf_token %}
                 <select class="form-select" aria-label="country select" id="select-country" name="select-country">
                     <option selected>Selecione um país</option>
@@ -32,60 +32,105 @@
                             {{ country.nome_portugues }}
                         </option>
                     {% endfor %}
-
                 </select>
-                <table id="table-duplicate-universities" class="standard-table">
+            </div>
+            <div class="input-group mb-3">
+                <select
+                    class="form-select" aria-label="university select"
+                    id="select-university" name="select-university"
+                    hidden
+                >
+                </select>
+            </div>
+            <div class="input-group mb-3">
+                <table id="table-similar-universities" class="table table-striped" hidden>
                     <thead>
                         <tr>
-                            <th>
-                                <!-- dropdown -->
-                            </th>
-                            <th>
-                                Nome universidade
-                            </th>
-                            <th>
-                                País
-                            </th>
+                            <th>id_universidade</th>
+{#                            <th>Universidade</th>#}
+                            <th>id_apelido</th>
+                            <th>Apelido</th>
+                            <th>Similaridade</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for entry in universities_list %}
-                            <tr class="{% if entry.assigned|divisibleby:2 %}even-color{% else %}odd-color{% endif %}">
-                                <td>
-                                    <input type="hidden"
-                                           name="university-id-{{ entry.index }}"
-                                           value="{{ entry.id_universidade }}"
-                                    >
-                                    <input type="hidden"
-                                           name="university-nickname-id-{{ entry.index }}"
-                                           value="{{ entry.id_apelido_universidade }}"
-                                    >
-                                    <select
-                                            name="select-assigned-{{ entry.index }}"
-                                            id="select-assigned-{{ entry.index }}"
-                                            class="form-select form-select-sm"
-                                    >
-                                        {% for option in options %}
-                                            {% if option.value == entry.assigned %}
-                                                <option value="{{ option.value }}" selected>
-                                                    {{ option.text }}
-                                                </option>
-                                            {% else %}
-                                                <option value="{{ option.value }}">
-                                                    {{ option.text }}
-                                                </option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                                <td>{{ entry.Universidade }}</td>
-                                <td>{{ entry.País }}</td>
-                            </tr>
-                        {% endfor %}
                     </tbody>
                 </table>
+            </div>
+            <div class="input-group mb-3">
                 <button id="button-send" type="submit" class="btn btn-dark">Enviar</button>
-            </form>
+            </div>
         </div>
     </div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.getElementById("select-country").addEventListener("change", async function() {
+        const id_pais = this.value;
+        if (!id_pais) return;
+
+        const response = await fetch(`/universities/list/${id_pais}`);
+        const data = await response.json();
+        
+        let select_university = document.getElementById('select-university');
+        select_university.removeAttribute('hidden');
+        select_university.innerHTML = '';
+        
+        const defaultOption = document.createElement("option");
+        defaultOption.value = '';
+        defaultOption.textContent = 'Selecione uma universidade';
+        select_university.appendChild(defaultOption);
+        
+        data.forEach(uni => {
+            const opt = document.createElement('option');
+            opt.value = uni.id_universidade;
+            opt.textContent = uni.nome_portugues;
+            select_university.appendChild(opt);
+        });
+    });
+
+    document.getElementById("select-university").addEventListener("change", async function() {
+        const id_universidade = this.value;
+        const id_pais = document.getElementById("select-country").value;
+        if (!id_universidade || !id_pais) return;
+    
+        const response = await fetch(`/universities/similar/${id_universidade}`);
+        const data = await response.json();
+    
+        let table_similar = document.getElementById("table-similar-universities");
+        table_similar.removeAttribute('hidden');
+        let tbody = table_similar.querySelector('tbody');
+        tbody.innerHTML = '';
+        data.forEach(uni => {
+            const tr = document.createElement('tr');
+            
+            // id_universidade
+            const tdIdUni = document.createElement('td');
+            tdIdUni.textContent = uni.id_universidade;
+            tr.appendChild(tdIdUni);
+            
+            {#// universidade#}
+            {#const tdNomeUni = document.createElement('td');#}
+            {#tdNomeUni.textContent = uni.nome_portugues;#}
+            {#tr.appendChild(tdNomeUni);#}
+
+            // id_apelido
+            const tdIdApelido = document.createElement("td");
+            tdIdApelido.textContent = uni.id_apelido;
+            tr.appendChild(tdIdApelido);
+
+            // apelido
+            const tdApelido = document.createElement("td");
+            tdApelido.textContent = uni.apelido;
+            tr.appendChild(tdApelido);
+
+            // similaridade
+            const tdSimilaridade = document.createElement("td");
+            tdSimilaridade.textContent = uni.similaridade;
+            tr.appendChild(tdSimilaridade);
+            
+            tbody.appendChild(tr);
+        });
+    });
+</script>
 {% endblock %}

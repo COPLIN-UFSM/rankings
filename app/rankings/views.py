@@ -1,6 +1,7 @@
 import itertools as it
 import re
 import sys
+from difflib import SequenceMatcher
 from io import StringIO
 
 import numpy as np
@@ -550,19 +551,23 @@ class UniversitiesSimilarView(View):
             ApelidoDeUniversidade.objects.filter(
                 universidade__pais_apelido__pais=uni.pais_apelido.pais
             ).exclude(universidade=uni).values_list(
-            'apelido', 'universidade__id_universidade'
+            'apelido', 'id_apelido', 'universidade__id_universidade'
             ),
-            columns=['apelido', 'id_universidade']
+            columns=['apelido', 'id_apelido', 'id_universidade']
         )
 
-        # TODO muito lento! vai ter que usar outra estratégia
-        universities['similarities_pt'] = universities['apelido'].apply(lambda x: get_similarities(uni.nome_portugues, universities['apelido']))
-        universities['similarities_en'] = universities['apelido'].apply(lambda x: get_similarities(uni.nome_ingles, universities['apelido']))
+        universities['similaridade_pt'] = universities['apelido'].apply(
+            lambda x: SequenceMatcher(None, uni.nome_portugues.lower(), x.lower()).ratio()
+        )
+        universities['similaridade_en'] = universities['apelido'].apply(
+            lambda x: SequenceMatcher(None, uni.nome_ingles.lower(), x.lower()).ratio()
+        )
 
-        universities['similarity'] = universities[['similarities_pt', 'similarities_en']].max(axis=1)
-        del universities[['similarities_pt', 'similarities_en']]
-        #
-        universities = universities.sort_values(by='similarity', ascending=False)
-        print(universities)
+        universities['similaridade'] = universities[['similaridade_pt', 'similaridade_en']].max(axis=1).round(2)
 
-        # TODo calcula similaridade e ordena!
+        universities = universities.sort_values(by='similaridade', ascending=False)
+
+        return JsonResponse(
+            universities[['id_universidade', 'id_apelido', 'apelido', 'similaridade']].to_dict(orient='records'),
+            safe=False
+        )
