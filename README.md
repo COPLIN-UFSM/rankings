@@ -26,6 +26,9 @@ conda env create -f environment.yml
 
 ### Desenvolvimento
 
+A aplicação de desenvolvimento usa apenas um banco de dados SQLite, tanto para tabelas do Django quanto para tabelas
+de dados da aplicação. Este banco é totalmente independente do banco de produção (banco bee).
+
 #### Configuração
 
 1. Delete os arquivos de migração em [migrations](app/rankings/migrations)
@@ -44,23 +47,41 @@ Para executar a aplicação:
 python manage.py runserver --settings=app.dev_settings
 ```
 
+Acesse o servidor em `http://localhost:8000/ranking`
+
 ### Produção
+
+A aplicação de produção usa dois bancos de dados, um SQLite para tabelas do Django, e o banco bee (IBM DB2) para as 
+tabelas da aplicação. 
 
 #### Configuração
 
-```bash
-python manage.py makemigrations rankings 
-python manage.py migrate --database=local_sqlite
-python manage.py soft_reset
-```
+A configuração precisa ser feita uma vez **por máquina** que vá acessar a aplicação. Isto acontece pois, como esta 
+aplicação usa um banco de dados SQLite local para armazenar dados do Django, ele precisa ser configurado a cada nova
+máquina que roda a aplicação.
+
+1. Delete os arquivos de migração em [migrations](app/rankings/migrations)
+2. Execute os seguintes comandos (a partir da pasta [app](app)):
+   ```bash
+   python manage.py makemigrations rankings 
+   python manage.py migrate --database=local_sqlite
+   ```
+3. **⚠️ ATENÇÃO: ⚠️** caso você queira remover alguns dados do banco da aplicação (banco bee), execute o comando 
+   abaixo:
+   ```bash
+   python manage.py soft_reset
+   ```
+   Execute `python manage.py soft_reset --help` para listar quais tabelas serão afetadas por esse comando.
 
 #### Subsequentes
 
 Para executar a aplicação:
 
 ```bash
-   python manage.py runserver
-   ```
+python manage.py runserver
+```
+
+Acesse o servidor em `http://localhost:8000/ranking`
 
 ## Executando testes
 
