@@ -1,7 +1,7 @@
 # Rankings
 
-Uma aplicação Web para gerenciamento de Rankings Acadêmicos, criada pela Coordenadoria de Planejamento Informacional 
-da UFSM - COPLIN/PROPLAN.
+Uma aplicação Web escrita em Django (Python) para gerenciamento de Rankings Acadêmicos, criada pela Coordenadoria de 
+Planejamento Informacional da UFSM.
 
 ## Pré-requisitos
 
@@ -20,16 +20,18 @@ As configurações da máquina que o repositório foi desenvolvido encontram-se 
 
 ## Instalação
 
+Será necessário criar um ambiente virtual do Anaconda para executar a aplicação:
+
 ```bash
 conda env create -f environment.yml
 ```
 
+Após isso, existem duas maneiras de utilizar a aplicação: usando um banco de dados de desenvolvimento, e o banco de 
+dados de produção.
+
 ### Desenvolvimento
 
-A aplicação de desenvolvimento usa apenas um banco de dados SQLite, tanto para tabelas do Django quanto para tabelas
-de dados da aplicação. Este banco é totalmente independente do banco de produção (banco bee).
-
-#### Configuração
+O banco de dados de desenvolvimento é usado para fazer testes locais em um banco de dados SQLite persistente.
 
 1. Delete os arquivos de migração em [migrations](app/rankings/migrations)
 2. Execute os seguintes comandos (a partir da pasta [app](app)):
@@ -38,50 +40,32 @@ de dados da aplicação. Este banco é totalmente independente do banco de produ
    python manage.py migrate --settings=app.dev_settings
    python manage.py hard_reset --settings=app.dev_settings
    ```
-
-#### Subsequentes
-
-Para executar a aplicação:
-
-```bash
-python manage.py runserver --settings=app.dev_settings
-```
-
-Acesse o servidor em `http://localhost:8000/ranking`
+3. Para executar a aplicação:
+  ```bash
+  python manage.py runserver --settings=app.dev_settings
+  ```
 
 ### Produção
 
-A aplicação de produção usa dois bancos de dados, um SQLite para tabelas do Django, e o banco bee (IBM DB2) para as 
-tabelas da aplicação. 
-
-#### Configuração
-
-A configuração precisa ser feita uma vez **por máquina** que vá acessar a aplicação. Isto acontece pois, como esta 
-aplicação usa um banco de dados SQLite local para armazenar dados do Django, ele precisa ser configurado a cada nova
-máquina que roda a aplicação.
+O banco de dados de produção é o banco bee da UFSM; os dados dele são usados em painéis acadêmicos.
 
 1. Delete os arquivos de migração em [migrations](app/rankings/migrations)
 2. Execute os seguintes comandos (a partir da pasta [app](app)):
    ```bash
    python manage.py makemigrations rankings 
    python manage.py migrate --database=local_sqlite
-   ```
-3. **⚠️ ATENÇÃO: ⚠️** caso você queira remover alguns dados do banco da aplicação (banco bee), execute o comando 
-   abaixo:
-   ```bash
    python manage.py soft_reset
    ```
-   Execute `python manage.py soft_reset --help` para listar quais tabelas serão afetadas por esse comando.
+3. Para executar a aplicação:
+   ```bash
+   python manage.py runserver
+   ```
 
-#### Subsequentes
+### Ordem de inserção de rankings
 
-Para executar a aplicação:
-
-```bash
-python manage.py runserver
-```
-
-Acesse o servidor em `http://localhost:8000/ranking`
+A ordem de inserção de rankings importa! Comece inserindo rankings nos quais o nome das universidades está bem 
+formatado: Times Higher Education e QS. Depois, siga para os rankings onde os nomes das universidades são 
+inconsistentes: Unirank, Webometrics, Green Metric.
 
 ## Executando testes
 
