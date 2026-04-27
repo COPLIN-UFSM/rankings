@@ -16,7 +16,8 @@ dependencies:
   - urllib3==1.26.*
   - pip:
       - coplin-db2
-      - git+https://github.com/COPLIN-UFSM/python-ibmdb-django.git
+      - ibm_db
+      - ibm_db_django
       - wakepy
       - django-nested-inline
       - django==5.2.*
