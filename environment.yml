@@ -3,23 +3,17 @@ channels:
   - defaults
   - conda-forge
 dependencies:
+  - python=3.12.*
   - pip
-  - python=3.11.*
   - pandas=2.*
   - beautifulsoup4
-  - pytorch
-  - scikit-learn
-  - scipy
   - tqdm
   - requests=2.*
   - selenium
   - urllib3==1.26.*
   - jinja2
   - pip:
-      - coplin-db2
-      - ibm_db
       - ibm_db_django
-      - wakepy
       - django-nested-inline
       - django==5.2.*
       - django-bootstrap5
@@ -28,6 +22,4 @@ dependencies:
       - django-contrib-comments
       - sqlparse
       - sentence-transformers
-      - huggingface
-      - transformers
       - pytest

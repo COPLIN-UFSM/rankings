@@ -48,7 +48,7 @@ class InsertRankingForm(forms.Form):
             if isinstance(_x, float) or isinstance(_x, int):
                 return [float(_x), None]
 
-            _x = re.findall('([0-9\.]+)', _x)
+            _x = re.findall(r'([0-9\.]+)', _x)
 
             # for rep in string.punctuation + '—–':
             #     _x = _x.replace(rep, ' ')
