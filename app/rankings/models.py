@@ -290,7 +290,27 @@ class UniversidadesParaGrupos(models.Model):
 
 class Ranking(models.Model):
     id_ranking = models.AutoField(db_column='ID_RANKING', primary_key=True)
-    nome = UnicodeEscapedCharField('Nome', max_length=512, db_column='NOME_RANKING', unique=True, blank=False, null=False)
+    nome = UnicodeEscapedCharField('Nome', max_length=255, db_column='NOME_RANKING', unique=True, blank=False, null=False)
+    nome_curto_portugues = UnicodeEscapedCharField(
+        'Nome curto (PT-BR)', max_length=255, db_column='NOME_CURTO_PORTUGUES', blank=True, null=True
+    )
+    nome_curto_ingles = UnicodeEscapedCharField(
+        'Nome curto (EN-US)', max_length=255, db_column='NOME_CURTO_INGLES', blank=True, null=True
+    )
+    abrangencia_portugues = UnicodeEscapedCharField(
+        'Abrangência (PT-BR)', max_length=255, db_column='ABRANGENCIA_PORTUGUES', blank=True, null=True
+    )
+    abrangencia_ingles = UnicodeEscapedCharField(
+        'Scope (EN-US)', max_length=255, db_column='ABRANGENCIA_INGLES', blank=True, null=True
+    )
+    descricao_portugues = UnicodeEscapedCharField(
+        'Descrição (PT-BR)', max_length=255, db_column='DESCRICAO_PORTUGUES', blank=True, null=True
+    )
+    descricao_ingles = UnicodeEscapedCharField(
+        'Description (EN-US)', max_length=255, db_column='DESCRICAO_INGLES', blank=True, null=True
+    )
+    ordem_exibicao = models.IntegerField('Ordem de exibição', db_column='ORDEM_EXIBICAO', blank=True, null=True)
+    exibir = models.BooleanField('Exibir', db_column='EXIBIR', default=True, blank=True, null=True)
     ultima_atualizacao = models.DateTimeField(db_column='ULTIMA_ATUALIZACAO', default=timezone.now, blank=True, null=True)
 
     class Meta:
@@ -306,10 +326,15 @@ class Ranking(models.Model):
 class Pilar(models.Model):
     id_pilar = models.AutoField(db_column='ID_PILAR', primary_key=True)
     ranking = models.ForeignKey(Ranking, models.DO_NOTHING, db_column='ID_RANKING', blank=False, null=False)
-    nome_portugues = UnicodeEscapedCharField('Nome (PT-BR)', max_length=512, db_column='NOME_PILAR_PORTUGUES', blank=False, null=False)
-    nome_ingles = UnicodeEscapedCharField('Nome (EN-US)', max_length=512, db_column='NOME_PILAR_INGLES', blank=True, null=True)
-    descricao_portugues = UnicodeEscapedCharField('Descrição (PT-BR)', max_length=512, db_column='DESCRICAO_PILAR_PORTUGUES', blank=True, null=True)
-    descricao_ingles = UnicodeEscapedCharField('Descrição (EN-US)', max_length=512, db_column='DESCRICAO_PILAR_INGLES', blank=True, null=True)
+    nome_portugues = UnicodeEscapedCharField('Nome (PT-BR)', max_length=255, db_column='NOME_PILAR_PORTUGUES', blank=False, null=False)
+    nome_ingles = UnicodeEscapedCharField('Nome (EN-US)', max_length=255, db_column='NOME_PILAR_INGLES', blank=False, null=False)
+    descricao_portugues = UnicodeEscapedCharField('Descrição (PT-BR)', max_length=255, db_column='DESCRICAO_PILAR_PORTUGUES', blank=True, null=True)
+    descricao_ingles = UnicodeEscapedCharField('Descrição (EN-US)', max_length=255, db_column='DESCRICAO_PILAR_INGLES', blank=True, null=True)
+    e_escore = models.BooleanField('É escore', db_column='E_ESCORE', blank=True, null=True)
+    e_principal = models.BooleanField('É principal', db_column='E_PRINCIPAL', blank=True, null=True)
+    maior_e_melhor = models.BooleanField('Maior é melhor', db_column='MAIOR_E_MELHOR', blank=True, null=True)
+    ordem_exibicao = models.IntegerField('Ordem de exibição', db_column='ORDEM_EXIBICAO', blank=True, null=True)
+    exibir = models.BooleanField('Exibir', db_column='EXIBIR', default=True, blank=True, null=True)
 
     class Meta:
         managed = False
