@@ -212,7 +212,7 @@ class RankingsInsertViewTestCase(RankingsTransactionTestCase):
 
         for i, row in df.iterrows():
             for p in pillars:
-                print(row['Universidade'], row['Ano'], p['id_pilar'])
+                print(p['id_pilar'], row['Ano'], row['Universidade'])
 
                 pv = PilarValor.objects.get(
                     pilar_id=p['id_pilar'],

@@ -8,18 +8,25 @@ dependencies:
   - pandas=2.*
   - beautifulsoup4
   - tqdm
+  - numpy
+  - matplotlib=3.*
   - requests=2.*
   - selenium
   - urllib3==1.26.*
   - jinja2
   - pip:
-      - ibm_db_django
+      - coplin-db2==2.*
+      - dash-bootstrap-components==1.5.*
+      - wakepy
       - django-nested-inline
       - django==5.2.*
       - django-bootstrap5
+      - django-contrib-comments
       - django-crispy-forms
       - crispy-bootstrap5
-      - django-contrib-comments
+      - ibm-db-django
       - sqlparse
-      - sentence-transformers
+      - openpyxl
+      - ftfy
       - pytest
+      - sentence-transformers
